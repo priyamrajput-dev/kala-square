@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Phase 3 - Prompt 3: Public Home Page (`/`) - DONE
+- Phase 4 - Prompt 4: Public Artist Profile Page (`/top-creators/[slug]`) - DONE
 
 ## Current Goal
 
-- Ready for Prompt 4: Public Artist Profile Page (`/top-creators/[slug]`)
+- Ready for Prompt 5: Admin Add / Edit Artist Form
 
 ## Completed
 
@@ -46,29 +46,58 @@ Update this file whenever the current phase, active feature, or implementation s
 
 - **Prompt 3: Public Home Page Implementation (DONE)**
   - Implemented 12 sections in exact order in `apps/web/src/` with mock data matching `Kalasquare_Home_Page_Manager_2.html` and screenshots 01 to 07:
-    1. **Header (Sticky)**: Logo "Kala" (black) + "Square" (red), Search bar ("Search for artists, venues, events"), City dropdown ("Delhi-NCR"), Coral "Sign in" button, Hamburger icon, and sub-nav (Top Creators, Hire Artists, Events & Shows, Venues) with responsive mobile drawer.
-    2. **Hero Section**: Eyebrow "DISCOVER & HIRE VERIFIED ARTISTS", H1 "Book India's Top Talent For Your Next Big Event", subtext, "Explore Artists" & "List Your Talent" CTA buttons, 3 stats ("12,000+ Verified Artists", "850+ Live Venues", "4.9★ Average Rating"), 4 gradient tiles (Coral, Orange, Blue, Violet with white outline icons), and 3 overlapping floating cards (Artist: Sahil Badal, Venue: Siri Fort Auditorium, Opportunity: Bollywood Playback).
-    3. **Platinum Artists Section**: 4 cards (Jai Vijay Sachan, Vijay Vikram Singh, Dinesh Bawra, Sahil Badal) with golden Platinum badge, photo, rating, reviews count, price label, and save heart button.
-    4. **New on KalaSquare Section**: 4 cards (Aarav Mehta, Tanya Bose, Ishaan Rao, Neha Arora) with coral New badge.
-    5. **Find Talent By Category Section**: 12 categories in exact order (Actor, Singer, Musician, Band, Dancer, Comedian, Emcee, Speaker, Magician, DJ, Photographer, Crew / Company) with count pill and SVG outline icon.
-    6. **Stage & Spotlights Section**: Large featured 2x card (The Great Indian Kala Festival 2026) on left + 2 small stacked cards on right.
-    7. **Featured Events Section**: 4 event cards (The Kala Gala 2026, India's Next Voice, Kala Utsav 2026, KS Originals Live Comedy) with badges ("Trending", "New", "Filling Fast", "KS Original").
-    8. **Rising Artists Section**: 4 cards (Ria Bally, Khushboo Choubey, Kunal Verma, Keshav Nagar) with black Rising badge.
-    9. **Venues Section**: 3 venue cards (Comedy County, Rasā – The Stage, Stage Five Studio) with top gradient + code badge (CO, RA, ST), capacity, and price label.
-    10. **FAQ Section**: Full coral `#eb4e62` background, white accordion with 4 FAQs from reference HTML, first item open by default.
-    11. **Footer**: White background with 3 columns (Information, Useful Links, Follow Us On) and copyright notice.
-    12. **Mobile Sticky Enquiry CTA**: Fixed bottom bar on mobile with coral "Send Enquiry" button.
+    1. Header (Sticky)
+    2. Hero Section
+    3. Platinum Artists Section
+    4. New on KalaSquare Section
+    5. Find Talent By Category Section (12 categories)
+    6. Stage & Spotlights Section
+    7. Featured Events Section
+    8. Rising Artists Section
+    9. Venues Section
+    10. FAQ Section
+    11. Footer
+    12. Mobile Sticky Enquiry CTA
   - Setup mock data in `apps/web/src/lib/mock-data.ts` and types in `apps/web/src/lib/types.ts`.
   - Configured Unsplash remote image patterns in `apps/web/next.config.ts`.
   - Verified full build (`pnpm build`) and live dev server on `http://localhost:3000`.
 
+- **Prompt 4: Public Artist Profile Page Implementation (DONE)**
+  - Built dynamic route `/top-creators/[slug]` with `generateStaticParams` for mock slugs: `sahil-badal`, `test-artist`, `aarav-sharma`.
+  - Implemented branded 404 page in `apps/web/src/app/not-found.tsx` and `notFound()` handling for unknown slugs.
+  - Dynamic SEO metadata (Title, Bio description, Canonical URL, Open Graph image) and JSON-LD `Person` schema.
+  - Extended `apps/web/src/lib/types.ts` with `ArtistProfile` and component interfaces.
+  - Extended `apps/web/src/lib/mock-data.ts` with 3 complete, rich artist profiles:
+    - `sahil-badal`: Platinum Singer (Top Songs, FAQs, Sufi/Bollywood fusion, 12 gallery photos)
+    - `test-artist`: Actor with IMDb (Vijay Vikram Singh, voice of Bigg Boss, Film & screen, no Top Songs)
+    - `aarav-sharma`: Rising Dancer (Contemporary fusion, no Top Songs, no IMDb, no FAQs)
+  - Created 15 modular artist components in `apps/web/src/components/artist/`:
+    1. `ArtistHero`: 800x800 square photo (320px desktop), rating overlay, Platinum golden / Verified blue badges, name, tagline, location, category pills (Peach bg, Coral text), action buttons ("Send Enquiry", "Talk to creator", "Share", "Save" heart toggle), social links.
+    2. `ArtistTabs` (Client): Sticky navigation bar with scroll-spy, active Coral indicator, horizontal scroll on mobile, conditional tabs (hides IMDb/Spotify/FAQs if data is missing).
+    3. `ArtistAbout`: Two columns (2/3 bio with "Read more" toggle, 1/3 physical stats card with ruler icon and verification badge).
+    4. `ArtistQuickStats`: 4 cards row (Experience, Projects, Live Shows, Followers).
+    5. `FanbaseChart`: Pure SVG Donut chart with segmented circles and centered total count, platform cards grid (Spotify, YouTube, Instagram, Facebook, Deezer, SoundCloud, TikTok).
+    6. `GalleryLightbox` (Client): 4-photo grid (aspect 3/2) with "+X View More" overlay, Lightbox modal with Prev/Next buttons, close, counter, and keyboard arrow/Escape navigation.
+    7. `VideoGrid`: 3 YouTube video cards with thumbnail, play button, and external link.
+    8. `ClipGrid`: 4 vertical cards (9:16 aspect ratio) for short clips and reels.
+    9. `TopSongs`: Singer-only section with Spotify green badge, track titles, plays, duration, and direct Spotify links.
+    10. `CampaignsAwards`: Previous brand campaigns and awards/honors cards with trophy icons.
+    11. `IMDbSection`: Actor-only section with IMDb yellow badge, score, known-for list, and screen credits.
+    12. `FAQAccordion` (Client): Platinum-only accordion with first item open by default.
+    13. `ReviewsSection` (Client): Average rating, stars, total reviews note, 3 mock reviews, "Write a Review" button with notification.
+    14. `SimilarArtists`: 4 similar artist cards reusing `ArtistCard`.
+    15. `EnquiryCard` (Client): Desktop sticky card with budget range, validation form, success state ("Enquiry sent!"), phone call link, trust points + Mobile sticky bottom bar.
+  - Added `i.ytimg.com` to `next.config.ts` for YouTube thumbnail support.
+  - Added skeleton loader `loading.tsx` in `/top-creators/[slug]`.
+  - Automated tests verified 100% of functional requirements and conditional visibility rules.
+  - `pnpm typecheck` and `pnpm build` passed with zero errors.
+
 ## In Progress
 
-- None (Prompt 3 completed).
+- None (Prompt 4 completed).
 
 ## Next Up
 
-- Prompt 4 - Public Artist Profile Page - `/top-creators/[slug]`
 - Prompt 5 - Admin Add / Edit Artist Form - Videos 6, Clips 8, Campaigns 6, Awards 8, FAQs 8, Gallery 12, Fanbase, SEO
 - Prompt 6 - Admin Home Page Manager + View All Artists + Enquiries
 - Prompt 7 - Backend APIs - Artists CRUD + Publish / Draft + Uploads + Home APIs

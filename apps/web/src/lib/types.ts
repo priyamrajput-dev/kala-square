@@ -62,3 +62,148 @@ export interface SpotlightItem {
   link?: string;
   imageUrl: string;
 }
+
+// -------------------------------------------------------------
+// Artist Profile Specific Interfaces (Prompt 4)
+// -------------------------------------------------------------
+
+export interface PhysicalStats {
+  height?: string;
+  weight?: string;
+  waist?: string;
+  chest?: string;
+  hairType?: string;
+  hairLength?: string;
+  languages?: string[];
+}
+
+export interface QuickStats {
+  experienceYears?: string;
+  projectsCount?: string;
+  liveShowsCount?: string;
+  totalFollowersLabel?: string;
+}
+
+export interface FanbasePlatform {
+  key: 'fbSp' | 'fbYt' | 'fbIg' | 'fbFb' | 'fbDz' | 'fbSc' | 'fbTt';
+  name: string;
+  label: string;
+  color: string;
+  count: string;
+  numValue: number;
+}
+
+export interface GalleryImage {
+  id: string;
+  src: string;
+  title?: string;
+  width?: number;
+  height?: number;
+}
+
+export interface VideoItem {
+  id: string;
+  title: string;
+  url: string;
+  youtubeId: string;
+  views?: string;
+}
+
+export interface ClipItem {
+  id: string;
+  title: string;
+  url: string;
+  thumbnailUrl?: string;
+}
+
+export interface SongItem {
+  id: string;
+  title: string;
+  plays?: string;
+  duration?: string;
+  url: string;
+}
+
+export interface CampaignItem {
+  id: string;
+  brandName: string;
+  category: string;
+  year: string;
+  description?: string;
+  imageUrl?: string;
+}
+
+export interface AwardItem {
+  id: string;
+  title: string;
+  category: string;
+  year: string;
+  description?: string;
+}
+
+export interface IMDbCredit {
+  id: string;
+  title: string;
+  year?: string;
+  role?: string;
+  type?: string;
+  isKnownFor?: boolean;
+  imdbUrl?: string;
+}
+
+export interface IMDbData {
+  rating?: string;
+  imdbUrl?: string;
+  knownFor?: string[];
+  credits: IMDbCredit[];
+}
+
+export interface ReviewItem {
+  id: string;
+  authorName: string;
+  date: string;
+  rating: number;
+  comment: string;
+}
+
+export interface SocialLinks {
+  instagram?: string;
+  youtube?: string;
+  facebook?: string;
+  x?: string;
+  spotify?: string;
+  imdb?: string;
+}
+
+export interface ArtistProfile {
+  id: string;
+  slug: string;
+  name: string;
+  tagline?: string;
+  bio: string;
+  photoUrl: string;
+  city: string;
+  state?: string;
+  phone?: string;
+  email?: string;
+  categories: string[];
+  specializations?: string[];
+  artistClass: 'platinum' | 'rising' | 'emerging' | 'standard';
+  isVerified: boolean;
+  rating: number;
+  reviewsCount: number;
+  priceLabel: string;
+  physicalStats?: PhysicalStats;
+  quickStats: QuickStats;
+  fanbase: FanbasePlatform[];
+  gallery: GalleryImage[];
+  videos: VideoItem[];
+  clips: ClipItem[];
+  topSongs?: SongItem[];
+  campaigns: CampaignItem[];
+  awards: AwardItem[];
+  imdb?: IMDbData;
+  faqs?: FAQItem[];
+  reviews: ReviewItem[];
+  social: SocialLinks;
+}

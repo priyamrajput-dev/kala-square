@@ -1,0 +1,15 @@
+export { default as ArtistHero } from './ArtistHero';
+export { default as ArtistTabs } from './ArtistTabs';
+export { default as ArtistAbout } from './ArtistAbout';
+export { default as ArtistQuickStats } from './ArtistQuickStats';
+export { default as FanbaseChart } from './FanbaseChart';
+export { default as GalleryLightbox } from './GalleryLightbox';
+export { default as VideoGrid } from './VideoGrid';
+export { default as ClipGrid } from './ClipGrid';
+export { default as TopSongs } from './TopSongs';
+export { default as CampaignsAwards } from './CampaignsAwards';
+export { default as IMDbSection } from './IMDbSection';
+export { default as FAQAccordion } from './FAQAccordion';
+export { default as ReviewsSection } from './ReviewsSection';
+export { default as SimilarArtists } from './SimilarArtists';
+export { default as EnquiryCard } from './EnquiryCard';

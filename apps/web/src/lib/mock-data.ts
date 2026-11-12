@@ -1,4 +1,12 @@
-import { Artist, Category, EventItem, VenueItem, FAQItem, SpotlightItem } from './types';
+import {
+  Artist,
+  Category,
+  EventItem,
+  VenueItem,
+  FAQItem,
+  SpotlightItem,
+  ArtistProfile,
+} from './types';
 
 export const mockArtists: Artist[] = [
   // Platinum Artists
@@ -420,3 +428,297 @@ export const mockFAQs: FAQItem[] = [
       'The Verified blue badge indicates verified identities, documentation, and performance credentials. The Platinum golden badge represents top-tier artists with verified track records, extensive fanbase, and national acclaim.',
   },
 ];
+
+export const mockArtistProfiles: ArtistProfile[] = [
+  // 1. Platinum Singer: Sahil Badal
+  {
+    id: 'p1',
+    slug: 'sahil-badal',
+    name: 'Sahil Badal',
+    tagline: 'Playback Singer · Sufi Fusion Vocalist · Live Performer',
+    bio: 'Sahil Badal is one of India\'s most versatile live and playback vocalists, renowned for electrifying arena shows and soulful Sufi fusion renditions. With over 18 years of professional performance history spanning corporate galas, premier festivals, and cross-border music projects, Sahil has captivated millions of listeners worldwide. His signature vocal texture bridges traditional Indian classical roots with modern pop and rock acoustics, delivering memorable live experiences that keep audiences on their feet.',
+    photoUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80',
+    city: 'Delhi',
+    state: 'Delhi-NCR',
+    phone: '+91 98765 43210',
+    email: 'bookings@sahilbadal.com',
+    categories: ['Singer', 'Musician'],
+    specializations: ['Bollywood Live', 'Sufi Fusion', 'Acoustic Unplugged', 'College Fests', 'Private Galas'],
+    artistClass: 'platinum',
+    isVerified: true,
+    rating: 4.9,
+    reviewsCount: 38,
+    priceLabel: 'From ₹50,000',
+    physicalStats: {
+      height: "5'10\"",
+      weight: '68 kg',
+      waist: '32 in',
+      chest: '40 in',
+      hairType: 'Straight',
+      hairLength: 'Short',
+      languages: ['Hindi', 'English', 'Punjabi'],
+    },
+    quickStats: {
+      experienceYears: '18 Years',
+      projectsCount: '50+',
+      liveShowsCount: '150+',
+      totalFollowersLabel: '50k',
+    },
+    fanbase: [
+      { key: 'fbSp', name: 'Spotify', label: 'Followers', color: '#1DB954', count: '31.9M', numValue: 31900000 },
+      { key: 'fbYt', name: 'YouTube', label: 'Subscribers', color: '#FF0000', count: '7.9M', numValue: 7900000 },
+      { key: 'fbIg', name: 'Instagram', label: 'Followers', color: '#C13584', count: '19.0M', numValue: 19000000 },
+      { key: 'fbFb', name: 'Facebook', label: 'Followers', color: '#1877F2', count: '30.9M', numValue: 30900000 },
+      { key: 'fbDz', name: 'Deezer', label: 'Fans', color: '#A238FF', count: '108.7K', numValue: 108700 },
+      { key: 'fbSc', name: 'SoundCloud', label: 'Followers', color: '#FF5500', count: '77.6K', numValue: 77600 },
+      { key: 'fbTt', name: 'TikTok', label: 'Followers', color: '#161616', count: '7.0M', numValue: 7000000 },
+    ],
+    gallery: [
+      { id: 'g1', src: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1200&auto=format&fit=crop&q=80', title: 'Live Arena Tour' },
+      { id: 'g2', src: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&auto=format&fit=crop&q=80', title: 'Studio Recording Session' },
+      { id: 'g3', src: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1200&auto=format&fit=crop&q=80', title: 'Concert Stage Lights' },
+      { id: 'g4', src: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&auto=format&fit=crop&q=80', title: 'Festival Finale' },
+      { id: 'g5', src: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=1200&auto=format&fit=crop&q=80', title: 'Acoustic Guitar Unplugged' },
+      { id: 'g6', src: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200&auto=format&fit=crop&q=80', title: 'Crowd Interaction Moment' },
+      { id: 'g7', src: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=1200&auto=format&fit=crop&q=80', title: 'Cultural Gala Delhi' },
+      { id: 'g8', src: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=1200&auto=format&fit=crop&q=80', title: 'Sunset Open Air Show' },
+      { id: 'g9', src: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=1200&auto=format&fit=crop&q=80', title: 'Award Show Performance' },
+      { id: 'g10', src: 'https://images.unsplash.com/photo-1520523839898-507125cd53c1?w=1200&auto=format&fit=crop&q=80', title: 'Band Soundcheck' },
+      { id: 'g11', src: 'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=1200&auto=format&fit=crop&q=80', title: 'Press Meet & Greeting' },
+      { id: 'g12', src: 'https://images.unsplash.com/photo-1483412033650-1015ddeb83d1?w=1200&auto=format&fit=crop&q=80', title: 'Encore Performance' },
+    ],
+    videos: [
+      { id: 'v1', title: 'Sufi Night Live at Siri Fort Auditorium', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeId: 'dQw4w9WgXcQ', views: '2.4M views' },
+      { id: 'v2', title: 'Acoustic Medley - Bollywood Classics', url: 'https://www.youtube.com/watch?v=9bZkp7q19f0', youtubeId: '9bZkp7q19f0', views: '1.1M views' },
+      { id: 'v3', title: 'Behind the Scenes: Delhi Arena Tour 2026', url: 'https://www.youtube.com/watch?v=kJQP7kiw5Fk', youtubeId: 'kJQP7kiw5Fk', views: '780K views' },
+    ],
+    clips: [
+      { id: 'c1', title: 'Vocal warmups before stadium show', url: 'https://youtube.com/shorts/sample1' },
+      { id: 'c2', title: 'Crowd singing along in chorus', url: 'https://youtube.com/shorts/sample2' },
+      { id: 'c3', title: 'Spontaneous harmonization backstage', url: 'https://youtube.com/shorts/sample3' },
+      { id: 'c4', title: 'Acoustic riff rehearsal snippet', url: 'https://youtube.com/shorts/sample4' },
+    ],
+    topSongs: [
+      { id: 's1', title: 'Raanjhan Yaar (Sufi Pop)', plays: '14,250,000 plays', duration: '3:45', url: 'https://open.spotify.com' },
+      { id: 's2', title: 'Dil Ki Sada (Acoustic Version)', plays: '9,810,000 plays', duration: '4:12', url: 'https://open.spotify.com' },
+      { id: 's3', title: 'O Re Piya (Reprise Live)', plays: '7,430,000 plays', duration: '5:02', url: 'https://open.spotify.com' },
+      { id: 's4', title: 'Jogan Tere Ishq Mein', plays: '5,120,000 plays', duration: '3:20', url: 'https://open.spotify.com' },
+      { id: 's5', title: 'Mast Malang', plays: '3,890,000 plays', duration: '4:30', url: 'https://open.spotify.com' },
+    ],
+    campaigns: [
+      { id: 'cp1', brandName: 'Red Bull Music SoundClash', category: 'Live Music Property', year: '2025', description: 'Headline live fusion artist for the North India edition of Red Bull SoundClash.' },
+      { id: 'cp2', brandName: 'Coke Studio Bharat', category: 'Studio Collaboration', year: '2024', description: 'Featured vocal collaborator on track 4 blending Rajasthani folk lyrics with contemporary soul.' },
+      { id: 'cp3', brandName: 'OnePlus Nord Launch Tour', category: 'Campus Tour', year: '2024', description: 'Headline music performer across 6 college fest concert stages in Delhi-NCR.' },
+    ],
+    awards: [
+      { id: 'aw1', title: 'Best Live Performer (Folk & Fusion)', category: 'GiMA Global Indian Music Academy', year: '2025', description: 'Awarded for exceptional stage mastery and live energy during the 2024–2025 national tour.' },
+      { id: 'aw2', title: 'Indie Vocalist of the Year', category: 'Radio Mirchi Music Awards', year: '2024', description: 'Recognized for chart-topping independent single "Raanjhan Yaar".' },
+      { id: 'aw3', title: 'Youth Icon in Cultural Music', category: 'Delhi State Cultural Council', year: '2023', description: 'Honored for promoting classical Sufi literature among university students.' },
+    ],
+    faqs: [
+      { question: 'What is Sahil Badal\'s standard set duration for live bookings?', answer: 'Sahil typically performs a 90 to 120-minute live concert set with his full 6-piece band. Unplugged or acoustic corporate sets can also be tailored from 45 to 60 minutes upon request.' },
+      { question: 'Does Sahil travel with his own sound engineer and tech rider?', answer: 'Yes, all outstation and arena concerts include his dedicated front-of-house sound engineer and stage manager. A detailed technical rider (console, monitor, microphones) is provided upon contract confirmation.' },
+      { question: 'Can special song requests or custom anthems be accommodated?', answer: 'Yes, with at least 10 days advance notice, Sahil and the band can prepare up to 2 customized song requests or bespoke corporate brand anthems for private galas.' },
+      { question: 'What are the travel and logistics requirements?', answer: 'For shows outside Delhi-NCR, domestic flights for 7 band members/crew, local premium hotel accommodation, and airport transfers are required.' },
+    ],
+    reviews: [
+      { id: 'r1', authorName: 'Vikram Singhania', date: 'October 2026', rating: 5, comment: 'Sahil and his band turned our corporate annual summit into an unforgettable stadium-like concert! The energy from the first song to the encore was simply out of this world.' },
+      { id: 'r2', authorName: 'Meenakshi Sundaram', date: 'August 2026', rating: 5, comment: 'We booked Sahil for our daughter\'s wedding sangeet in Udaipur. The Sufi fusion set moved every single guest. Truly a world-class vocalist.' },
+      { id: 'r3', authorName: 'Amanpreet Singh', date: 'July 2026', rating: 5, comment: 'Professional, punctual, and extraordinarily talented. Audio mixing and live presence were pristine. Worth every single rupee!' },
+    ],
+    social: {
+      instagram: 'https://instagram.com/sahilbadalmusic',
+      youtube: 'https://youtube.com/@sahilbadallive',
+      facebook: 'https://facebook.com/sahilbadalofficial',
+      spotify: 'https://open.spotify.com/artist/sahilbadal',
+      x: 'https://x.com/sahilbadal',
+    },
+  },
+
+  // 2. Actor with IMDb: Vijay Vikram Singh (slug: test-artist)
+  {
+    id: 'p2',
+    slug: 'test-artist',
+    name: 'Vijay Vikram Singh',
+    tagline: 'Iconic Voice of Bigg Boss · Film Actor · Keynote Speaker',
+    bio: 'Vijay Vikram Singh is a celebrated Indian voice artist, television personality, and film actor. Widely recognized as the iconic authoritative voice behind the television reality phenomenon Bigg Boss, he has brought narrative gravitas to major national advertising campaigns, documentaries, and Bollywood feature films. With a magnetic on-screen presence in acclaimed series such as The Family Man, Mirzapur, and Special OPS, Vijay continues to inspire as a dynamic motivational speaker and theatre practitioner.',
+    photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&auto=format&fit=crop&q=80',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    phone: '+91 99887 76655',
+    email: 'contact@vijayvikram.com',
+    categories: ['Actor', 'Voice-over'],
+    specializations: ['Method Acting', 'Hindi & English Narration', 'Film Dubbing', 'Keynote Speeches'],
+    artistClass: 'platinum',
+    isVerified: true,
+    rating: 5.0,
+    reviewsCount: 64,
+    priceLabel: 'From ₹1,00,000',
+    physicalStats: {
+      height: "5'11\"",
+      weight: '74 kg',
+      waist: '34 in',
+      chest: '42 in',
+      hairType: 'Wavy',
+      hairLength: 'Medium',
+      languages: ['Hindi', 'English', 'Urdu'],
+    },
+    quickStats: {
+      experienceYears: '14 Years',
+      projectsCount: '80+',
+      liveShowsCount: '40+',
+      totalFollowersLabel: '420K',
+    },
+    fanbase: [
+      { key: 'fbIg', name: 'Instagram', label: 'Followers', color: '#C13584', count: '2.4M', numValue: 2400000 },
+      { key: 'fbYt', name: 'YouTube', label: 'Subscribers', color: '#FF0000', count: '850K', numValue: 850000 },
+      { key: 'fbFb', name: 'Facebook', label: 'Followers', color: '#1877F2', count: '1.2M', numValue: 1200000 },
+    ],
+    gallery: [
+      { id: 'g1', src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=1200&auto=format&fit=crop&q=80', title: 'Portrait Shoot' },
+      { id: 'g2', src: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=1200&auto=format&fit=crop&q=80', title: 'Studio Microphone Recording' },
+      { id: 'g3', src: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=1200&auto=format&fit=crop&q=80', title: 'Keynote Address at Mumbai Conclave' },
+      { id: 'g4', src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&auto=format&fit=crop&q=80', title: 'On Set Web Series Shoot' },
+    ],
+    videos: [
+      { id: 'v1', title: 'Voice Acting Masterclass & The Bigg Boss Journey', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeId: 'dQw4w9WgXcQ', views: '1.8M views' },
+      { id: 'v2', title: 'TEDx Talk: The Power of Finding Your Voice', url: 'https://www.youtube.com/watch?v=9bZkp7q19f0', youtubeId: '9bZkp7q19f0', views: '950K views' },
+      { id: 'v3', title: 'Acting Reel 2026: Dramatic & Character Roles', url: 'https://www.youtube.com/watch?v=kJQP7kiw5Fk', youtubeId: 'kJQP7kiw5Fk', views: '620K views' },
+    ],
+    clips: [
+      { id: 'c1', title: 'Famous line delivery in Bigg Boss voice', url: 'https://youtube.com/shorts/sample1' },
+      { id: 'c2', title: 'Behind the mic voice modulation tip', url: 'https://youtube.com/shorts/sample2' },
+      { id: 'c3', title: 'Audition script reading excerpt', url: 'https://youtube.com/shorts/sample3' },
+      { id: 'c4', title: 'Stage hosting highlights reel', url: 'https://youtube.com/shorts/sample4' },
+    ],
+    campaigns: [
+      { id: 'cp1', brandName: 'Tata Tea Jaago Re', category: 'TV Commercial Narration', year: '2025', description: 'Lead narrative voice for the nationwide social awareness broadcast campaign.' },
+      { id: 'cp2', brandName: 'Amazon Prime Video Originals', category: 'Promotional Campaign', year: '2024', description: 'Official trailer narrative voice for multiple blockbuster thriller launches.' },
+      { id: 'cp3', brandName: 'ICICI Bank Wealth Management', category: 'Corporate Video', year: '2023', description: 'Executive narrator for the corporate documentary and investor briefing series.' },
+    ],
+    awards: [
+      { id: 'aw1', title: 'Excellence in Voice-Over Arts', category: 'India Voice Art Awards', year: '2024', description: 'Honored for exceptional contribution to national broadcast entertainment.' },
+      { id: 'aw2', title: 'Best Supporting Actor in a Drama Series', category: 'OTT Critics Awards', year: '2023', description: 'Nominated and awarded for intense performance in leading streaming original.' },
+    ],
+    imdb: {
+      rating: '8.4 / 10',
+      imdbUrl: 'https://www.imdb.com/name/nm10852943/',
+      knownFor: ['The Family Man', 'Bigg Boss (Voice of Narrator)', 'Mirzapur', 'Special OPS'],
+      credits: [
+        { id: 'im1', title: 'The Family Man', year: '2021', role: 'Agent Talpade / Guest', type: 'Web Series', isKnownFor: true, imdbUrl: 'https://www.imdb.com' },
+        { id: 'im2', title: 'Bigg Boss', year: '2010–2026', role: 'Narrator / Voice of Bigg Boss', type: 'Television Series', isKnownFor: true, imdbUrl: 'https://www.imdb.com' },
+        { id: 'im3', title: 'Mirzapur', year: '2020', role: 'DIG Officer', type: 'Web Series', isKnownFor: true, imdbUrl: 'https://www.imdb.com' },
+        { id: 'im4', title: 'Special OPS', year: '2020', role: 'Intelligence Officer', type: 'Web Series', isKnownFor: false, imdbUrl: 'https://www.imdb.com' },
+      ],
+    },
+    faqs: [
+      { question: 'What events does Vijay Vikram Singh host or keynote?', answer: 'Vijay regularly headlines corporate leadership conclaves, annual awards nights, panel discussions, and motivational university summits.' },
+      { question: 'Is Vijay available for commercial voiceovers and dubbing?', answer: 'Yes, he works out of top Mumbai audio recording studios and has an equipped broadcast home studio for international voiceover assignments.' },
+    ],
+    reviews: [
+      { id: 'r1', authorName: 'Ritesh Deshmukh (Corporate Planner)', date: 'November 2026', rating: 5, comment: 'Vijay was the keynote anchor for our Global Tech Summit. The moment he took the mic, the audience went completely silent and listened intently. True authority and charisma.' },
+      { id: 'r2', authorName: 'Pooja Bhattacharya', date: 'September 2026', rating: 5, comment: 'A thorough gentleman and consummate professional. His narration added unmatched prestige to our brand film.' },
+      { id: 'r3', authorName: 'Karan Mehra', date: 'July 2026', rating: 5, comment: 'Hearing that legendary voice in person was surreal. Highly recommended for any high-stakes event.' },
+    ],
+    social: {
+      instagram: 'https://instagram.com/vijayvikramsingh',
+      youtube: 'https://youtube.com/@vijayvikramvoice',
+      facebook: 'https://facebook.com/vijayvikramactor',
+      imdb: 'https://www.imdb.com/name/nm10852943/',
+      x: 'https://x.com/vijayvikram',
+    },
+  },
+
+  // 3. Rising Dancer: Aarav Sharma (slug: aarav-sharma)
+  {
+    id: 'p3',
+    slug: 'aarav-sharma',
+    name: 'Aarav Sharma',
+    tagline: 'Contemporary & Urban Choreographer · Reality Show Finalist',
+    bio: 'Aarav Sharma is a trailblazing contemporary dancer and stage choreographer pushing the boundaries of movement design in India. Having trained extensively in Kathak, lyrical hip-hop, and floorwork, Aarav has choreographed high-energy musical theatrical productions, music videos, and viral social dance concepts. His performance style combines intense athleticism with emotional storytelling, leaving audiences spellbound across international dance showcases.',
+    photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80',
+    city: 'Delhi',
+    state: 'Delhi-NCR',
+    phone: '+91 97654 32109',
+    email: 'aarav.dance@gmail.com',
+    categories: ['Dancer', 'Choreographer'],
+    specializations: ['Contemporary Fusion', 'Urban Hip Hop', 'Music Video Choreography', 'Flashmobs'],
+    artistClass: 'rising',
+    isVerified: true,
+    rating: 4.8,
+    reviewsCount: 19,
+    priceLabel: 'From ₹35,000',
+    physicalStats: {
+      height: "5'9\"",
+      weight: '62 kg',
+      waist: '29 in',
+      chest: '38 in',
+      hairType: 'Curly',
+      hairLength: 'Medium',
+      languages: ['Hindi', 'English'],
+    },
+    quickStats: {
+      experienceYears: '6 Years',
+      projectsCount: '35+',
+      liveShowsCount: '90+',
+      totalFollowersLabel: '280K',
+    },
+    fanbase: [
+      { key: 'fbIg', name: 'Instagram', label: 'Followers', color: '#C13584', count: '1.8M', numValue: 1800000 },
+      { key: 'fbYt', name: 'YouTube', label: 'Subscribers', color: '#FF0000', count: '620K', numValue: 620000 },
+      { key: 'fbTt', name: 'TikTok', label: 'Followers', color: '#161616', count: '2.1M', numValue: 2100000 },
+    ],
+    gallery: [
+      { id: 'g1', src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&auto=format&fit=crop&q=80', title: 'Studio Rehearsal Jump' },
+      { id: 'g2', src: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=1200&auto=format&fit=crop&q=80', title: 'Contemporary Floor Sequence' },
+      { id: 'g3', src: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200&auto=format&fit=crop&q=80', title: 'Stage Performance Lighting' },
+      { id: 'g4', src: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=1200&auto=format&fit=crop&q=80', title: 'Outdoor Silhouette Movement' },
+    ],
+    videos: [
+      { id: 'v1', title: 'Contemporary Fusion Solo - "Shiva Tandava"', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeId: 'dQw4w9WgXcQ', views: '1.2M views' },
+      { id: 'v2', title: 'Urban Dance Choreography Showcase 2026', url: 'https://www.youtube.com/watch?v=9bZkp7q19f0', youtubeId: '9bZkp7q19f0', views: '640K views' },
+      { id: 'v3', title: 'Dance India Dance Finale Audition Act', url: 'https://www.youtube.com/watch?v=kJQP7kiw5Fk', youtubeId: 'kJQP7kiw5Fk', views: '410K views' },
+    ],
+    clips: [
+      { id: 'c1', title: 'Viral hook step challenge reel', url: 'https://youtube.com/shorts/sample1' },
+      { id: 'c2', title: '30-second fluid floor transition', url: 'https://youtube.com/shorts/sample2' },
+      { id: 'c3', title: 'Street dance battle highlight', url: 'https://youtube.com/shorts/sample3' },
+      { id: 'c4', title: 'Slow-motion aerial spin practice', url: 'https://youtube.com/shorts/sample4' },
+    ],
+    campaigns: [
+      { id: 'cp1', brandName: 'Nike India - Move To Zero', category: 'Athlete Campaign', year: '2025', description: 'Featured performer in digital movement films showcasing dynamic apparel mobility.' },
+      { id: 'cp2', brandName: 'Sunburn Campus Anthem', category: 'Music Video', year: '2024', description: 'Lead choreographic dancer and troupe leader for the official electronic festival promo.' },
+    ],
+    awards: [
+      { id: 'aw1', title: 'Best Solo Choreographer', category: 'National Contemporary Dance Forum', year: '2024', description: 'First prize for groundbreaking work on Indian mythological themes.' },
+      { id: 'aw2', title: 'Rising Star of Movement Arts', category: 'Delhi Youth Festival', year: '2023', description: 'Honored among top emerging performing artists under 25.' },
+    ],
+    reviews: [
+      { id: 'r1', authorName: 'Kritika Roy', date: 'October 2026', rating: 5, comment: 'Aarav choreographed our college fest opening act. He is exceptionally disciplined, creative, and made even beginners look like pros!' },
+      { id: 'r2', authorName: 'Devansh Chopra', date: 'July 2026', rating: 4, comment: 'Incredible stage presence and athletic execution. His solo at our corporate awards was the talk of the evening.' },
+      { id: 'r3', authorName: 'Sanjay Rawat', date: 'May 2026', rating: 5, comment: 'A true artist of the modern generation. Seamless communication and top tier choreography.' },
+    ],
+    social: {
+      instagram: 'https://instagram.com/aaravsharmadance',
+      youtube: 'https://youtube.com/@aaravdance',
+      x: 'https://x.com/aaravdance',
+    },
+  },
+];
+
+export function getArtistProfileBySlug(slug: string): ArtistProfile | undefined {
+  const normalized = slug.toLowerCase().trim();
+  // Direct match
+  const profile = mockArtistProfiles.find((p) => p.slug === normalized);
+  if (profile) return profile;
+
+  // Aliases for user convenience and testing
+  if (normalized === 'vijay-vikram-singh') {
+    return mockArtistProfiles.find((p) => p.slug === 'test-artist');
+  }
+  if (normalized === 'sana-qureshi') {
+    return mockArtistProfiles.find((p) => p.slug === 'aarav-sharma');
+  }
+  return undefined;
+}
+
