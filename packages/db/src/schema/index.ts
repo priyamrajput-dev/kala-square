@@ -1,3 +1,9 @@
-// TODO: Schema definitions will be added in upcoming prompts
-// In Prompt 1, DB tables are intentionally not created.
-export const schema = {};
+export * from './artists.js';
+export * from './artist_media.js';
+export * from './artist_work.js';
+export * from './artist_social.js';
+export * from './venues.js';
+export * from './events.js';
+export * from './home_sections.js';
+export * from './enquiries.js';
+export * from './users.js';

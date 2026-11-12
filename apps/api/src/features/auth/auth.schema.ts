@@ -1,6 +1,7 @@
-// TODO: Auth Zod schemas will be added in upcoming prompts
-import { z } from 'zod';
-
-export const LoginRequestSchema = z.object({
-  // TODO: Add credentials validation fields
-});
+// Auth schemas imported and re-exported from @kalasquare/shared
+export {
+  adminLoginSchema,
+  authResponseSchema,
+  type AdminLoginInput,
+  type AuthResponse,
+} from '@kalasquare/shared';

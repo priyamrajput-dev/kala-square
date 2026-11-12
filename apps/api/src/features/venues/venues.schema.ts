@@ -1,6 +1,7 @@
-// TODO: Venues Zod schemas will be added in upcoming prompts
-import { z } from 'zod';
-
-export const VenueSchema = z.object({
-  // TODO: Add venue validation fields
-});
+// Venues schemas imported and re-exported from @kalasquare/shared
+export {
+  venueCreateSchema,
+  venueUpdateSchema,
+  type VenueCreateInput,
+  type VenueUpdateInput,
+} from '@kalasquare/shared';

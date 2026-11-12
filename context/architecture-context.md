@@ -1,68 +1,70 @@
-# Architecture Context
+# Architecture Context - Kalasquare
 
 ## Stack
 
-| Layer            | Technology              | Role                                                           |
-| ---------------- | ----------------------- | -------------------------------------------------------------- |
-| Framework        | Next.js 16 + TypeScript | Full-stack app with server/client boundaries                   |
-| UI               | Tailwind + shadcn/ui    | Component composition and styling                              |
-| Auth             | Clerk                   | User identity and route protection                             |
-| Database         | Prisma + PostgreSQL     | Relational metadata: projects, collaborators, specs, task runs |
-| Canvas           | Liveblocks + React Flow | Real-time collaborative canvas, presence, and cursors          |
-| Background tasks | Trigger.dev             | Durable AI generation workflows                                |
-| Artifact storage | Vercel Blob             | Canvas snapshots and generated Markdown specs                  |
+| Layer | Technology | Role |
+| :--- | :--- | :--- |
+| **Frontend** | Next.js 16 (LTS Stable) App Router + TypeScript | Public + Admin UI |
+| **Styling** | Tailwind CSS | Tokens, no hardcoded hex |
+| **Backend** | Node.js + Fastify + TypeScript | API, Feature-First |
+| **Database** | PostgreSQL + Drizzle ORM | Artists, Venues, Events, Enquiries, Home Sections |
+| **Validation** | Zod | Single source of truth, frontend + backend + Swagger |
+| **API Docs** | fastify-type-provider-zod + @fastify/swagger | Zod -> JSON Schema -> Swagger UI at /docs |
+| **Package Manager** | PNPM only | Monorepo, pnpm-workspace.yaml |
+
+## Monorepo + Feature-First Backend Structure
+
+```text
+kalasquare/
+AGENTS.md
+context/ - Six files (this folder)
+apps/web/ - Next.js 16
+  src/app/, src/components/, src/lib/
+apps/api/src/ - Fastify, Feature-First
+  server.ts (only listen, no logic)
+  app.ts (bootstrap, create Fastify instance, register plugins + all features)
+  config/env.ts (env validated with Zod)
+  common/ - errors, middlewares, utils (only code used by 2+ features)
+  lib/ - db.ts, logger.ts, storage.ts, auth.ts
+  features/
+    auth/ - auth.routes.ts, auth.controller.ts, auth.service.ts, auth.repository.ts, auth.schema.ts, auth.types.ts
+    artists/ - artists.routes.ts, artists.controller.ts, artists.service.ts, artists.repository.ts, artists.schema.ts, artists.types.ts
+    home/ - home.routes.ts, home.controller.ts, home.service.ts, home.repository.ts, home.schema.ts, home.types.ts
+    enquiries/ - enquiries.routes.ts, enquiries.controller.ts, enquiries.service.ts, enquiries.repository.ts, enquiries.schema.ts, enquiries.types.ts
+    venues/ - venues.routes.ts, venues.controller.ts, venues.service.ts, venues.repository.ts, venues.schema.ts, venues.types.ts
+    uploads/ - uploads.routes.ts, uploads.controller.ts, uploads.service.ts, uploads.repository.ts, uploads.schema.ts, uploads.types.ts
+packages/shared/ - Shared Zod schemas used by both web and api
+packages/db/ - Drizzle schema + migrations
+packages/config/ - Shared tsconfig, eslint
+screenshots/ - 14 reference screenshots
+Kalasquare_Home_Page_Manager_2.html - Design source
+```
 
 ## System Boundaries
 
-- `app/api` — Authenticated request handlers: input validation, ownership checks, task triggering, and persistence.
-- `trigger` — Long-running background jobs: AI design generation and spec generation.
-- `lib` — Shared infrastructure: Prisma client, access control helpers, and utilities.
-- `components` — UI composition: canvas surfaces, sidebars, dialogs, and interactive elements.
-- `prisma` — Database schema and generated client output.
-- `data` — Legacy local directory. Not used for new artifacts.
+- `apps/web` - Only UI. No DB queries. Fetches data from API.
+- `apps/api/features/*` - Each feature owns its routes, controller, service, repository, schema.
+- `packages/shared` - Used by both web and api.
+- `packages/db` - Only schema + migrations.
 
 ## Storage Model
 
-- **Database**: metadata, ownership, relationships, and task run records.
-- **Vercel Blob**: generated artifacts — canvas snapshots at `canvas/{projectId}.json` and specs at `specs/{projectId}/{specId}.md`.
-- Project records, spec records, and task run records belong in PostgreSQL.
-- Canvas content and Markdown output are stored in and retrieved from Vercel Blob.
-- The blob URL is stored in the database (`canvasJsonPath`, `filePath`) as the reference to the artifact.
+- **PostgreSQL**: artists, artist_media, artist_work, artist_social, venues, events, home_sections, enquiries, users.
+- **File Storage**: Profile photo, gallery, share image. Local for now, S3 later. Database stores only the URL.
+- **Home Sections**: home_sections table with JSONB `orderedIds` + `heroImages`.
 
-## Auth and Collaboration Model
+## Auth Model
 
-- Every project has a single owner (Clerk user ID).
-- Projects can include additional collaborators.
-- Only authenticated users can access protected routes.
-- Only the owner or a collaborator can mutate project resources.
-- Liveblocks room tokens are issued only after verifying project membership.
-
-## Starter System Designs
-
-- Prebuilt templates are static canvas snapshots stored in the codebase.
-- Templates are loaded into the active Liveblocks room when a user imports one.
-- Import can occur on canvas creation or from within the editor at any time.
-- Template data follows the same node/edge schema as user-created canvas content.
-- Templates do not require a separate database record; they are resolved by template ID at import time.
-
-## AI Generation Model
-
-### Design Generation
-
-- Input: user prompt, project context, and current canvas state.
-- Execution: durable background task via Trigger.dev.
-- Output: structured node and edge updates written into the shared Liveblocks room.
-
-### Spec Generation
-
-- Input: current canvas graph and project context.
-- Execution: durable background task via Trigger.dev.
-- Output: Markdown technical spec saved to the filesystem and linked to the project in the database.
+- Admin login: Email + Password, JWT.
+- Only Admin can mutate (create, edit, delete, publish).
+- Public routes: `GET /api/artists/:slug` (only status=live), `GET /api/home`, `GET /api/categories`.
 
 ## Invariants
 
-1. Request handlers do not run long-lived AI work — that belongs in background tasks.
-2. Metadata and large generated artifacts are stored in separate layers.
-3. Auth and ownership are enforced at every mutation boundary.
-4. Client components are used only where browser interactivity or real-time state requires them.
-5. The canvas schema must remain consistent between user-created content and imported templates.
+1. Controller never writes a DB query. Service never handles req/res. Repository never has business logic.
+2. Order is always: routes -> controller -> service -> repository. Do NOT break it.
+3. No API without a Zod schema. Do NOT write Swagger manually.
+4. Draft / Pending artist public URL must return 404. Only Live opens.
+5. Admin save must trigger revalidatePath + revalidateTag. No stale cache.
+6. Use Server Components by default. Use "use client" only when browser interactivity is required.
+7. No Ghost AI stack: No Clerk, Prisma, Liveblocks, Trigger.dev, Vercel Blob.

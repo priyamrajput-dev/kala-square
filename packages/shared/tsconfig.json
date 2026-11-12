@@ -1,8 +1,8 @@
 {
-  "extends": "@kalasquare/config/tsconfig.node.json",
-  "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist"
-  },
-  "include": ["src/**/*"]
+    "extends": "@kalasquare/config/tsconfig.node.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist"
+    },
+    "include": ["src/**/*"]
 }

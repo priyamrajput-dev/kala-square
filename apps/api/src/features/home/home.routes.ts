@@ -2,5 +2,5 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 
 export const homeRoutes: FastifyPluginAsyncZod = async (_fastify) => {
-  // TODO: Register home page configuration and feed endpoints
+    // TODO: Register home page configuration and feed endpoints
 };

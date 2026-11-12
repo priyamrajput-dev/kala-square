@@ -1,5 +1,13 @@
 import { z } from 'zod';
 
+export * from './schemas/artist.schema.js';
+export * from './schemas/home.schema.js';
+export * from './schemas/enquiry.schema.js';
+export * from './schemas/auth.schema.js';
+export * from './schemas/venue.schema.js';
+export * from './schemas/event.schema.js';
+
+// Common System Schemas
 export const HealthResponseSchema = z.object({
   status: z.literal('ok'),
   timestamp: z.string(),

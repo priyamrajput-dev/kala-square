@@ -3,6 +3,6 @@
 import { getDb } from '@kalasquare/db';
 
 export function getDatabase() {
-  // TODO: Connect and return DB instance in upcoming prompt
-  return getDb();
+    // TODO: Connect and return DB instance in upcoming prompt
+    return getDb();
 }

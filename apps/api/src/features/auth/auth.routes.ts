@@ -2,5 +2,5 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 
 export const authRoutes: FastifyPluginAsyncZod = async (_fastify) => {
-  // TODO: Register auth endpoints (login, logout, session)
+    // TODO: Register auth endpoints (login, logout, session)
 };

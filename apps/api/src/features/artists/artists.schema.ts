@@ -1,6 +1,20 @@
-// TODO: Artists Zod schemas will be added in upcoming prompts
-import { z } from 'zod';
-
-export const ArtistSchema = z.object({
-  // TODO: Add artist validation fields
-});
+// Artists schemas imported and re-exported from @kalasquare/shared
+export {
+  artistCreateSchema,
+  artistUpdateSchema,
+  artistPublishSchema,
+  artistMediaSchema,
+  artistWorkSchema,
+  artistSocialSchema,
+  ArtistClassEnum,
+  BudgetRangeEnum,
+  ArtistStatusEnum,
+  MediaTypeEnum,
+  WorkKindEnum,
+  type ArtistCreateInput,
+  type ArtistUpdateInput,
+  type ArtistPublishInput,
+  type ArtistMediaInput,
+  type ArtistWorkInput,
+  type ArtistSocialInput,
+} from '@kalasquare/shared';

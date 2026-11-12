@@ -1,50 +1,60 @@
-# Code Standards
+# Code Standards - Kalasquare
 
 ## General
 
 - Keep modules small and single-purpose.
-- Fix root causes — do not layer workarounds.
-- Do not mix unrelated concerns in one component or route.
-- Respect the system boundaries defined in `architecture-context.md`.
+- Fix root causes. Do NOT layer workarounds.
+- Do NOT mix unrelated concerns in one component or route.
+- Respect system boundaries in `architecture-context.md`.
 
 ## TypeScript
 
 - Strict mode is required throughout the project.
-- Avoid `any`; use explicit interfaces or narrowly scoped types.
-- Validate unknown external input at system boundaries before trusting it.
-- Use `interface` for object contracts.
+- Avoid `any`. Use explicit interfaces or narrowly scoped types.
+- Validate unknown external input at system boundaries with Zod before trusting it.
+- Use `interface` for object contracts, `type` for unions.
 
-## Next.js
+## Next.js 16
 
 - Default to React Server Components.
 - Add `"use client"` only when the component needs browser interactivity, hooks, or real-time state.
 - Keep route handlers focused on a single responsibility.
 - Long-running work belongs in background tasks, not in request handlers.
 
+## Backend - Feature-First + Layered
+
+- `*.routes.ts`: Only define routes + attach Zod schema. No logic.
+- `*.controller.ts`: Only handle req/res, call service, return response shape.
+- `*.service.ts`: Business logic only. Status logic (draft / pending / live), slug generation, completeness calculation.
+- `*.repository.ts`: Only Drizzle queries. No business logic.
+- `*.schema.ts`: Zod schema + DTO. Export type with `z.infer`.
+- `*.types.ts`: Extra types if needed.
+
 ## Styling
 
-- Use CSS custom property tokens defined in `globals.css` — no raw Tailwind color classes like `zinc-*` or hardcoded hex values.
-- Reference tokens through their Tailwind utility names: `bg-base`, `text-copy-primary`, `border-surface-border`, `text-brand`, etc.
-- Maintain the border radius scale: `rounded-xl` for small elements, `rounded-2xl` for cards, `rounded-3xl` for modals.
+- Use Tailwind tokens. Do NOT use hardcoded hex or raw Tailwind color classes like `zinc-*`.
+- Colors: Background `#f3f3f5`, Card white, Coral `#eb4e62`. Define tokens in tailwind config.
+- Radius: Small 10px, Card 16-20px.
 
 ## API Routes
 
-- Validate and parse request input before any logic runs.
-- Enforce auth and project ownership checks before any mutation.
-- Return consistent, predictable response shapes.
-- Keep route handlers thin — push complexity into shared modules or background tasks.
+- Validate and parse request input with Zod before any logic runs.
+- Enforce auth and ownership checks before any mutation.
+- Return consistent response shapes.
+- Keep route handlers thin. Push complexity into service.
 
 ## Data and Storage
 
-- Project metadata and relationships belong in PostgreSQL via Prisma.
-- Canvas snapshots and generated specs belong in Vercel Blob; Prisma stores only the blob URL reference.
-- Do not store large generated content directly in the database.
-- Task run records are first-class relational data — treat ownership and run IDs as verified before any token issuance.
+- Artists, Venues, Events, Enquiries belong in PostgreSQL via Drizzle.
+- Images belong in file storage. Database stores only URL.
+- Do NOT store large content directly in database.
+- Home sections store ordered IDs in JSONB.
 
 ## File Organization
 
-- `lib/` — shared infrastructure: Prisma client, auth helpers, utilities.
-- `trigger/` — all durable background tasks and AI workflows.
-- `components/` — UI composition only; no business logic.
-- `app/api/` — route handlers for auth, triggering, and persistence.
+- `apps/api/src/features/<feature>/` - 6 files for that feature.
+- `apps/api/src/common/` - Shared errors, middlewares, utils.
+- `apps/api/src/lib/` - db, logger, storage, auth.
+- `packages/shared/` - Shared Zod schemas.
+- `packages/db/` - Drizzle schema.
 - Name files after the responsibility they contain, not the technology.

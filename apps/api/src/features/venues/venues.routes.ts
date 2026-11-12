@@ -2,5 +2,5 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 
 export const venuesRoutes: FastifyPluginAsyncZod = async (_fastify) => {
-  // TODO: Register venue management and listing endpoints
+    // TODO: Register venue management and listing endpoints
 };

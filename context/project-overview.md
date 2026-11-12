@@ -1,91 +1,78 @@
-# Ghost AI
+# Project Overview - Kalasquare
 
 ## Overview
 
-Ghost AI is a real-time collaborative system design workspace. Users describe a system in plain English, an AI agent maps that system onto a shared canvas, collaborators refine the architecture, and the app generates a technical specification from the resulting graph.
+Kalasquare is a talent listing platform. Visitors discover artists, venues, and events on the Home Page. Admin manages the Home Page and Artist profiles. When an artist is published, it appears on the Home Page immediately. When a visitor clicks it, the full Artist Profile opens.
 
 ## Goals
 
-1. Let authenticated users create and manage architecture projects.
-2. Provide a collaborative real-time canvas for system design.
-3. Let users import prebuilt starter system designs into the canvas.
-4. Let AI generate an initial architecture from a natural language prompt.
-5. Let collaborators refine the generated architecture.
-6. Convert the final graph into a persistent Markdown technical spec.
+1. Visitor can see Home Page with Hero, Platinum Artists, Categories, Spotlights, Events, Rising Artists, Venues.
+2. Visitor can open an Artist Profile from the Home Page and see all details - videos, gallery, fanbase, awards, FAQs, reviews.
+3. Visitor can send an enquiry for an artist.
+4. Admin can add, edit, delete, verify, and publish artists.
+5. Admin can control Home Page sections - order, selection, images.
+6. Admin save must update the live site immediately.
 
 ## Core User Flow
 
-1. User signs in.
-2. User creates or selects a project.
-3. User enters the project workspace.
-4. User optionally imports a starter system design template into the canvas.
-5. User prompts the AI to generate or extend the system design.
-6. AI generates nodes and edges in the shared canvas.
-7. Collaborators edit and refine the design.
-8. User triggers spec generation.
-9. App persists the generated Markdown spec.
-10. User reviews or downloads the spec.
+1. Visitor opens Home Page.
+2. Visitor browses by category - Actor, Singer, Dancer, etc. - or Platinum / Rising sections.
+3. Visitor clicks an artist card.
+4. Artist Profile opens - `/top-creators/sahil-badal`
+5. Visitor sees videos, gallery, fanbase, awards, FAQs, reviews.
+6. Visitor sends enquiry.
+7. Admin logs in, opens Artists -> Add Artist, fills all details, clicks Save and Publish.
+8. Artist appears on Home Page immediately.
 
 ## Features
 
-### Authentication and Projects
+### Public Home Page
 
-- User sign-in and route protection.
-- Project creation, ownership, and collaborator access.
-- Project list and workspace navigation.
+- Header: Logo, Search, City dropdown, Sign In, Hamburger. Nav: Top Creators, Hire Artists, Events & Shows, Venues.
+- Hero: Left text + 2 buttons, Right 4 gradient tiles + 3 overlapping cards.
+- Platinum Artists, New on KalaSquare, Find Talent By Category (12 categories), Stage & Spotlights, Featured Events, Rising Artists, Venues, FAQ, Footer.
+- 12 Categories: Actor, Singer, Musician, Band, Dancer, Comedian, Emcee, Speaker, Magician, DJ, Photographer, Crew / Company.
 
-### Collaborative Canvas
+### Artist Profile Page - `/top-creators/[slug]`
 
-- Shared real-time canvas using Liveblocks and React Flow.
-- Live cursors, presence indicators, and node/edge editing.
-- Canvas snapshots persisted to the filesystem.
+- Hero: Photo + Rating + Badge (Platinum golden / Verified blue) + Name + Tagline + City + Categories + Specializations + CTA.
+- Tabs: About, Fanbase, Gallery, Videos, Reels, Spotify, Work, IMDb, Reviews.
+- Sections: About + Physical Stats, Quick Stats, Fanbase Donut Chart, Gallery (4 + Lightbox), Latest Videos, Reels, Top Songs (Singer only), Campaigns + Awards, IMDb (Actor only), FAQs (Platinum only), Reviews, Similar Artists.
 
-### Starter System Designs
+### Admin - Add / Edit Artist
 
-- A curated library of prebuilt system design templates.
-- Users can import a starter template into the canvas at any point during editing.
-- Templates are static canvas snapshots loaded directly into the active room.
-- Covers common patterns: monolith, microservices, event-driven, serverless, and more.
+- Basic Details, Class and Visibility, About, Quick Stats, Physical Stats, Photo Gallery (max 12), Videos (max 6), Short Clips (max 8), Previous Campaigns (max 6), Awards (max 8), FAQs (max 8), Social and Links, Fanbase by Platform, SEO.
+- Bottom sticky bar: Profile Completeness % + Cancel + Save as Draft + Save and Publish.
 
-### AI Architecture Generation
+### Admin - Home Page Manager
 
-- AI generates a system design from a user-supplied prompt.
-- Output is structured as canvas nodes and edges written into the shared room.
-- Generation runs as a durable background task.
+- Sections: Hero, Platinum, Category, Spotlight, Events, Rising, Venues.
+- Search + Select, Move Up / Down, Publish / Discard.
 
-### Spec Generation
+### Enquiries
 
-- The current canvas graph is converted into a Markdown technical specification.
-- Specs are persisted as files and linked to the project in the database.
-- Users can view and download generated specs.
+- Visitor sends enquiry from Home Page or Artist Profile. Admin sees it in Admin -> Enquiries.
 
 ## Scope
 
 ### In Scope
 
-- Authentication and route protection
-- Project creation and ownership
-- Collaborator access by project
-- Starter system design template library and import
-- Real-time shared canvas with nodes, edges, and presence
-- AI-powered architecture generation from prompts
-- AI-powered Markdown spec generation from the canvas graph
-- Persistent storage for project metadata and generated artifacts
-- Spec download
+- Public Home Page, Artist Profile Page, Category Listing.
+- Admin Home Page Manager, Admin Artists CRUD, Admin Enquiries.
+- Venues, Events, SEO, Uploads, Auth (Admin login).
+- Publish / Draft / Pending logic, Mobile responsive.
 
 ### Out Of Scope
 
-- Billing and subscription systems
-- Enterprise permission tiers beyond owner and collaborator
-- Versioned spec history and review workflows
-- Production object storage migration
-- Mobile-native applications
+- Billing / Payment gateway.
+- Artist self-signup - Phase 1 only Admin adds artists.
+- Mobile-native app.
+- Real WhatsApp automation - Only UI placeholder in Phase 1.
 
-## Success Criteria
+## Success Criteria - Acceptance Test
 
-1. A signed-in user can create and open a project.
-2. Multiple users can collaborate in the same canvas simultaneously.
-3. A user can import a prebuilt starter design into the canvas.
-4. AI can generate an architecture into the shared room from a prompt.
-5. The graph can be converted into a persisted Markdown spec.
-6. Project metadata and generated artifacts are stored in the correct layers.
+1. Admin creates artist -> Save as Draft -> Public URL returns 404.
+2. Admin sets Verified ON + Publish -> Live profile opens at `/top-creators/test-artist`.
+3. Admin edits tagline + photo -> Save -> Live page refresh shows new data.
+4. Admin unpublishes -> Public URL returns 404 again.
+5. All 4 steps pass on mobile as well.

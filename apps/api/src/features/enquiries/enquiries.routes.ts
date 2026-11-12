@@ -2,5 +2,5 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 
 export const enquiriesRoutes: FastifyPluginAsyncZod = async (_fastify) => {
-  // TODO: Register booking and artist enquiry endpoints
+    // TODO: Register booking and artist enquiry endpoints
 };

@@ -1,6 +1,11 @@
-// TODO: Home Zod schemas will be added in upcoming prompts
-import { z } from 'zod';
-
-export const HomeSectionSchema = z.object({
-  // TODO: Add home section validation fields
-});
+// Home section schemas imported and re-exported from @kalasquare/shared
+export {
+  homeSectionUpdateSchema,
+  homeSectionSchema,
+  heroImageItemSchema,
+  SectionKeyEnum,
+  type HomeSectionUpdateInput,
+  type HomeSectionDTO,
+  type HeroImageItem,
+  type SectionKey,
+} from '@kalasquare/shared';

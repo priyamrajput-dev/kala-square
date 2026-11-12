@@ -1,6 +1,11 @@
-// TODO: Enquiries Zod schemas will be added in upcoming prompts
-import { z } from 'zod';
-
-export const CreateEnquirySchema = z.object({
-  // TODO: Add enquiry validation fields
-});
+// Enquiries schemas imported and re-exported from @kalasquare/shared
+export {
+  enquiryCreateSchema,
+  enquiryUpdateStatusSchema,
+  enquirySchema,
+  EnquiryStatusEnum,
+  type EnquiryCreateInput,
+  type EnquiryUpdateStatusInput,
+  type EnquiryDTO,
+  type EnquiryStatus,
+} from '@kalasquare/shared';

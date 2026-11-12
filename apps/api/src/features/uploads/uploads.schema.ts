@@ -1,6 +1,9 @@
-// TODO: Uploads Zod schemas will be added in upcoming prompts
 import { z } from 'zod';
 
-export const UploadFileSchema = z.object({
-  // TODO: Add file upload validation fields
+export const UploadFileResponseSchema = z.object({
+  url: z.string().url(),
+  filename: z.string(),
+  size: z.number(),
+  mimeType: z.string(),
 });
+export type UploadFileResponse = z.infer<typeof UploadFileResponseSchema>;

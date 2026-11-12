@@ -1,64 +1,80 @@
-# Progress Tracker
+# Progress Tracker - Kalasquare
 
 Update this file whenever the current phase, active feature, or implementation state changes.
 
 ## Current Phase
 
-- Setup Done (Prompt 1: Monorepo & Infrastructure Setup - DONE)
+- Phase 2 - Prompt 2: DB Schema + Drizzle + Shared Zod Schemas - DONE
 
 ## Current Goal
 
-- Ready for Prompt 2 (Database Schema & Migrations / Next Feature)
+- Ready for Prompt 3: Public Home Page Implementation
 
 ## Completed
 
 - **Prompt 1: Monorepo & Infrastructure Setup (DONE)**
-  - Setup pnpm workspace monorepo (`apps/*`, `packages/*`).
-  - Created root `package.json` with scripts: `dev`, `build`, `lint`, `typecheck`.
-  - Configured shared packages:
-    - `packages/config`: shared tsconfig configurations (`base`, `node`, `next`).
-    - `packages/shared`: shared Zod schemas & TypeScript types (`HealthResponseSchema`, `PaginationQuerySchema`, etc.).
-    - `packages/db`: Drizzle ORM configuration (`drizzle.config.ts`), client factory, and schema placeholder (no active DB connection / no tables created in Prompt 1).
-  - Setup Fastify backend in `apps/api`:
-    - Fastify server running on port 3001.
-    - Zod validation and serialization with `fastify-type-provider-zod`.
-    - Auto-generated OpenAPI / Swagger UI served at `/docs`.
-    - Registered 6 feature modules with feature-first 6-file structure (routes, controller, service, repository, schema, types with TODOs):
-      - `auth`
-      - `artists`
-      - `home`
-      - `enquiries`
-      - `venues`
-      - `uploads`
-  - Setup Next.js 16 (LTS Stable) frontend in `apps/web`:
-    - Next.js 16 App Router with Tailwind CSS on port 3000.
-    - Created placeholder pages returning "Coming in next prompt":
-      - `/` (Home)
-      - `/top-creators/[slug]` (Artist profile)
-      - `/admin` (Admin dashboard)
-      - `/admin/artists` (Admin artists management)
-      - `/admin/home` (Admin homepage manager)
-  - Created `.env.example` and environment configuration.
+  - Reference HTML analyzed (`Kalasquare_Home_Page_Manager_2.html`).
+  - 14 screenshots analyzed (Home Page + Add Artist Form).
+  - Tech stack locked: PNPM monorepo, Next.js 16 LTS + Tailwind CSS, Fastify + Zod + Swagger, PostgreSQL + Drizzle ORM.
+  - Setup `apps/web` (Next.js 16 App Router on :3000) with placeholder routes.
+  - Setup `apps/api` (Fastify on :3001) with Zod Type Provider and Swagger UI on `/docs`.
+  - Created 6 feature modules with 6-file structure (TODOs).
+  - Created `packages/shared`, `packages/db`, `packages/config`.
+  - Context files synced with single source of truth.
+
+- **Prompt 2: DB Schema + Drizzle + Shared Zod Schemas (DONE)**
+  - Created all 9 Drizzle PostgreSQL tables in `packages/db/src/schema/`:
+    - `artists.ts` (33 columns, slug unique, JSONB categories/specializations/languages, budgetRange, artistClass, completeness)
+    - `artist_media.ts` (8 columns, artistId FK cascade, type gallery/video/clip, url, sortOrder)
+    - `artist_work.ts` (11 columns, artistId FK cascade, kind campaign/award/faq, title/question, description/answer, year, category, imageUrl)
+    - `artist_social.ts` (23 columns, artistId FK unique cascade, social URLs, follower labels, full SEO fields & score)
+    - `venues.ts` (13 columns, slug unique, city, state, capacity, priceLabel, imageUrl, description, status)
+    - `events.ts` (13 columns, slug unique, date, city, venueName, category, badge, imageUrl, description, status)
+    - `home_sections.ts` (8 columns, sectionKey unique, title, orderedIds JSONB, heroImages JSONB, isVisible)
+    - `enquiries.ts` (12 columns, artistId FK nullable, name, phone, email, city, eventDate, budgetRange, message, status)
+    - `users.ts` (7 columns, email unique, passwordHash, name, role admin)
+  - Generated initial migration `0000_pale_stick.sql` via `drizzle-kit generate`.
+  - Created shared Zod schemas with TypeScript types in `packages/shared/src/schemas/`:
+    - `artist.schema.ts` (`artistCreateSchema`, `artistUpdateSchema`, `artistPublishSchema`, `artistMediaSchema`, `artistWorkSchema`, `artistSocialSchema`)
+    - `home.schema.ts` (`homeSectionUpdateSchema`, `homeSectionSchema`, `heroImageItemSchema`)
+    - `enquiry.schema.ts` (`enquiryCreateSchema`, `enquiryUpdateStatusSchema`, `enquirySchema`)
+    - `auth.schema.ts` (`adminLoginSchema`, `authResponseSchema`)
+    - `venue.schema.ts` (`venueCreateSchema`, `venueUpdateSchema`)
+    - `event.schema.ts` (`eventCreateSchema`, `eventUpdateSchema`)
+  - Updated all feature schema files in `apps/api/src/features/` (`artists`, `home`, `enquiries`, `auth`, `venues`) to import and re-export from `@kalasquare/shared`.
+  - Both `pnpm typecheck` and `pnpm build` pass with 0 errors.
 
 ## In Progress
 
-- None (Prompt 1 completed).
+- None (Prompt 2 completed).
 
 ## Next Up
 
-- Prompt 2: Database tables & Drizzle schema definitions, migrations, and model wiring.
+- Prompt 3 - Public Home Page
+- Prompt 4 - Public Artist Profile Page - `/top-creators/[slug]`
+- Prompt 5 - Admin Add / Edit Artist Form - Videos 6, Clips 8, Campaigns 6, Awards 8, FAQs 8, Gallery 12, Fanbase, SEO
+- Prompt 6 - Admin Home Page Manager + View All Artists + Enquiries
+- Prompt 7 - Backend APIs - Artists CRUD + Publish / Draft + Uploads + Home APIs
+- Prompt 8 - Live Deploy + Testing + Acceptance
 
 ## Open Questions
 
-- None at this stage.
+- Real auth provider? Custom JWT or NextAuth? - Decide in Prompt 7
+- Image storage? Local or S3 / Cloudinary? - Decide in Prompt 7
+- WhatsApp automation? Phase 1 only placeholder
 
 ## Architecture Decisions
 
-- **Tech Stack Locked**: Next.js 16 LTS + Tailwind CSS (web), Fastify + Zod + Swagger (api), Drizzle ORM + Postgres (db), pnpm workspace monorepo.
-- **Feature-first Backend Architecture**: Every feature maintains strict separation of concerns across 6 layers (`routes` -> `controller` -> `service` -> `repository`, validated by `schema`, typed by `types`).
-- **Swagger Documentation**: Swagger generated automatically from Zod schemas via `fastify-type-provider-zod` without manual Swagger/OpenAPI writing.
+- PNPM only, not Bun - Stability + Vercel support
+- Next.js 16 LTS Stable - Current LTS
+- Zod only for validation, not TypeBox - Everyone knows Zod, Swagger from Zod
+- Backend Feature-First: routes -> controller -> service -> repository
+- Design: Screenshots + HTML are source of truth, 1 pixel difference not allowed
+- Six File Methodology: context/ folder is source of truth
 
 ## Session Notes
 
-- Monorepo initialized and verified with `pnpm install`, `pnpm typecheck`, `pnpm build`, and local verification of web (port 3000) and Swagger API docs (port 3001/docs).
-
+- User previously shared Ghost AI files - They were only a template. Content is Kalasquare, not Ghost AI.
+- Clerk / Prisma / Liveblocks / Dark Theme must NOT appear in Kalasquare.
+- Prompts are in English, conversation with user is in Hinglish.
+- Prompts are given one by one, not all at once.
