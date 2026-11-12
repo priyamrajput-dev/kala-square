@@ -1,0 +1,18 @@
+{
+  "name": "kalasquare",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kalasquare - Artist Management & Booking Marketplace Monorepo",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @kalasquare/web --filter @kalasquare/api dev",
+    "dev:web": "pnpm --filter @kalasquare/web dev",
+    "dev:api": "pnpm --filter @kalasquare/api dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "packageManager": "pnpm@11.2.2",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

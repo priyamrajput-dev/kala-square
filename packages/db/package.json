@@ -1,0 +1,28 @@
+{
+  "name": "@kalasquare/db",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Database schema and Drizzle ORM configuration for Kalasquare",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.45.4",
+    "postgres": "^3.4.5"
+  },
+  "devDependencies": {
+    "@kalasquare/config": "workspace:*",
+    "@types/node": "^22.13.4",
+    "drizzle-kit": "^0.31.11",
+    "typescript": "^5.7.3"
+  }
+}
