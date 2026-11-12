@@ -1,2 +1,9 @@
-// UI Components placeholder for apps/web
-export {};
+export { default as Header } from './Header';
+export { default as Hero } from './Hero';
+export { default as ArtistCard } from './ArtistCard';
+export { default as CategoryCard } from './CategoryCard';
+export { default as EventCard } from './EventCard';
+export { default as VenueCard } from './VenueCard';
+export { default as FAQSection } from './FAQSection';
+export { default as Footer } from './Footer';
+export { default as HomeSections } from './HomeSections';

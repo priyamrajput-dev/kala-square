@@ -1,8 +1,12 @@
+import type { Metadata } from 'next';
+import HomeSections from '@/components/HomeSections';
+
+export const metadata: Metadata = {
+  title: 'KalaSquare - Find Artists, Venues & Events in India',
+  description:
+    'Discover top artists, singers, actors, dancers, venues and events. Book verified talent for your event.',
+};
+
 export default function HomePage() {
-    return (
-        <main className="flex min-h-screen flex-col items-center justify-center p-8 text-center">
-            <h1 className="text-3xl font-bold tracking-tight mb-4">Kalasquare</h1>
-            <p className="text-lg text-neutral-600">Coming in next prompt</p>
-        </main>
-    );
+  return <HomeSections />;
 }
