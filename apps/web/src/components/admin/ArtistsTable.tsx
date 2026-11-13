@@ -21,6 +21,13 @@ import {
 import { mockArtistProfiles } from '@/lib/mock-data';
 import { ArtistProfile } from '@/lib/types';
 import { calculateCompleteness } from '@/lib/completeness';
+import {
+  fetchAdminArtists,
+  deleteArtist,
+  duplicateArtist,
+  publishArtist,
+  unpublishArtist,
+} from '@/lib/api';
 import ConfirmModal from './ConfirmModal';
 
 interface ManagedArtist {
@@ -89,69 +96,92 @@ export default function ArtistsTable() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // 1. Initial Load: Merge mockArtistProfiles and localStorage
-  useEffect(() => {
-    const loadArtists = () => {
-      // Base mock artists mapped to ManagedArtist
-      const baseList: ManagedArtist[] = mockArtistProfiles.map((p, idx) => ({
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        photoUrl: p.photoUrl,
-        categories: p.categories,
-        city: p.city,
-        artistClass: (p.artistClass as ManagedArtist['artistClass']) || 'platinum',
-        status: 'published',
-        completeness: calculateCompleteness(p as any).score || (idx === 0 ? 95 : 85),
-        priceNumeric: 50000 + idx * 25000,
-        priceLabel: p.priceLabel || 'From ₹50,000',
-        updatedAt: '2026-11-12',
-        rawProfile: p,
-      }));
-
-      // Read from localStorage key 'kalasquare_admin_artists'
-      if (typeof window !== 'undefined') {
-        try {
-          const raw = localStorage.getItem('kalasquare_admin_artists');
-          if (raw) {
-            const savedList = JSON.parse(raw);
-            if (Array.isArray(savedList)) {
-              savedList.forEach((item: any) => {
-                const existingIdx = baseList.findIndex(
-                  (a) => a.id === item.id || a.slug === item.slug
-                );
-                const managedItem: ManagedArtist = {
-                  id: item.id || `art-${Date.now()}`,
-                  name: item.name || 'Unnamed Artist',
-                  slug: item.slug || 'unnamed',
-                  photoUrl: item.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-                  categories: item.categories || ['Singer'],
-                  city: item.city || 'Delhi',
-                  artistClass: item.artistClass || 'rising',
-                  status: item.status || 'draft',
-                  completeness: calculateCompleteness(item).score,
-                  priceNumeric: Number(item.priceFrom) || 50000,
-                  priceLabel: item.priceFrom ? `From ₹${Number(item.priceFrom).toLocaleString()}` : 'From ₹50,000',
-                  updatedAt: (item.updatedAt || new Date().toISOString()).split('T')[0],
-                  rawProfile: item,
-                };
-
-                if (existingIdx >= 0) {
-                  baseList[existingIdx] = managedItem;
-                } else {
-                  baseList.unshift(managedItem);
-                }
-              });
-            }
-          }
-        } catch (e) {
-          console.error('Failed to parse saved artists from localStorage', e);
-        }
+  // 1. Initial Load: Fetch from API with fallback to mockArtistProfiles and localStorage
+  const loadArtists = async () => {
+    try {
+      const res = await fetchAdminArtists();
+      if (res && res.data && res.data.length > 0) {
+        const mapped: ManagedArtist[] = res.data.map((item: any, idx: number) => ({
+          id: item.id,
+          name: item.name,
+          slug: item.slug,
+          photoUrl: item.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+          categories: item.categories || ['Singer'],
+          city: item.city || 'Delhi',
+          artistClass: (item.artistClass as ManagedArtist['artistClass']) || 'standard',
+          status: item.status === 'live' || item.status === 'published' ? 'published' : 'draft',
+          completeness: item.completeness || 90,
+          priceNumeric: 50000 + idx * 10000,
+          priceLabel: item.priceLabel || 'From ₹50,000',
+          updatedAt: (item.updatedAt || new Date().toISOString()).split('T')[0],
+        }));
+        setArtists(mapped);
+        return;
       }
+    } catch {
+      // API fallback
+    }
 
-      setArtists(baseList);
-    };
+    // Base mock artists mapped to ManagedArtist
+    const baseList: ManagedArtist[] = mockArtistProfiles.map((p, idx) => ({
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      photoUrl: p.photoUrl,
+      categories: p.categories,
+      city: p.city,
+      artistClass: (p.artistClass as ManagedArtist['artistClass']) || 'platinum',
+      status: 'published',
+      completeness: calculateCompleteness(p as any).score || (idx === 0 ? 95 : 85),
+      priceNumeric: 50000 + idx * 25000,
+      priceLabel: p.priceLabel || 'From ₹50,000',
+      updatedAt: '2026-11-12',
+      rawProfile: p,
+    }));
 
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('kalasquare_admin_artists');
+        if (raw) {
+          const savedList = JSON.parse(raw);
+          if (Array.isArray(savedList)) {
+            savedList.forEach((item: any) => {
+              const existingIdx = baseList.findIndex(
+                (a) => a.id === item.id || a.slug === item.slug
+              );
+              const managedItem: ManagedArtist = {
+                id: item.id || `art-${Date.now()}`,
+                name: item.name || 'Unnamed Artist',
+                slug: item.slug || 'unnamed',
+                photoUrl: item.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+                categories: item.categories || ['Singer'],
+                city: item.city || 'Delhi',
+                artistClass: item.artistClass || 'rising',
+                status: item.status || 'draft',
+                completeness: calculateCompleteness(item).score,
+                priceNumeric: Number(item.priceFrom) || 50000,
+                priceLabel: item.priceFrom ? `From ₹${Number(item.priceFrom).toLocaleString()}` : 'From ₹50,000',
+                updatedAt: (item.updatedAt || new Date().toISOString()).split('T')[0],
+                rawProfile: item,
+              };
+
+              if (existingIdx >= 0) {
+                baseList[existingIdx] = managedItem;
+              } else {
+                baseList.unshift(managedItem);
+              }
+            });
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse saved artists from localStorage', e);
+      }
+    }
+
+    setArtists(baseList);
+  };
+
+  useEffect(() => {
     loadArtists();
   }, []);
 
@@ -230,20 +260,44 @@ export default function ArtistsTable() {
 
   // 4. Actions
   // Toggle Publish / Unpublish
-  const handleToggleStatus = (id: string) => {
+  const handleToggleStatus = async (id: string) => {
+    const target = artists.find((a) => a.id === id);
+    if (!target) return;
+    const isPub = target.status === 'published';
+    try {
+      if (isPub) {
+        await unpublishArtist(id);
+      } else {
+        await publishArtist(id);
+      }
+    } catch {
+      // Fallback
+    }
+
+    const nextStatus = isPub ? 'draft' : 'published';
     const updated = artists.map((a) => {
       if (a.id === id) {
-        const nextStatus = a.status === 'published' ? 'draft' : 'published';
-        showToast(`Artist "${a.name}" is now ${nextStatus === 'published' ? 'Published' : 'Draft'}`);
         return { ...a, status: nextStatus as 'published' | 'draft' };
       }
       return a;
     });
     persistArtistsToStorage(updated);
+    showToast(`Artist "${target.name}" is now ${nextStatus === 'published' ? 'Published' : 'Draft'}`);
   };
 
   // Duplicate Artist
-  const handleDuplicate = (artist: ManagedArtist) => {
+  const handleDuplicate = async (artist: ManagedArtist) => {
+    try {
+      const res = await duplicateArtist(artist.id);
+      if (res) {
+        showToast(`Created duplicate: "${artist.name} (Copy)"`);
+        await loadArtists();
+        return;
+      }
+    } catch {
+      // Fallback
+    }
+
     const copySlug = `${artist.slug}-copy-${Math.floor(Math.random() * 900 + 100)}`;
     const copyId = `art-${Date.now()}`;
     const copyName = `${artist.name} (Copy)`;
@@ -263,9 +317,14 @@ export default function ArtistsTable() {
   };
 
   // Delete Single Artist
-  const handleDeleteSingle = () => {
+  const handleDeleteSingle = async () => {
     if (!deleteTargetId) return;
     const target = artists.find((a) => a.id === deleteTargetId);
+    try {
+      await deleteArtist(deleteTargetId);
+    } catch {
+      // Fallback
+    }
     const updated = artists.filter((a) => a.id !== deleteTargetId);
     persistArtistsToStorage(updated);
     setSelectedIds((prev) => prev.filter((id) => id !== deleteTargetId));

@@ -3,6 +3,7 @@
 import React, { useRef, useState } from 'react';
 import Image from 'next/image';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { uploadFile } from '@/lib/api';
 
 interface ImageUploadProps {
     label: string;
@@ -27,20 +28,25 @@ export default function ImageUpload({
     const [urlInputOpen, setUrlInputOpen] = useState(false);
     const [customUrl, setCustomUrl] = useState('');
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             if (file.size > 5 * 1024 * 1024) {
                 alert('File size exceeds 5MB limit. Please choose a smaller photo.');
                 return;
             }
-            const reader = new FileReader();
-            reader.onload = () => {
-                if (typeof reader.result === 'string') {
-                    onChange(reader.result);
-                }
-            };
-            reader.readAsDataURL(file);
+            try {
+                const res = await uploadFile(file);
+                onChange(res.url);
+            } catch {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    if (typeof reader.result === 'string') {
+                        onChange(reader.result);
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
         }
     };
 

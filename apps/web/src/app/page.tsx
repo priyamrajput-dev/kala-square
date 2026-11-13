@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import HomeSections from '@/components/HomeSections';
+import { fetchPublicHome } from '@/lib/api';
 
 export const metadata: Metadata = {
   title: 'KalaSquare - Find Artists, Venues & Events in India',
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
     'Discover top artists, singers, actors, dancers, venues and events. Book verified talent for your event.',
 };
 
-export default function HomePage() {
-  return <HomeSections />;
+export default async function HomePage() {
+  const homeData = await fetchPublicHome();
+  return <HomeSections initialData={homeData} />;
 }

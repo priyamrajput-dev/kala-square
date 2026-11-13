@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Phase 6 - Prompt 6: Admin Home Page Manager + View All Artists + Enquiries - DONE
+- Phase 7 - Prompt 7: Real Backend APIs + Full Frontend Integration - DONE
 
 ## Current Goal
 
-- Ready for Prompt 7: Backend APIs - Artists CRUD + Publish / Draft + Uploads + Home APIs
+- Ready for Prompt 8: Live Deploy + Production Configuration + End-to-End Acceptance Testing
 
 ## Completed
 
@@ -156,13 +156,46 @@ Update this file whenever the current phase, active feature, or implementation s
     - Updated `AdminLayout.tsx` so Artists, Home Page Manager, and Enquiries sidebar links are active.
   - Verified `pnpm typecheck` (0 errors across monorepo) and Next.js static build (`pnpm build`).
 
+- **Prompt 7: Real Backend APIs + Full Frontend Integration (DONE)**
+  - **Database & Drizzle ORM (`packages/db`)**:
+    - Created `home_configs` table (`homeConfigs`) for draft and published JSONB configurations.
+    - Added `code` and `price_from` to `venues` table.
+    - Added `event_type` and `notes` (JSONB) to `enquiries` table.
+    - Altered `artist_social.seo_meta_title` to `varchar(255)` for robust metadata handling.
+    - Generated & ran migrations `0000_pale_stick.sql` and `0001_slippery_rocket_raccoon.sql`.
+  - **Fastify Backend Architecture (`apps/api`)**:
+    - Implemented strict 6-file feature architecture across all domains:
+      - `auth/`: `routes`, `controller`, `service`, `repository`, `schema`, `types` (JWT 7-day tokens, bcrypt admin login, `/api/auth/me`, `/api/auth/logout`, `requireAdmin` middleware).
+      - `artists/`: `routes`, `controller`, `service`, `repository`, `schema`, `types` (Public: `GET /api/public/artists`, `GET /api/public/artists/:slug`; Admin: CRUD, duplicate with `(Copy)`, publish/unpublish transitions, 0-100% completeness score calculation).
+      - `home/`: `routes`, `controller`, `service`, `repository`, `schema`, `types` (`GET /api/public/home`, `GET /api/admin/home-page`, `PUT /api/admin/home-page`, `POST /api/admin/home-page/publish`).
+      - `enquiries/`: `routes`, `controller`, `service`, `repository`, `schema`, `types` (`POST /api/public/enquiries` with 5/hr rate limiting, `GET /api/admin/enquiries` with status/search filter, `PATCH /:id/status`, `POST /:id/notes`, `DELETE /:id`).
+      - `venues/`: `routes`, `controller`, `service`, `repository`, `schema`, `types` (`GET /api/public/venues`, `GET /api/admin/venues`, `POST /api/admin/venues`, `PUT /api/admin/venues/:id`, `DELETE /api/admin/venues/:id`).
+      - `uploads/`: `routes`, `controller`, `service`, `schema` (Multipart file upload with `@fastify/multipart`, validating JPG/PNG/WebP max 5MB, static file serving via `@fastify/static` at `/uploads/`).
+    - Configured Swagger documentation with `fastify-type-provider-zod` at `/docs` (with `/api/docs` redirect).
+    - Health checks at `/health` and `/api/health`.
+    - Created comprehensive database seed script `apps/api/src/db/seed.ts` runnable with `pnpm db:seed`.
+  - **Frontend Real API Integration (`apps/web`)**:
+    - Implemented `apps/web/src/lib/auth.ts` (`login`, `logout`, `getToken`, `isLoggedIn`, `getAuthUser`).
+    - Built Admin Login UI at `/admin/login` and integrated route protection guards in `AdminLayout.tsx`.
+    - Created unified API client `apps/web/src/lib/api.ts` connecting frontend components to backend endpoints with graceful offline mock fallbacks.
+    - Connected Public Home Page Server Component (`apps/web/src/app/page.tsx`) to `fetchPublicHome()`.
+    - Connected Public Artist Profile Page (`apps/web/src/app/top-creators/[slug]/page.tsx`) to `fetchPublicArtistBySlug()` with Next.js `notFound()` on 404.
+    - Connected Admin Artists Table (`ArtistsTable.tsx`) to `fetchAdminArtists()`, API-driven publish/unpublish, duplicate, and delete.
+    - Connected Admin Artist Form (`ArtistForm.tsx`) to `createArtist()` / `updateArtist()` and image uploaders (`ImageUpload.tsx`, `GalleryUploader.tsx`) to `uploadFile()`.
+    - Connected Admin Home Page Manager (`/admin/home-page`) to `fetchAdminHome()`, `saveHome()`, and `publishHome()`.
+    - Connected Admin Enquiries Manager (`EnquiriesTable.tsx`) to `fetchEnquiries()`, status updates, and note appending.
+    - Connected Artist Profile Booking Enquiry Card (`EnquiryCard.tsx`) to `createEnquiry()`.
+  - **Verification & Acceptance**:
+    - All verification curl checks passed (Health, Swagger UI, Admin Login, Invalid Login 401, Public Artists list & detail, missing artist 404, Public Home config, Enquiry creation 201, Admin Artists, Admin Enquiries, Admin Venues, Save/Publish Home draft, Artist completeness, Duplicate, Delete, Publish/Unpublish status transitions, Multipart file uploads).
+    - `pnpm typecheck` passed with 0 errors across monorepo (`packages/db`, `packages/shared`, `packages/config`, `apps/api`, `apps/web`).
+    - `pnpm build` passed with all 13 Next.js routes optimized and static-rendered.
+
 ## In Progress
 
-- None (Prompt 6 completed).
+- None (Prompt 7 completed).
 
 ## Next Up
 
-- Prompt 7 - Backend APIs - Artists CRUD + Publish / Draft + Uploads + Home APIs
 - Prompt 8 - Live Deploy + Testing + Acceptance
 
 ## Open Questions

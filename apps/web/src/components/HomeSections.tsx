@@ -22,11 +22,19 @@ import {
 } from '@/lib/mock-data';
 import { HomeConfig, homeConfigSchema } from '@/lib/validators/home-config';
 
-export default function HomeSections() {
-  const [config, setConfig] = useState<HomeConfig>(mockHomeConfig);
+interface HomeSectionsProps {
+  initialData?: any;
+}
 
-  // Client-side hydration: read custom config from localStorage if present
+export default function HomeSections({ initialData }: HomeSectionsProps) {
+  const [config, setConfig] = useState<HomeConfig>(initialData?.config || mockHomeConfig);
+
+  // Client-side hydration: sync if initialData changes or fallback to localStorage
   useEffect(() => {
+    if (initialData?.config) {
+      setConfig(initialData.config);
+      return;
+    }
     if (typeof window !== 'undefined') {
       try {
         const raw = localStorage.getItem('kalasquare_home_config');
@@ -41,40 +49,48 @@ export default function HomeSections() {
         console.error('Failed to parse home config from localStorage', e);
       }
     }
-  }, []);
+  }, [initialData]);
 
-  // Filter Platinum Artists based on config
+  // Filter Platinum Artists based on API data or config
   const platinumArtists = (
-    config.platinum.artistIds.length > 0
+    initialData?.platinumArtists && initialData.platinumArtists.length > 0
+      ? initialData.platinumArtists
+      : config.platinum.artistIds.length > 0
       ? config.platinum.artistIds
-          .map((id) => mockArtists.find((a) => a.id === id || a.slug === id))
+          .map((id: string) => mockArtists.find((a) => a.id === id || a.slug === id))
           .filter(Boolean)
       : mockArtists.filter((a) => a.tier === 'platinum').slice(0, 4)
   ) as typeof mockArtists;
 
-  // Filter New Artists based on config
+  // Filter New Artists based on API data or config
   const newArtists = (
-    config.newTalent.artistIds.length > 0
+    initialData?.newArtists && initialData.newArtists.length > 0
+      ? initialData.newArtists
+      : config.newTalent.artistIds.length > 0
       ? config.newTalent.artistIds
-          .map((id) => mockArtists.find((a) => a.id === id || a.slug === id))
+          .map((id: string) => mockArtists.find((a) => a.id === id || a.slug === id))
           .filter(Boolean)
       : mockArtists.filter((a) => a.badgeType === 'new').slice(0, 4)
   ) as typeof mockArtists;
 
-  // Filter Rising Artists based on config
+  // Filter Rising Artists based on API data or config
   const risingArtists = (
-    config.rising.artistIds.length > 0
+    initialData?.risingArtists && initialData.risingArtists.length > 0
+      ? initialData.risingArtists
+      : config.rising.artistIds.length > 0
       ? config.rising.artistIds
-          .map((id) => mockArtists.find((a) => a.id === id || a.slug === id))
+          .map((id: string) => mockArtists.find((a) => a.id === id || a.slug === id))
           .filter(Boolean)
       : mockArtists.filter((a) => a.badgeType === 'rising').slice(0, 4)
   ) as typeof mockArtists;
 
-  // Filter Venues based on config
+  // Filter Venues based on API data or config
   const selectedVenues = (
-    config.venues.venueIds.length > 0
+    initialData?.venues && initialData.venues.length > 0
+      ? initialData.venues
+      : config.venues.venueIds.length > 0
       ? config.venues.venueIds
-          .map((id) => mockVenues.find((v) => v.id === id))
+          .map((id: string) => mockVenues.find((v) => v.id === id))
           .filter(Boolean)
       : mockVenues.slice(0, 3)
   ) as typeof mockVenues;

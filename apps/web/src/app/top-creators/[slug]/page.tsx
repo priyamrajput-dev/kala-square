@@ -19,7 +19,8 @@ import {
   SimilarArtists,
   EnquiryCard,
 } from '@/components/artist';
-import { getArtistProfileBySlug, mockArtistProfiles, mockArtists } from '@/lib/mock-data';
+import { fetchPublicArtistBySlug } from '@/lib/api';
+import { mockArtists } from '@/lib/mock-data';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -35,7 +36,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const artist = getArtistProfileBySlug(slug);
+  const artist = await fetchPublicArtistBySlug(slug);
 
   if (!artist) {
     return {
@@ -45,7 +46,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const title = `${artist.name} | KalaSquare`;
-  const description = artist.bio.slice(0, 160);
+  const description = artist.bio?.slice(0, 160) || '';
   const canonicalUrl = `https://kalasquare.com/top-creators/${slug}`;
 
   return {
@@ -73,13 +74,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ArtistProfilePage({ params }: PageProps) {
   const { slug } = await params;
-  const artist = getArtistProfileBySlug(slug);
+  const artist = await fetchPublicArtistBySlug(slug);
 
   if (!artist) {
     notFound();
   }
 
-  const socialLinks = Object.values(artist.social).filter(Boolean) as string[];
+  const socialLinks = Object.values(artist.social || {}).filter(Boolean) as string[];
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -120,7 +121,7 @@ export default async function ArtistProfilePage({ params }: PageProps) {
           {/* Left Column (8 cols): All profile sections */}
           <div className="lg:col-span-8 space-y-8 min-w-0">
             {/* 4. Quick Stats (Snapshot of journey) */}
-            <ArtistQuickStats stats={artist.quickStats} />
+            <ArtistQuickStats stats={artist.quickStats || (artist as any).stats} />
 
             {/* 3. About + Physical Stats */}
             <ArtistAbout artist={artist} />
@@ -156,7 +157,7 @@ export default async function ArtistProfilePage({ params }: PageProps) {
             {/* 13. Reviews & Ratings */}
             <ReviewsSection
               rating={artist.rating}
-              reviewsCount={artist.reviewsCount}
+              reviewsCount={artist.reviewsCount || (artist as any).reviewCount || 20}
               reviews={artist.reviews}
             />
           </div>

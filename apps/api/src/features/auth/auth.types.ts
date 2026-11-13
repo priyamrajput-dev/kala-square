@@ -1,4 +1,8 @@
-// TODO: Auth TypeScript types will be added in upcoming prompts
-export interface UserSession {
-    // TODO: Define user session interface
+import { AuthUser } from '../../lib/auth.js';
+
+export type { AuthUser };
+
+export interface AdminLoginResult {
+    token: string;
+    user: AuthUser;
 }

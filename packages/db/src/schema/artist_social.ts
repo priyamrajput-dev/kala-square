@@ -19,7 +19,7 @@ export const artistSocial = pgTable('artist_social', {
   deezerFansLabel: varchar('deezer_fans_label', { length: 50 }),
   soundcloudFollowersLabel: varchar('soundcloud_followers_label', { length: 50 }),
   tiktokFollowersLabel: varchar('tiktok_followers_label', { length: 50 }),
-  seoMetaTitle: varchar('seo_meta_title', { length: 60 }),
+  seoMetaTitle: varchar('seo_meta_title', { length: 255 }),
   seoMetaDescription: varchar('seo_meta_description', { length: 160 }),
   seoFocusKeyword: varchar('seo_focus_keyword', { length: 100 }),
   seoCanonicalUrl: text('seo_canonical_url'),

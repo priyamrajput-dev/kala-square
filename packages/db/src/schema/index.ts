@@ -5,5 +5,6 @@ export * from './artist_social.js';
 export * from './venues.js';
 export * from './events.js';
 export * from './home_sections.js';
+export * from './home_configs.js';
 export * from './enquiries.js';
 export * from './users.js';

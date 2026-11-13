@@ -9,7 +9,10 @@
     "dev:api": "pnpm --filter @kalasquare/api dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "db:generate": "pnpm --filter @kalasquare/db db:generate",
+    "db:migrate": "pnpm --filter @kalasquare/db db:migrate",
+    "db:seed": "pnpm --filter @kalasquare/api seed"
   },
   "packageManager": "pnpm@11.2.2",
   "engines": {

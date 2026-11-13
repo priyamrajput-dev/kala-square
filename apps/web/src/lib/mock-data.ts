@@ -1,3 +1,5 @@
+// Fallback only, real data comes from API in Prompt 7.
+// This mock dataset serves as an offline resilience layer when the Fastify API is offline.
 import {
   Artist,
   Category,

@@ -1,9 +1,8 @@
 import { z } from 'zod';
 
-export const UploadFileResponseSchema = z.object({
-  url: z.string().url(),
-  filename: z.string(),
-  size: z.number(),
-  mimeType: z.string(),
+export const uploadResponseSchema = z.object({
+    url: z.string(),
+    filename: z.string().optional(),
 });
-export type UploadFileResponse = z.infer<typeof UploadFileResponseSchema>;
+
+export type UploadResponse = z.infer<typeof uploadResponseSchema>;

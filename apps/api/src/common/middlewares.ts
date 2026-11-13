@@ -1,10 +1,24 @@
-// Shared middlewares for Fastify (only for logic used across multiple features)
 import type { FastifyRequest, FastifyReply } from 'fastify';
+import { verifyAuthToken, AuthUser } from '../lib/auth.js';
 
-export async function authenticate(_request: FastifyRequest, _reply: FastifyReply) {
-    // TODO: Cross-cutting authentication middleware hook
+declare module 'fastify' {
+    interface FastifyRequest {
+        user?: AuthUser;
+    }
 }
 
-export async function requireAdmin(_request: FastifyRequest, _reply: FastifyReply) {
-    // TODO: Admin authorization check middleware hook
+export async function requireAdmin(request: FastifyRequest, reply: FastifyReply) {
+    const authHeader = request.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return reply.status(401).send({ error: 'Unauthorized: Admin authentication token required' });
+    }
+
+    const token = authHeader.substring(7).trim();
+    const user = verifyAuthToken(token);
+
+    if (!user) {
+        return reply.status(401).send({ error: 'Unauthorized: Invalid or expired token' });
+    }
+
+    request.user = user;
 }

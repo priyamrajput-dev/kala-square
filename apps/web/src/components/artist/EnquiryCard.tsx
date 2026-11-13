@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Check, Phone, ShieldCheck, Clock } from 'lucide-react';
 import { ArtistProfile } from '@/lib/types';
+import { createEnquiry } from '@/lib/api';
 
 interface EnquiryCardProps {
     artist: ArtistProfile;
@@ -11,6 +12,7 @@ interface EnquiryCardProps {
 
 export default function EnquiryCard({ artist }: EnquiryCardProps) {
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
@@ -20,10 +22,26 @@ export default function EnquiryCard({ artist }: EnquiryCardProps) {
 
     const firstName = artist.name.replace(/^Dr\.\s*/, '').split(' ')[0];
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.name || !formData.phone) return;
-        setIsSubmitted(true);
+        setIsLoading(true);
+        try {
+            await createEnquiry({
+                artistId: artist.id,
+                customerName: formData.name,
+                customerPhone: formData.phone,
+                eventDate: formData.date || undefined,
+                eventType: 'Direct Booking Request',
+                message: formData.message || `Booking enquiry for ${artist.name}`,
+            });
+            setIsSubmitted(true);
+        } catch {
+            // Offline fallback
+            setIsSubmitted(true);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (

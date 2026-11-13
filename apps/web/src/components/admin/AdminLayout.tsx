@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
     Users,
     LayoutDashboard,
@@ -14,7 +14,9 @@ import {
     Menu,
     X,
     CheckCircle2,
+    LogOut,
 } from 'lucide-react';
+import { isLoggedIn, logout } from '@/lib/auth';
 
 interface AdminLayoutProps {
     children: React.ReactNode;
@@ -22,8 +24,42 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
     const pathname = usePathname();
+    const router = useRouter();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [authChecked, setAuthChecked] = useState(false);
+
+    useEffect(() => {
+        if (pathname === '/admin/login') {
+            setAuthChecked(true);
+            return;
+        }
+
+        if (!isLoggedIn()) {
+            router.push('/admin/login');
+        } else {
+            setAuthChecked(true);
+        }
+    }, [pathname, router]);
+
+    // If on login page, render full width without sidebar
+    if (pathname === '/admin/login') {
+        return <>{children}</>;
+    }
+
+    if (!authChecked) {
+        return (
+            <div className="min-h-screen bg-[#f3f3f5] flex items-center justify-center">
+                <div className="flex items-center gap-2 text-sm text-[#6b6b76] font-medium">
+                    <svg className="animate-spin h-5 w-5 text-[#eb4e62]" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                    <span>Verifying session...</span>
+                </div>
+            </div>
+        );
+    }
 
     const showToast = (msg: string) => {
         setToastMessage(msg);
@@ -127,7 +163,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                                     className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
                                         isActive
                                             ? 'bg-[#fde6ea] text-[#eb4e62]'
-                                            : 'text-[#6b6b76] hover:bg-[#f6f6f7] hover:text-[#1b1b1f]'
+                                             : 'text-[#6b6b76] hover:bg-[#f6f6f7] hover:text-[#1b1b1f]'
                                     }`}
                                 >
                                     <Icon className="h-4 w-4" />
@@ -138,8 +174,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     </nav>
                 </div>
 
-                {/* Sidebar Footer Link to Public Website */}
-                <div className="p-4 border-t border-[#e6e6ea]">
+                {/* Sidebar Footer Link to Public Website & Logout */}
+                <div className="p-4 border-t border-[#e6e6ea] space-y-2">
                     <Link
                         href="/"
                         target="_blank"
@@ -149,6 +185,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                         <span>View Live Website</span>
                         <ExternalLink className="h-3.5 w-3.5 text-[#6b6b76]" />
                     </Link>
+
+                    <button
+                        type="button"
+                        onClick={() => logout()}
+                        className="w-full flex items-center justify-between p-3 rounded-xl bg-red-50 hover:bg-red-100/80 text-xs font-bold text-red-600 transition"
+                    >
+                        <span>Log Out</span>
+                        <LogOut className="h-3.5 w-3.5 text-red-500" />
+                    </button>
                 </div>
             </aside>
 

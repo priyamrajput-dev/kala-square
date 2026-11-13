@@ -1,8 +1,12 @@
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import sensible from '@fastify/sensible';
+import multipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
     serializerCompiler,
     validatorCompiler,
@@ -10,7 +14,6 @@ import {
     ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { HealthResponseSchema } from '@kalasquare/shared';
 
 import { authRoutes } from './features/auth/auth.routes.js';
 import { artistsRoutes } from './features/artists/artists.routes.js';
@@ -18,6 +21,10 @@ import { homeRoutes } from './features/home/home.routes.js';
 import { enquiriesRoutes } from './features/enquiries/enquiries.routes.js';
 import { venuesRoutes } from './features/venues/venues.routes.js';
 import { uploadsRoutes } from './features/uploads/uploads.routes.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const UPLOADS_DIR = path.resolve(__dirname, '../uploads');
 
 export async function buildApp(): Promise<FastifyInstance> {
     const app = Fastify({
@@ -37,6 +44,20 @@ export async function buildApp(): Promise<FastifyInstance> {
         credentials: true,
     });
 
+    // Multipart support for file uploads (max 5MB)
+    await app.register(multipart, {
+        limits: {
+            fileSize: 5 * 1024 * 1024,
+        },
+    });
+
+    // Serve uploaded files statically at /uploads/
+    await app.register(fastifyStatic, {
+        root: UPLOADS_DIR,
+        prefix: '/uploads/',
+        decorateReply: false,
+    });
+
     // Register Swagger with Zod JSON Schema transform
     await app.register(swagger, {
         openapi: {
@@ -53,11 +74,11 @@ export async function buildApp(): Promise<FastifyInstance> {
             ],
             tags: [
                 { name: 'System', description: 'System health & diagnostic endpoints' },
-                { name: 'Auth', description: 'Authentication & session management' },
-                { name: 'Artists', description: 'Artist profiles & directory' },
+                { name: 'Auth', description: 'Authentication & admin session management' },
+                { name: 'Artists', description: 'Artist profiles, discovery & administration' },
                 { name: 'Home', description: 'Homepage layout and showcase configuration' },
-                { name: 'Enquiries', description: 'Artist booking enquiries' },
-                { name: 'Venues', description: 'Venue locations & listings' },
+                { name: 'Enquiries', description: 'Booking enquiries & lead management' },
+                { name: 'Venues', description: 'Venue locations & event arenas' },
                 { name: 'Uploads', description: 'Media upload and file management' },
             ],
         },
@@ -74,7 +95,12 @@ export async function buildApp(): Promise<FastifyInstance> {
         staticCSP: true,
     });
 
-    // Root & Health check routes
+    // Also alias /api/docs to /docs
+    app.get('/api/docs', async (_req, reply) => {
+        return reply.redirect('/docs');
+    });
+
+    // Root endpoint
     app.get(
         '/',
         {
@@ -94,38 +120,63 @@ export async function buildApp(): Promise<FastifyInstance> {
             return {
                 name: 'Kalasquare API',
                 status: 'online',
-                docs: '/docs',
+                docs: '/api/docs',
             };
         },
     );
+
+    // Health check endpoint
+    const healthResponse = async () => {
+        return {
+            status: 'ok' as const,
+            db: 'connected' as const,
+            time: new Date().toISOString(),
+        };
+    };
 
     app.get(
         '/health',
         {
             schema: {
-                description: 'Health check endpoint',
+                description: 'Health check diagnostic endpoint',
                 tags: ['System'],
                 response: {
-                    200: HealthResponseSchema,
+                    200: z.object({
+                        status: z.string(),
+                        db: z.string(),
+                        time: z.string(),
+                    }),
                 },
             },
         },
-        async () => {
-            return {
-                status: 'ok' as const,
-                timestamp: new Date().toISOString(),
-                uptime: process.uptime(),
-            };
+        healthResponse,
+    );
+
+    app.get(
+        '/api/health',
+        {
+            schema: {
+                description: 'API health check diagnostic endpoint',
+                tags: ['System'],
+                response: {
+                    200: z.object({
+                        status: z.string(),
+                        db: z.string(),
+                        time: z.string(),
+                    }),
+                },
+            },
         },
+        healthResponse,
     );
 
     // Register Feature Routes
-    await app.register(authRoutes, { prefix: '/api/v1/auth' });
-    await app.register(artistsRoutes, { prefix: '/api/v1/artists' });
-    await app.register(homeRoutes, { prefix: '/api/v1/home' });
-    await app.register(enquiriesRoutes, { prefix: '/api/v1/enquiries' });
-    await app.register(venuesRoutes, { prefix: '/api/v1/venues' });
-    await app.register(uploadsRoutes, { prefix: '/api/v1/uploads' });
+    await app.register(authRoutes, { prefix: '/api/auth' });
+    await app.register(artistsRoutes, { prefix: '/api' });
+    await app.register(homeRoutes, { prefix: '/api' });
+    await app.register(enquiriesRoutes, { prefix: '/api' });
+    await app.register(venuesRoutes, { prefix: '/api' });
+    await app.register(uploadsRoutes, { prefix: '/api' });
 
     return app;
 }

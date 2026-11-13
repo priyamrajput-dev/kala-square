@@ -21,6 +21,7 @@ import {
   ArtistFormData,
 } from '@/lib/validators/artist-form';
 import { calculateCompleteness } from '@/lib/completeness';
+import { createArtist, updateArtist } from '@/lib/api';
 import FormSection from './FormSection';
 import ImageUpload from './ImageUpload';
 import GalleryUploader, { GalleryItem } from './GalleryUploader';
@@ -284,7 +285,7 @@ export default function ArtistForm({ mode, initialData, artistId }: ArtistFormPr
   };
 
   // Handle Save as Draft
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
     const values = watch();
     // Validate with relaxed draft schema
     const result = artistDraftSchema.safeParse(values);
@@ -294,28 +295,50 @@ export default function ArtistForm({ mode, initialData, artistId }: ArtistFormPr
       return;
     }
 
-    saveToLocalStorage({ ...values, status: 'draft' }, 'draft');
-    setToastMessage(`"${values.name}" saved as Draft successfully!`);
-
-    setTimeout(() => {
-      router.push('/admin/artists');
-    }, 1200);
+    try {
+      if (mode === 'edit' && artistId) {
+        await updateArtist(artistId, { ...values, status: 'draft' });
+      } else {
+        await createArtist({ ...values, status: 'draft' });
+      }
+      setToastMessage(`"${values.name}" saved as Draft successfully!`);
+      setTimeout(() => {
+        router.push('/admin/artists');
+      }, 1200);
+    } catch (err: any) {
+      saveToLocalStorage({ ...values, status: 'draft' }, 'draft');
+      setToastMessage(`"${values.name}" saved as Draft locally.`);
+      setTimeout(() => {
+        router.push('/admin/artists');
+      }, 1200);
+    }
   };
 
   // Perform Final Publish Save
-  const executePublish = (data: ArtistFormData) => {
+  const executePublish = async (data: ArtistFormData) => {
     const publishData = {
       ...data,
       status: 'published' as const,
       publishDate: data.publishDate || new Date().toISOString().split('T')[0],
     };
 
-    saveToLocalStorage(publishData, 'published');
-    setToastMessage(`"${data.name}" published successfully! Live on site.`);
-
-    setTimeout(() => {
-      router.push('/admin/artists');
-    }, 1200);
+    try {
+      if (mode === 'edit' && artistId) {
+        await updateArtist(artistId, publishData);
+      } else {
+        await createArtist(publishData);
+      }
+      setToastMessage(`"${data.name}" published successfully! Live on site.`);
+      setTimeout(() => {
+        router.push('/admin/artists');
+      }, 1200);
+    } catch (err: any) {
+      saveToLocalStorage(publishData, 'published');
+      setToastMessage(`"${data.name}" published locally.`);
+      setTimeout(() => {
+        router.push('/admin/artists');
+      }, 1200);
+    }
   };
 
   // On Valid Full Form Submission (Publish Button)

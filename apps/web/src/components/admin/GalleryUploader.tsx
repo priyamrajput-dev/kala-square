@@ -3,6 +3,7 @@
 import React, { useRef, useState } from 'react';
 import Image from 'next/image';
 import { Plus, X, ArrowUp, ArrowDown, Upload, Link2 } from 'lucide-react';
+import { uploadFile } from '@/lib/api';
 
 export interface GalleryItem {
     id: string;
@@ -43,34 +44,41 @@ export default function GalleryUploader({
         setUrlInputOpen(false);
     };
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
         const remainingSlots = max - items.length;
         const filesToRead = Array.from(files).slice(0, remainingSlots);
 
-        const newItems: GalleryItem[] = [];
-        let completed = 0;
+        const uploadedItems: GalleryItem[] = [];
 
-        filesToRead.forEach((file, index) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                if (typeof reader.result === 'string') {
-                    newItems.push({
-                        id: `gal-${Date.now()}-${index}`,
-                        src: reader.result,
+        for (let i = 0; i < filesToRead.length; i++) {
+            const file = filesToRead[i];
+            try {
+                const res = await uploadFile(file);
+                uploadedItems.push({
+                    id: `gal-${Date.now()}-${i}`,
+                    src: res.url,
+                    caption: '',
+                });
+            } catch {
+                const reader = new FileReader();
+                const dataUrl = await new Promise<string>((resolve) => {
+                    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+                    reader.readAsDataURL(file);
+                });
+                if (dataUrl) {
+                    uploadedItems.push({
+                        id: `gal-${Date.now()}-${i}`,
+                        src: dataUrl,
                         caption: '',
                     });
                 }
-                completed++;
-                if (completed === filesToRead.length) {
-                    onChange([...items, ...newItems]);
-                }
-            };
-            reader.readAsDataURL(file);
-        });
+            }
+        }
 
+        onChange([...items, ...uploadedItems]);
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 

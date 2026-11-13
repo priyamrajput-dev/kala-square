@@ -14,7 +14,10 @@ const envSchema = z.object({
     PORT: z.coerce.number().default(3001),
     HOST: z.string().default('0.0.0.0'),
     API_URL: z.string().default('http://localhost:3001'),
-    DATABASE_URL: z.string().optional(),
+    DATABASE_URL: z.string().default('postgresql://postgres:postgres@localhost:5432/kalasquare'),
+    JWT_SECRET: z.string().default('kalasquare_super_secret_jwt_key_2026'),
+    ADMIN_EMAIL: z.string().email().default('admin@kalasquare.com'),
+    ADMIN_PASSWORD_HASH: z.string().default('$2b$10$lbMEN79yebMD5syp742DvOSnySTxDNwsgsaU/gIrCVNnSAMLIMlZG'),
 });
 
 export type Env = z.infer<typeof envSchema>;
