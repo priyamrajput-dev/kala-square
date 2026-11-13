@@ -6,7 +6,7 @@ import { Plus, X, ArrowUp, ArrowDown, Upload, Link2 } from 'lucide-react';
 import { uploadFile } from '@/lib/api';
 
 export interface GalleryItem {
-    id: string;
+    id?: string;
     src: string;
     caption?: string;
 }

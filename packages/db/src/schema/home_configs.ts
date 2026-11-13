@@ -11,3 +11,4 @@ export const homeConfigs = pgTable('home_configs', {
 
 export type HomeConfigRecord = typeof homeConfigs.$inferSelect;
 export type NewHomeConfigRecord = typeof homeConfigs.$inferInsert;
+

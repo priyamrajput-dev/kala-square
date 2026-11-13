@@ -2,6 +2,12 @@
 .env
 .env.local
 .env.*.local
+.env.production
+.env.development
+
+# Uploads
+apps/api/uploads/*
+!apps/api/uploads/.gitkeep
 
 # Dependencies
 node_modules/

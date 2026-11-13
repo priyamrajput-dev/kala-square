@@ -209,6 +209,7 @@ export class ArtistsService {
             categories: Array.isArray(artist.categories) ? artist.categories : [],
             specializations: Array.isArray(artist.specializations) ? artist.specializations : [],
             bio: artist.bio || '',
+            photoUrl: artist.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800',
             profilePhotoUrl: artist.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800',
             rating: 4.9,
             reviewCount: 32,

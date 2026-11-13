@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Phase 7 - Prompt 7: Real Backend APIs + Full Frontend Integration - DONE
+- Phase 8 - Prompt 8: Production Deployment, Hardening & Acceptance Testing - DONE (PROJECT COMPLETE)
 
 ## Current Goal
 
-- Ready for Prompt 8: Live Deploy + Production Configuration + End-to-End Acceptance Testing
+- Kalasquare 1.0 MVP Successfully Built, Hardened, Tested & Ready for Production
 
 ## Completed
 
@@ -190,13 +190,47 @@ Update this file whenever the current phase, active feature, or implementation s
     - `pnpm typecheck` passed with 0 errors across monorepo (`packages/db`, `packages/shared`, `packages/config`, `apps/api`, `apps/web`).
     - `pnpm build` passed with all 13 Next.js routes optimized and static-rendered.
 
+- **Prompt 8: Production Deployment, Hardening & Acceptance Testing (DONE - PROJECT COMPLETE)**
+  - **Part A: Production Environment & Configuration**:
+    - Created `apps/web/.env.production` with `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_GA_ID`.
+    - Created `apps/api/.env.production` with `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH`, `CORS_ORIGIN`, `UPLOAD_DIR`.
+    - Created `apps/api/src/lib/env.ts` with strict Zod environment validation on boot (throws clear errors if any required env var is missing in production).
+    - Created CLI password hashing utility `scripts/hash-password.ts` with root script `"pnpm hash-password --password <pwd>"`.
+    - Updated `uploads.service.ts` to respect `UPLOAD_DIR`, and added `apps/api/uploads/*` (with `.gitkeep`) to `.gitignore`.
+  - **Part B: Production Deployment Configs**:
+    - Created `apps/web/vercel.json` for Vercel deployment.
+    - Created `apps/api/Dockerfile` (Node 20 Alpine, PNPM monorepo build, production server start).
+    - Created `apps/api/railway.json` and `render.yaml` for containerized backend hosting.
+  - **Part C: SEO, Performance & Security Hardening**:
+    - SEO: Enhanced `RootLayout` with Open Graph 1200x630 images, Twitter summary large cards, and metadata base URL.
+    - Sitemap: Created dynamic `apps/web/src/app/sitemap.ts` exporting published artist profile URLs and main routes.
+    - Robots: Created `apps/web/public/robots.txt` disallowing `/admin/` and `/api/` with sitemap reference.
+    - Fonts: Replaced build-time `next/font/google` with asynchronous Google Fonts stylesheet preconnect and system fallbacks, eliminating build-time network stalls.
+    - Caching: Home Page and Artist Profile Page configured with `revalidate = 60`; all Admin pages configured with `dynamic = 'force-dynamic'`.
+    - Security: Verified `requireAdmin` JWT guard across all `/api/admin/*` routes; verified rate limiter returns 429 after 5 requests/hour; verified XSS escaping in React; verified CORS origin restrictions.
+  - **Part D: 8 Acceptance Test Suites Executed**:
+    - Suite 1 (Create, Draft 404, Publish, Live Profile 200): **PASS**
+    - Suite 2 (Edit Reflects Immediately): **PASS**
+    - Suite 3 (Unpublish Gives 404, Draft Gives 404): **PASS**
+    - Suite 4 (Mobile & Responsive Layouts 375px/768px/1440px): **PASS**
+    - Suite 5 (Validation Testing - space in slug, duplicate slug 409, PriceTo < PriceFrom 400, >6 videos 400, no phone 400): **PASS**
+    - Suite 6 (Image Upload, Refresh & DB Persistence): **PASS**
+    - Suite 7 (Home Page Manager Section Order & Visibility Live Reflection): **PASS**
+    - Suite 8 (Enquiries Public Submission -> Admin Review -> Status -> Notes): **PASS**
+  - **Part E: Quality Audit & Documentation**:
+    - Created `BUGS.md` documenting all 5 issues resolved during hardening and their re-test results.
+    - Created `DEPLOY.md` with production URLs, checklists, database setup, limitation disclosures, and test suite logs.
+    - Cleaned up console.logs (0 in runtime code).
+    - `pnpm typecheck` passed with 0 errors across all 5 workspace projects.
+    - `pnpm build` passed with all static and dynamic routes compiled.
+
 ## In Progress
 
-- None (Prompt 7 completed).
+- None (All 8 prompts complete).
 
 ## Next Up
 
-- Prompt 8 - Live Deploy + Testing + Acceptance
+- Client handover, production domain DNS pointing (`kalasquare.com` and `api.kalasquare.com`), and Phase 2 roadmap.
 
 ## Open Questions
 

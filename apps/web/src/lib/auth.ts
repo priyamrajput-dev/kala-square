@@ -96,3 +96,4 @@ export async function logout(): Promise<void> {
         window.location.href = '/admin/login';
     }
 }
+

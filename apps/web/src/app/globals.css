@@ -12,11 +12,13 @@
   --color-field: #f6f6f7;
   --color-success: #1a8a57;
   --color-warning: #8f5a00;
-  --font-heading: var(--font-bricolage), Georgia, sans-serif;
-  --font-body: var(--font-dm-sans), system-ui, sans-serif;
+  --font-heading: 'Bricolage Grotesque', Georgia, sans-serif;
+  --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
 }
 
 :root {
+  --font-bricolage: 'Bricolage Grotesque', Georgia, sans-serif;
+  --font-dm-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
   --coral: #eb4e62;
   --coral-dark: #d63a50;
   --peach: #fde6ea;

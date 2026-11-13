@@ -43,7 +43,7 @@ export const faqItemFormSchema = z.object({
 });
 
 export const galleryItemFormSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   src: z.string().min(1, 'Image source is required'),
   caption: z.string().max(80, 'Caption too long (max 80)').optional(),
 });

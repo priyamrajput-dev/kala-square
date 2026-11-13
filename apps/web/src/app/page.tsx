@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import HomeSections from '@/components/HomeSections';
 import { fetchPublicHome } from '@/lib/api';
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: 'KalaSquare - Find Artists, Venues & Events in India',
   description:

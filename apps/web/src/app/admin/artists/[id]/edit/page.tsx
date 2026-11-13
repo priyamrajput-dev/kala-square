@@ -6,6 +6,8 @@ import ArtistForm from '@/components/admin/ArtistForm';
 import { mockArtistProfiles, getArtistProfileBySlug } from '@/lib/mock-data';
 import { ArtistFormData } from '@/lib/validators/artist-form';
 
+export const dynamic = 'force-dynamic';
+
 interface EditPageProps {
     params: Promise<{ id: string }>;
 }

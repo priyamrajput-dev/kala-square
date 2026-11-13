@@ -6,6 +6,7 @@ import fastifyStatic from '@fastify/static';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import path from 'node:path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import {
     serializerCompiler,
@@ -14,6 +15,7 @@ import {
     ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { env } from './config/env.js';
 
 import { authRoutes } from './features/auth/auth.routes.js';
 import { artistsRoutes } from './features/artists/artists.routes.js';
@@ -24,7 +26,10 @@ import { uploadsRoutes } from './features/uploads/uploads.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const UPLOADS_DIR = path.resolve(__dirname, '../uploads');
+const UPLOADS_DIR = env.UPLOAD_DIR || path.resolve(__dirname, '../uploads');
+if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
 
 export async function buildApp(): Promise<FastifyInstance> {
     const app = Fastify({
@@ -40,7 +45,9 @@ export async function buildApp(): Promise<FastifyInstance> {
     // Register plugins
     await app.register(sensible);
     await app.register(cors, {
-        origin: true,
+        origin: env.NODE_ENV === 'production' && env.CORS_ORIGIN !== '*'
+            ? [env.CORS_ORIGIN, 'https://kalasquare.com', 'https://www.kalasquare.com']
+            : true,
         credentials: true,
     });
 

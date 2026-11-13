@@ -2,6 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import { Users, Plus, ArrowRight } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">

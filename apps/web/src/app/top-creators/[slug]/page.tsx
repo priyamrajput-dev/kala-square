@@ -22,6 +22,8 @@ import {
 import { fetchPublicArtistBySlug } from '@/lib/api';
 import { mockArtists } from '@/lib/mock-data';
 
+export const revalidate = 60;
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }

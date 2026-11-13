@@ -1,5 +1,5 @@
 import { EnquiriesRepository } from './enquiries.repository.js';
-import { NotFoundError, ValidationError } from '../../common/errors.js';
+import { NotFoundError, ValidationError, RateLimitError } from '../../common/errors.js';
 import { EnquiryCreateInput, AdminEnquiryQuery } from './enquiries.schema.js';
 
 // In-memory rate limiter: Map<ip, timestamp[]>
@@ -14,7 +14,7 @@ export class EnquiriesService {
         const timestamps = (ipRateLimitMap.get(ip) || []).filter((t) => t > oneHourAgo);
 
         if (timestamps.length >= 5) {
-            throw new ValidationError('Rate limit reached: Maximum 5 booking enquiries permitted per hour.');
+            throw new RateLimitError('Rate limit reached: Maximum 5 booking enquiries permitted per hour.');
         }
 
         timestamps.push(now);

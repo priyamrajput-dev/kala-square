@@ -13,7 +13,10 @@ import {
 import { HomeConfig } from './validators/home-config';
 import { ArtistProfile } from './types';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE =
+    (typeof window === 'undefined' && process.env.INTERNAL_API_URL)
+        ? process.env.INTERNAL_API_URL
+        : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
 
 // Helper for authenticated admin headers
 function getAdminHeaders(): HeadersInit {
@@ -59,6 +62,7 @@ export async function fetchPublicArtists(query: {
 
         const res = await fetch(`${API_BASE}/api/public/artists?${params.toString()}`, {
             next: { revalidate: 60 },
+            signal: AbortSignal.timeout(2000),
         });
 
         if (res.ok) {
@@ -94,6 +98,7 @@ export async function fetchPublicArtistBySlug(slug: string): Promise<ArtistProfi
     try {
         const res = await fetch(`${API_BASE}/api/public/artists/${slug}`, {
             next: { revalidate: 60 },
+            signal: AbortSignal.timeout(2000),
         });
 
         if (res.status === 404) {
@@ -115,6 +120,7 @@ export async function fetchPublicHome() {
     try {
         const res = await fetch(`${API_BASE}/api/public/home`, {
             next: { revalidate: 60 },
+            signal: AbortSignal.timeout(2000),
         });
 
         if (res.ok) {

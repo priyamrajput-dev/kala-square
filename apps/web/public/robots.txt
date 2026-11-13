@@ -1,0 +1,7 @@
+# KalaSquare Robots.txt
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://kalasquare.com/sitemap.xml

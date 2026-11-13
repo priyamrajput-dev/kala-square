@@ -12,7 +12,8 @@
     "typecheck": "pnpm -r typecheck",
     "db:generate": "pnpm --filter @kalasquare/db db:generate",
     "db:migrate": "pnpm --filter @kalasquare/db db:migrate",
-    "db:seed": "pnpm --filter @kalasquare/api seed"
+    "db:seed": "pnpm --filter @kalasquare/api seed",
+    "hash-password": "pnpm --filter @kalasquare/api exec tsx ../../scripts/hash-password.ts"
   },
   "packageManager": "pnpm@11.2.2",
   "engines": {

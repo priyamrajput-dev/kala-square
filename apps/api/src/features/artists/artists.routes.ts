@@ -5,6 +5,7 @@ import {
     publicArtistQuerySchema,
     adminArtistQuerySchema,
     artistBaseSchema,
+    artistFormSchema,
 } from './artists.schema.js';
 import { requireAdmin } from '../../common/middlewares.js';
 
@@ -63,7 +64,7 @@ export const artistsRoutes: FastifyPluginAsyncZod = async (fastify) => {
             schema: {
                 description: 'Admin create a new artist profile (draft or published)',
                 tags: ['Artists'],
-                body: artistBaseSchema,
+                body: artistFormSchema,
             },
         },
         controller.createArtist
@@ -94,7 +95,7 @@ export const artistsRoutes: FastifyPluginAsyncZod = async (fastify) => {
                 params: z.object({
                     id: z.string().min(1),
                 }),
-                body: artistBaseSchema,
+                body: artistFormSchema,
             },
         },
         controller.updateArtist
