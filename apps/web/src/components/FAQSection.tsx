@@ -6,9 +6,15 @@ import { FAQItem } from '@/lib/types';
 
 interface FAQSectionProps {
   faqs: FAQItem[];
+  title?: string;
+  buttonText?: string;
 }
 
-export default function FAQSection({ faqs }: FAQSectionProps) {
+export default function FAQSection({
+  faqs,
+  title = 'Frequently Asked Questions',
+  buttonText = 'View All FAQs',
+}: FAQSectionProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(0); // First item open by default
 
   const toggle = (index: number) => {
@@ -25,7 +31,7 @@ export default function FAQSection({ faqs }: FAQSectionProps) {
               Clear &amp; Transparent
             </span>
             <h2 className="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-[1.1]">
-              Frequently Asked Questions
+              {title}
             </h2>
             <p className="text-white/90 text-base max-w-md leading-relaxed">
               Everything artists, organizers, corporate planners, and venues ask before booking on KalaSquare.
@@ -35,7 +41,7 @@ export default function FAQSection({ faqs }: FAQSectionProps) {
                 href="#contact"
                 className="inline-flex items-center justify-center h-12 px-7 rounded-[10px] bg-white hover:bg-neutral-100 text-[#eb4e62] font-bold text-sm shadow-md transition"
               >
-                View All FAQs
+                {buttonText}
               </a>
             </div>
           </div>

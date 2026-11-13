@@ -3,7 +3,33 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Music2, Mic, Video, Palette, MapPin, Briefcase } from 'lucide-react';
 
-export default function Hero() {
+interface HeroProps {
+  heroConfig?: {
+    eyebrow?: string;
+    heading?: string;
+    subtext?: string;
+    primaryButtonText?: string;
+    secondaryButtonText?: string;
+    artistsCount?: string;
+    eventsCount?: string;
+    rating?: string;
+    showStats?: boolean;
+  };
+}
+
+export default function Hero({ heroConfig }: HeroProps = {}) {
+  const eyebrow = heroConfig?.eyebrow || 'DISCOVER & HIRE VERIFIED ARTISTS';
+  const heading = heroConfig?.heading || "Book India's Top Talent For Your Next Big Event";
+  const subtext =
+    heroConfig?.subtext ||
+    'Directly connect with 12,000+ curated performers, musicians, comedians, and creators. Transparent pricing, verified reviews, seamless booking.';
+  const primaryBtn = heroConfig?.primaryButtonText || 'Explore Artists';
+  const secondaryBtn = heroConfig?.secondaryButtonText || 'List Your Talent';
+  const showStats = heroConfig?.showStats ?? true;
+  const artistsCount = heroConfig?.artistsCount || '12,000+';
+  const eventsCount = heroConfig?.eventsCount || '850+';
+  const rating = heroConfig?.rating || '4.9★';
+
   return (
     <section className="bg-[#f3f3f5] py-12 md:py-20 overflow-hidden border-b border-[#e6e6ea]">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
@@ -11,15 +37,15 @@ export default function Hero() {
           {/* Left Column: Heading, Subtext, Buttons, Stats */}
           <div className="lg:col-span-6 space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fde6ea] text-[#eb4e62] text-xs font-bold tracking-wider uppercase">
-              <span>DISCOVER &amp; HIRE VERIFIED ARTISTS</span>
+              <span>{eyebrow}</span>
             </div>
 
             <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-[54px] text-[#1b1b1f] tracking-tight leading-[1.08]">
-              Book India&apos;s Top Talent For Your Next Big Event
+              {heading}
             </h1>
 
             <p className="text-lg text-[#6b6b76] max-w-xl leading-relaxed">
-              Directly connect with 12,000+ curated performers, musicians, comedians, and creators. Transparent pricing, verified reviews, seamless booking.
+              {subtext}
             </p>
 
             <div className="flex flex-wrap items-center gap-4 pt-2">
@@ -27,31 +53,39 @@ export default function Hero() {
                 href="/top-creators"
                 className="h-12 px-7 rounded-[10px] bg-[#eb4e62] hover:bg-[#d63a50] text-white font-bold text-base transition flex items-center justify-center shadow-sm"
               >
-                Explore Artists
+                {primaryBtn}
               </Link>
               <Link
                 href="/admin"
                 className="h-12 px-7 rounded-[10px] bg-white border border-[#e6e6ea] hover:border-[#eb4e62] hover:text-[#eb4e62] text-[#1b1b1f] font-bold text-base transition flex items-center justify-center shadow-sm"
               >
-                List Your Talent
+                {secondaryBtn}
               </Link>
             </div>
 
-            {/* Quick Stats: 12,000+ Verified Artists, 850+ Live Venues, 4.9★ Average Rating */}
-            <div className="pt-8 border-t border-[#e6e6ea] grid grid-cols-3 gap-6">
-              <div>
-                <p className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f]">12,000+</p>
-                <p className="text-xs sm:text-sm text-[#6b6b76] mt-0.5">Verified Artists</p>
+            {/* Quick Stats */}
+            {showStats && (
+              <div className="pt-8 border-t border-[#e6e6ea] grid grid-cols-3 gap-6">
+                <div>
+                  <p className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f]">
+                    {artistsCount}
+                  </p>
+                  <p className="text-xs sm:text-sm text-[#6b6b76] mt-0.5">Verified Artists</p>
+                </div>
+                <div>
+                  <p className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f]">
+                    {eventsCount}
+                  </p>
+                  <p className="text-xs sm:text-sm text-[#6b6b76] mt-0.5">Live Venues &amp; Events</p>
+                </div>
+                <div>
+                  <p className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f]">
+                    {rating}
+                  </p>
+                  <p className="text-xs sm:text-sm text-[#6b6b76] mt-0.5">Average Rating</p>
+                </div>
               </div>
-              <div>
-                <p className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f]">850+</p>
-                <p className="text-xs sm:text-sm text-[#6b6b76] mt-0.5">Live Venues</p>
-              </div>
-              <div>
-                <p className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f]">4.9★</p>
-                <p className="text-xs sm:text-sm text-[#6b6b76] mt-0.5">Average Rating</p>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Right Column: 4 Gradient Tiles + 3 Overlapping Floating Cards */}

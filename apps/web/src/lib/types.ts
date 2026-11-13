@@ -207,3 +207,26 @@ export interface ArtistProfile {
   reviews: ReviewItem[];
   social: SocialLinks;
 }
+
+// -------------------------------------------------------------
+// Enquiries Specific Interfaces (Prompt 6)
+// -------------------------------------------------------------
+
+export interface Enquiry {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  artistId?: string;
+  artistName: string;
+  artistSlug: string;
+  artistPhotoUrl: string;
+  city: string;
+  eventDate: string;
+  eventType: string;
+  budgetRange?: string;
+  message: string;
+  status: 'new' | 'contacted' | 'booked' | 'closed';
+  notes?: string;
+  createdAt: string;
+}

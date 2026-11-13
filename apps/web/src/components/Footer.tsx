@@ -1,7 +1,23 @@
 import React from 'react';
 import Link from 'next/link';
 
-export default function Footer() {
+interface FooterProps {
+    footerConfig?: {
+        instagramUrl?: string;
+        youtubeUrl?: string;
+        facebookUrl?: string;
+        xUrl?: string;
+        copyrightText?: string;
+    };
+}
+
+export default function Footer({ footerConfig }: FooterProps = {}) {
+    const instagramUrl = footerConfig?.instagramUrl || 'https://www.instagram.com/kalasquarein';
+    const youtubeUrl = footerConfig?.youtubeUrl || 'https://www.youtube.com/@kalasquare';
+    const facebookUrl = footerConfig?.facebookUrl || 'https://www.facebook.com/kalasquarein';
+    const xUrl = footerConfig?.xUrl || 'https://x.com/';
+    const copyright = footerConfig?.copyrightText || '© 2026 KalaSquare. All rights reserved.';
+
     return (
         <footer className="bg-white border-t border-[#e6e6ea] pt-16 pb-12">
             <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
@@ -112,7 +128,7 @@ export default function Footer() {
 
                             {/* YouTube */}
                             <a
-                                href="https://www.youtube.com/@MelodySquare"
+                                href={youtubeUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-10 h-10 rounded-full bg-[#f6f6f7] hover:bg-[#eb4e62] text-[#1b1b1f] hover:text-white flex items-center justify-center transition"
@@ -133,7 +149,7 @@ export default function Footer() {
 
                             {/* Facebook */}
                             <a
-                                href="https://www.facebook.com/kalasquarein"
+                                href={facebookUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-10 h-10 rounded-full bg-[#f6f6f7] hover:bg-[#eb4e62] text-[#1b1b1f] hover:text-white flex items-center justify-center transition"
@@ -146,7 +162,7 @@ export default function Footer() {
 
                             {/* X / Twitter */}
                             <a
-                                href="https://x.com/"
+                                href={xUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-10 h-10 rounded-full bg-[#f6f6f7] hover:bg-[#eb4e62] text-[#1b1b1f] hover:text-white flex items-center justify-center transition"
@@ -162,7 +178,7 @@ export default function Footer() {
 
                 {/* Bottom Copyright */}
                 <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-[#6b6b76] gap-4">
-                    <p>© 2026 KalaSquare. All rights reserved.</p>
+                    <p>{copyright}</p>
                     <p>Handcrafted for Artists, Planners &amp; Entertainment Venues in India.</p>
                 </div>
             </div>

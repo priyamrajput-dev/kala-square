@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Header from './Header';
@@ -18,21 +18,97 @@ import {
   mockVenues,
   mockFAQs,
   mockSpotlights,
+  mockHomeConfig,
 } from '@/lib/mock-data';
+import { HomeConfig, homeConfigSchema } from '@/lib/validators/home-config';
 
 export default function HomeSections() {
-  // Platinum Artists: first 4 artists with platinum badge
-  const platinumArtists = mockArtists.filter((a) => a.tier === 'platinum').slice(0, 4);
+  const [config, setConfig] = useState<HomeConfig>(mockHomeConfig);
 
-  // New on KalaSquare: 4 artists with new badge
-  const newArtists = mockArtists.filter((a) => a.badgeType === 'new').slice(0, 4);
+  // Client-side hydration: read custom config from localStorage if present
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('kalasquare_home_config');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const validated = homeConfigSchema.safeParse(parsed);
+          if (validated.success) {
+            setConfig(validated.data);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse home config from localStorage', e);
+      }
+    }
+  }, []);
 
-  // Rising Artists: 4 artists with rising badge
-  const risingArtists = mockArtists.filter((a) => a.badgeType === 'rising').slice(0, 4);
+  // Filter Platinum Artists based on config
+  const platinumArtists = (
+    config.platinum.artistIds.length > 0
+      ? config.platinum.artistIds
+          .map((id) => mockArtists.find((a) => a.id === id || a.slug === id))
+          .filter(Boolean)
+      : mockArtists.filter((a) => a.tier === 'platinum').slice(0, 4)
+  ) as typeof mockArtists;
 
-  // Main featured spotlight and side spotlights
-  const mainSpotlight = mockSpotlights[0];
-  const sideSpotlights = mockSpotlights.slice(1, 3);
+  // Filter New Artists based on config
+  const newArtists = (
+    config.newTalent.artistIds.length > 0
+      ? config.newTalent.artistIds
+          .map((id) => mockArtists.find((a) => a.id === id || a.slug === id))
+          .filter(Boolean)
+      : mockArtists.filter((a) => a.badgeType === 'new').slice(0, 4)
+  ) as typeof mockArtists;
+
+  // Filter Rising Artists based on config
+  const risingArtists = (
+    config.rising.artistIds.length > 0
+      ? config.rising.artistIds
+          .map((id) => mockArtists.find((a) => a.id === id || a.slug === id))
+          .filter(Boolean)
+      : mockArtists.filter((a) => a.badgeType === 'rising').slice(0, 4)
+  ) as typeof mockArtists;
+
+  // Filter Venues based on config
+  const selectedVenues = (
+    config.venues.venueIds.length > 0
+      ? config.venues.venueIds
+          .map((id) => mockVenues.find((v) => v.id === id))
+          .filter(Boolean)
+      : mockVenues.slice(0, 3)
+  ) as typeof mockVenues;
+
+  // Filter Categories based on config
+  const visibleCategories = mockCategories
+    .filter((cat) => {
+      const cfgItem = config.categories.items.find((item) => item.slug === cat.slug);
+      return cfgItem ? cfgItem.isVisible : true;
+    })
+    .map((cat) => {
+      const cfgItem = config.categories.items.find((item) => item.slug === cat.slug);
+      return cfgItem ? { ...cat, count: cfgItem.count } : cat;
+    });
+
+  // Spotlights from config
+  const mainSpotlight = {
+    id: 's1',
+    title: config.spotlights.featuredArticle.title || mockSpotlights[0].title,
+    subtitle: config.spotlights.featuredArticle.description || mockSpotlights[0].subtitle,
+    imageUrl: config.spotlights.featuredArticle.imageUrl || mockSpotlights[0].imageUrl,
+    link: config.spotlights.featuredArticle.link || mockSpotlights[0].link,
+  };
+
+  const sideSpotlights = config.spotlights.smallArticles.map((art, idx) => ({
+    id: `s-small-${idx}`,
+    title: art.title,
+    subtitle: art.tag,
+    imageUrl: art.imageUrl || mockSpotlights[idx + 1]?.imageUrl || mockSpotlights[0].imageUrl,
+    link: art.link || mockSpotlights[idx + 1]?.link || '#',
+  }));
+
+  // FAQ list from config
+  const displayFaqs = config.faq.items.length > 0 ? config.faq.items : mockFAQs;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f3f3f5]">
@@ -41,289 +117,322 @@ export default function HomeSections() {
 
       <main className="flex-1">
         {/* 2. Hero Section */}
-        <Hero />
+        {config.hero.isVisible && <Hero heroConfig={config.hero} />}
 
         {/* 3. Platinum Artists Section */}
-        <section className="py-14 sm:py-18 bg-white border-b border-[#e6e6ea]" id="platinum">
-          <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-              <div>
-                <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                  Platinum Artists
-                </h2>
-                <p className="text-sm text-[#6b6b76] mt-1">
-                  India&apos;s finest artists, ready to book.
-                </p>
-              </div>
-              <Link
-                href="/top-creators?tier=platinum"
-                className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
-              >
-                <span>View All</span>
-                <span>&rarr;</span>
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {platinumArtists.map((artist) => (
-                <ArtistCard key={artist.id} artist={artist} badgeType="platinum" />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 4. New on KalaSquare Section */}
-        <section className="py-14 sm:py-18 bg-[#f3f3f5] border-b border-[#e6e6ea]" id="new-artists">
-          <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-              <div>
-                <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                  New on KalaSquare
-                </h2>
-                <p className="text-sm text-[#6b6b76] mt-1">
-                  Fresh talent and creators who just joined the platform.
-                </p>
-              </div>
-              <Link
-                href="/top-creators?sort=newest"
-                className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
-              >
-                <span>See All</span>
-                <span>&rarr;</span>
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {newArtists.map((artist) => (
-                <ArtistCard key={artist.id} artist={artist} badgeType="new" />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 5. Find Talent By Category Section */}
-        <section className="py-14 sm:py-18 bg-white border-b border-[#e6e6ea]" id="talent">
-          <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-              <div>
-                <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                  Find Talent By Category
-                </h2>
-                <p className="text-sm text-[#6b6b76] mt-1">
-                  12 Categories · Pick the kind of performer you need.
-                </p>
-              </div>
-              <Link
-                href="/top-creators"
-                className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
-              >
-                <span>All Categories</span>
-                <span>&rarr;</span>
-              </Link>
-            </div>
-
-            {/* 6 cards in row (desktop), 3 in row (tablet), 2 in row (mobile) */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5">
-              {mockCategories.map((category) => (
-                <CategoryCard key={category.slug} category={category} />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 6. Stage & Spotlights Section */}
-        <section className="py-14 sm:py-18 bg-[#f3f3f5] border-b border-[#e6e6ea]" id="spotlight">
-          <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-              <div>
-                <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                  Stage &amp; Spotlights
-                </h2>
-                <p className="text-sm text-[#6b6b76] mt-1">
-                  Featured campaigns, festival stages, and audition calls.
-                </p>
-              </div>
-            </div>
-
-            {/* Layout: Large featured card left (2x width) + 2 small cards right */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Left Large Card (2x width -> 8 cols) */}
-              <div className="lg:col-span-8 group relative rounded-[20px] overflow-hidden min-h-[380px] sm:min-h-[440px] flex flex-col justify-end p-6 sm:p-8 text-white shadow-sm hover:shadow-lg transition">
-                <Image
-                  src={mainSpotlight.imageUrl}
-                  alt={mainSpotlight.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  sizes="(max-width: 1024px) 100vw, 66vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
-
-                <div className="relative z-10 space-y-3 max-w-xl">
-                  <span className="inline-block px-3 py-1 rounded-full bg-[#eb4e62] text-xs font-bold uppercase tracking-wider text-white">
-                    Featured Spotlight
-                  </span>
-                  <h3 className="font-heading font-extrabold text-2xl sm:text-4xl leading-tight">
-                    {mainSpotlight.title}
-                  </h3>
-                  {mainSpotlight.subtitle && (
-                    <p className="text-white/80 text-sm sm:text-base">
-                      {mainSpotlight.subtitle}
-                    </p>
-                  )}
-                  <div className="pt-2">
-                    <a
-                      href={mainSpotlight.link || '#events'}
-                      className="inline-flex items-center h-11 px-6 rounded-[10px] bg-white text-[#eb4e62] font-bold text-sm hover:bg-neutral-100 transition shadow-sm"
-                    >
-                      View Event &rarr;
-                    </a>
-                  </div>
+        {config.platinum.isVisible && (
+          <section className="py-14 sm:py-18 bg-white border-b border-[#e6e6ea]" id="platinum">
+            <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+                <div>
+                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
+                    {config.platinum.title}
+                  </h2>
+                  <p className="text-sm text-[#6b6b76] mt-1">
+                    {config.platinum.subtitle}
+                  </p>
                 </div>
+                <Link
+                  href="/top-creators?tier=platinum"
+                  className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
+                >
+                  <span>{config.platinum.viewAllText}</span>
+                  <span>&rarr;</span>
+                </Link>
               </div>
 
-              {/* Right Small Cards (4 cols -> stacked 2 cards) */}
-              <div className="lg:col-span-4 flex flex-col gap-6">
-                {sideSpotlights.map((spotlight) => (
-                  <div
-                    key={spotlight.id}
-                    className="group relative rounded-[20px] overflow-hidden flex-1 min-h-[200px] flex flex-col justify-end p-5 sm:p-6 text-white shadow-sm hover:shadow-md transition"
-                  >
-                    <Image
-                      src={spotlight.imageUrl}
-                      alt={spotlight.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      sizes="(max-width: 1024px) 100vw, 33vw"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-
-                    <div className="relative z-10 space-y-2">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#eb4e62] bg-white/90 px-2 py-0.5 rounded-full inline-block">
-                        Auditions &amp; Gigs
-                      </span>
-                      <h4 className="font-heading font-bold text-lg sm:text-xl leading-snug line-clamp-2">
-                        {spotlight.title}
-                      </h4>
-                      {spotlight.subtitle && (
-                        <p className="text-xs text-white/80 line-clamp-1">
-                          {spotlight.subtitle}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {platinumArtists.map((artist) => (
+                  <ArtistCard key={artist.id} artist={artist} badgeType="platinum" />
                 ))}
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
+
+        {/* 4. New on KalaSquare Section */}
+        {config.newTalent.isVisible && (
+          <section className="py-14 sm:py-18 bg-[#f3f3f5] border-b border-[#e6e6ea]" id="new-artists">
+            <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+                <div>
+                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
+                    {config.newTalent.title}
+                  </h2>
+                  <p className="text-sm text-[#6b6b76] mt-1">
+                    {config.newTalent.subtitle}
+                  </p>
+                </div>
+                <Link
+                  href="/top-creators?sort=newest"
+                  className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
+                >
+                  <span>{config.newTalent.viewAllText}</span>
+                  <span>&rarr;</span>
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {newArtists.map((artist) => (
+                  <ArtistCard key={artist.id} artist={artist} badgeType="new" />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* 5. Find Talent By Category Section */}
+        {config.categories.isVisible && (
+          <section className="py-14 sm:py-18 bg-white border-b border-[#e6e6ea]" id="talent">
+            <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+                <div>
+                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
+                    {config.categories.title}
+                  </h2>
+                  <p className="text-sm text-[#6b6b76] mt-1">
+                    {config.categories.subtitle}
+                  </p>
+                </div>
+                <Link
+                  href="/top-creators"
+                  className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
+                >
+                  <span>All Categories</span>
+                  <span>&rarr;</span>
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5">
+                {visibleCategories.map((category) => (
+                  <CategoryCard key={category.slug} category={category} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* 6. Stage & Spotlights Section */}
+        {config.spotlights.isVisible && (
+          <section className="py-14 sm:py-18 bg-[#f3f3f5] border-b border-[#e6e6ea]" id="spotlight">
+            <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+                <div>
+                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
+                    {config.spotlights.title}
+                  </h2>
+                  <p className="text-sm text-[#6b6b76] mt-1">
+                    {config.spotlights.subtitle}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="lg:col-span-8 bg-white rounded-2xl overflow-hidden border border-[#e6e6ea] shadow-xs flex flex-col justify-between group">
+                  <div className="relative w-full h-[260px] sm:h-[340px] overflow-hidden bg-neutral-200">
+                    <Image
+                      src={mainSpotlight.imageUrl}
+                      alt={mainSpotlight.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition duration-500"
+                      sizes="(max-width: 1024px) 100vw, 66vw"
+                    />
+                    <div className="absolute top-4 left-4">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#eb4e62] text-white shadow-xs">
+                        Featured Event
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-6 sm:p-8 space-y-3">
+                    <h3 className="font-heading font-extrabold text-xl sm:text-2xl text-[#1b1b1f] group-hover:text-[#eb4e62] transition">
+                      {mainSpotlight.title}
+                    </h3>
+                    <p className="text-sm text-[#6b6b76] leading-relaxed">
+                      {mainSpotlight.subtitle}
+                    </p>
+                    <div className="pt-2">
+                      <Link
+                        href={mainSpotlight.link || '#'}
+                        className="text-xs font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
+                      >
+                        <span>Learn More &amp; Register</span>
+                        <span>&rarr;</span>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-4 flex flex-col gap-6">
+                  {sideSpotlights.map((side) => (
+                    <div
+                      key={side.id}
+                      className="bg-white rounded-2xl overflow-hidden border border-[#e6e6ea] shadow-xs flex flex-col group flex-1"
+                    >
+                      <div className="relative w-full h-[150px] overflow-hidden bg-neutral-200">
+                        <Image
+                          src={side.imageUrl}
+                          alt={side.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition duration-500"
+                          sizes="(max-width: 1024px) 100vw, 33vw"
+                        />
+                        <div className="absolute top-3 left-3">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-black/70 text-white backdrop-blur-xs">
+                            {side.subtitle}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="p-5 flex-1 flex flex-col justify-between">
+                        <h4 className="font-heading font-bold text-sm text-[#1b1b1f] group-hover:text-[#eb4e62] transition">
+                          {side.title}
+                        </h4>
+                        <Link
+                          href={side.link || '#'}
+                          className="text-xs font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1 mt-3"
+                        >
+                          <span>Explore Details</span>
+                          <span>&rarr;</span>
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* 7. Featured Events Section */}
-        <section className="py-14 sm:py-18 bg-white border-b border-[#e6e6ea]" id="events">
-          <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-              <div>
-                <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                  Featured Events
-                </h2>
-                <p className="text-sm text-[#6b6b76] mt-1">
-                  Live shows, festivals, and concerts across India.
-                </p>
+        {config.events.isVisible && (
+          <section className="py-14 sm:py-18 bg-white border-b border-[#e6e6ea]" id="events">
+            <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+                <div>
+                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
+                    {config.events.title}
+                  </h2>
+                  <p className="text-sm text-[#6b6b76] mt-1">
+                    {config.events.subtitle}
+                  </p>
+                </div>
+                <Link
+                  href="#events"
+                  className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
+                >
+                  <span>All Events</span>
+                  <span>&rarr;</span>
+                </Link>
               </div>
-              <Link
-                href="#events"
-                className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
-              >
-                <span>View All Shows</span>
-                <span>&rarr;</span>
-              </Link>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {mockEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {mockEvents.slice(0, 4).map((event, idx) => {
+                  const cfgBadge = config.events.items[idx]?.badge;
+                  const item = cfgBadge && cfgBadge !== 'none' ? { ...event, badge: cfgBadge } : event;
+                  return <EventCard key={item.id} event={item} />;
+                })}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* 8. Rising Artists Section */}
-        <section className="py-14 sm:py-18 bg-[#f3f3f5] border-b border-[#e6e6ea]" id="rising">
-          <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-              <div>
-                <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                  Rising Artists
-                </h2>
-                <p className="text-sm text-[#6b6b76] mt-1">
-                  Emerging performers and breakthrough talents to watch.
-                </p>
+        {config.rising.isVisible && (
+          <section className="py-14 sm:py-18 bg-[#f3f3f5] border-b border-[#e6e6ea]" id="rising">
+            <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+                <div>
+                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
+                    {config.rising.title}
+                  </h2>
+                  <p className="text-sm text-[#6b6b76] mt-1">
+                    {config.rising.subtitle}
+                  </p>
+                </div>
+                <Link
+                  href="/top-creators?tier=rising"
+                  className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
+                >
+                  <span>{config.rising.viewAllText}</span>
+                  <span>&rarr;</span>
+                </Link>
               </div>
-              <Link
-                href="/top-creators?tier=rising"
-                className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
-              >
-                <span>See All Rising</span>
-                <span>&rarr;</span>
-              </Link>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {risingArtists.map((artist) => (
-                <ArtistCard key={artist.id} artist={artist} badgeType="rising" />
-              ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {risingArtists.map((artist) => (
+                  <ArtistCard key={artist.id} artist={artist} badgeType="rising" />
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* 9. Venues Section */}
-        <section className="py-14 sm:py-18 bg-white border-b border-[#e6e6ea]" id="venues">
-          <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-              <div>
-                <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                  Venues
-                </h2>
-                <p className="text-sm text-[#6b6b76] mt-1">
-                  Stages, clubs, and studios for your next big event.
-                </p>
+        {config.venues.isVisible && (
+          <section className="py-14 sm:py-18 bg-white border-b border-[#e6e6ea]" id="venues">
+            <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+                <div>
+                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
+                    {config.venues.title}
+                  </h2>
+                  <p className="text-sm text-[#6b6b76] mt-1">
+                    {config.venues.subtitle}
+                  </p>
+                </div>
+                <Link
+                  href="#venues"
+                  className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
+                >
+                  <span>All Venues</span>
+                  <span>&rarr;</span>
+                </Link>
               </div>
-              <Link
-                href="#venues"
-                className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
-              >
-                <span>All Venues</span>
-                <span>&rarr;</span>
-              </Link>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {mockVenues.map((venue) => (
-                <VenueCard key={venue.id} venue={venue} />
-              ))}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {selectedVenues.map((venue) => (
+                  <VenueCard key={venue.id} venue={venue} />
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* 10. FAQ Section */}
-        <FAQSection faqs={mockFAQs} />
+        {config.faq.isVisible && (
+          <FAQSection
+            faqs={displayFaqs}
+            title={config.faq.title}
+            buttonText={config.faq.buttonText}
+          />
+        )}
       </main>
 
       {/* 11. Footer */}
-      <Footer />
+      {config.footer.isVisible && <Footer footerConfig={config.footer} />}
 
       {/* 12. Enquiry CTA - Sticky Bottom on Mobile Only */}
-      <div className="md:hidden sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#e6e6ea] p-3 shadow-lg flex items-center justify-between gap-4">
-        <div className="min-w-0">
-          <p className="font-bold text-xs text-[#1b1b1f] truncate">Need Artists for an Event?</p>
-          <p className="text-[11px] text-[#6b6b76] truncate">Get instant quotes &amp; curated talent</p>
-        </div>
-        <a
-          href="#talent"
-          className="flex-shrink-0 h-10 px-5 rounded-[10px] bg-[#eb4e62] text-white text-xs font-bold flex items-center justify-center shadow-sm"
+      {config.enquiryCta.isVisible && (
+        <div
+          className={`${
+            config.enquiryCta.mobileOnly ? 'md:hidden' : ''
+          } sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#e6e6ea] p-3 shadow-lg flex items-center justify-between gap-4`}
         >
-          Send Enquiry
-        </a>
-      </div>
+          <div className="min-w-0">
+            <p className="font-bold text-xs text-[#1b1b1f] truncate">
+              {config.enquiryCta.title}
+            </p>
+            <p className="text-[11px] text-[#6b6b76] truncate">
+              {config.enquiryCta.subtext || 'Get instant quotes & curated talent'}
+            </p>
+          </div>
+          <a
+            href="#talent"
+            className="shrink-0 h-10 px-5 rounded-[10px] bg-[#eb4e62] text-white text-xs font-bold flex items-center justify-center shadow-sm"
+          >
+            {config.enquiryCta.buttonText}
+          </a>
+        </div>
+      )}
     </div>
   );
 }

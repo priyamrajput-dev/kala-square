@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Phase 5 - Prompt 5: Admin Add / Edit Artist Form - DONE
+- Phase 6 - Prompt 6: Admin Home Page Manager + View All Artists + Enquiries - DONE
 
 ## Current Goal
 
-- Ready for Prompt 6: Admin Home Page Manager + View All Artists + Enquiries
+- Ready for Prompt 7: Backend APIs - Artists CRUD + Publish / Draft + Uploads + Home APIs
 
 ## Completed
 
@@ -121,13 +121,47 @@ Update this file whenever the current phase, active feature, or implementation s
   - Implemented mock save to `localStorage['kalasquare_admin_artists']` with toast alerts and auto-redirection.
   - Verified `pnpm typecheck` (0 errors across monorepo) and Next.js static build (`pnpm build`).
 
+- **Prompt 6: Admin Home Page Manager + View All Artists + Enquiries (DONE)**
+  - **Part A: View All Artists (`/admin/artists`)**:
+    - Replaced placeholder with full `ArtistsTable.tsx` component.
+    - Top bar with total artist count and "+ Add Artist" primary button.
+    - Live search across artist name, city, category, and slug.
+    - Filter dropdowns: Category (13 categories), Artist Class (All, Platinum, Gold, Rising, New), Status (All, Published, Draft), Sort (Newest First, Name A-Z, Price Low to High, Price High to Low).
+    - Table view (desktop) & cards view (mobile) with photo, name, slug, category pills, city, class badge, status badge, completeness bar, updated date, and action icons.
+    - Row actions: View live profile (Eye), Edit (Pencil), Duplicate (Copy with `{slug}-copy` and toast), Publish/Unpublish toggle, Delete with `ConfirmModal`.
+    - Bulk actions: Row selection checkboxes, Select All on page, floating action bar ("Publish Selected", "Unpublish Selected", "Delete Selected" with confirm modal).
+    - Client-side pagination (10 per page) with prev/next navigation and range indicator.
+    - Merged data from `mockArtistProfiles` and `localStorage['kalasquare_admin_artists']`.
+  - **Part B: Home Page Manager (`/admin/home-page`)**:
+    - Replicated layout from `Kalasquare_Home_Page_Manager_2.html`.
+    - Top bar: Title, Subtitle, "Preview Home Page" (opens `/` in new tab), "Save Changes" (Coral), "Publish" (Black with confirmation modal).
+    - Left sticky section list with 11 sections in exact order (Hero, Platinum Artists, New on KalaSquare, Find Talent By Category, Stage & Spotlights, Featured Events, Rising Artists, Venues, FAQ, Footer Links, Enquiry Sticky CTA).
+    - Reorder Up/Down buttons and Show/Hide visibility toggles per section.
+    - Right editor panel (`HomeSectionEditor.tsx`) with dedicated field editors for all 11 sections.
+    - Platinum Artists selector enforcing 4 artists with warning indicator if less than 4 selected.
+    - Live Mini Preview snapshot box updating dynamically as section fields change.
+    - Sticky bottom bar with last saved timestamp, "Save Draft" button, and "Publish" button.
+    - Zod validation schema (`homeConfigSchema`) in `apps/web/src/lib/validators/home-config.ts`.
+    - Mock save to `localStorage['kalasquare_home_config']` with toast alerts.
+  - **Part C: Enquiries Management (`/admin/enquiries`)**:
+    - Built `EnquiriesTable.tsx` and slide-out `EnquiryDrawer.tsx` (400px width on desktop, full width on mobile).
+    - Top bar with total enquiry count and filter tabs: All, New, Contacted, Booked, Closed.
+    - Live search by client name, artist name, phone, or event city.
+    - Table columns: Date, Customer, Requested Artist (link to profile), Event Date, Event Type, Message (truncated), Status badge, Actions.
+    - Slide-out drawer with complete event specifications, artist card, quick action buttons ("Call Client" `tel:`, "WhatsApp" `wa.me`), internal admin notes (textarea + Save Note to localStorage), and status changers (Mark Contacted, Mark Booked, Close).
+    - Added 8 realistic mock enquiries (`mockEnquiries`) covering all 4 status states in `apps/web/src/lib/mock-data.ts`.
+  - **Part D: Public Home Page Integration**:
+    - Updated `HomeSections.tsx` to read `kalasquare_home_config` from localStorage client-side in a hydration-safe manner.
+    - Dynamically respects section visibility (`isVisible: false` hides section), custom headlines, custom artist rows, and custom FAQ lists.
+    - Updated `AdminLayout.tsx` so Artists, Home Page Manager, and Enquiries sidebar links are active.
+  - Verified `pnpm typecheck` (0 errors across monorepo) and Next.js static build (`pnpm build`).
+
 ## In Progress
 
-- None (Prompt 5 completed).
+- None (Prompt 6 completed).
 
 ## Next Up
 
-- Prompt 6 - Admin Home Page Manager + View All Artists + Enquiries
 - Prompt 7 - Backend APIs - Artists CRUD + Publish / Draft + Uploads + Home APIs
 - Prompt 8 - Live Deploy + Testing + Acceptance
 

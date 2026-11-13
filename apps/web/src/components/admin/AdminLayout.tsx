@@ -33,8 +33,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     const navItems = [
         { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard, ready: false },
         { label: 'Artists', href: '/admin/artists', icon: Users, ready: true },
-        { label: 'Home Page Manager', href: '/admin/home', icon: Home, ready: false },
-        { label: 'Enquiries', href: '/admin/enquiries', icon: MessageSquare, ready: false },
+        { label: 'Home Page Manager', href: '/admin/home-page', icon: Home, ready: true },
+        { label: 'Enquiries', href: '/admin/enquiries', icon: MessageSquare, ready: true },
         { label: 'Venues', href: '/admin/venues', icon: Building2, ready: false },
         { label: 'Settings', href: '/admin/settings', icon: Settings, ready: false },
     ];
