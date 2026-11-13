@@ -6,4 +6,3 @@ export { default as DynamicList } from './DynamicList';
 export { default as CompletenessBar } from './CompletenessBar';
 export { default as SEOPreview } from './SEOPreview';
 export { default as ArtistForm } from './ArtistForm';
-
