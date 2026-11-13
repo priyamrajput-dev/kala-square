@@ -77,3 +77,4 @@ export default function VideoGrid({ videos }: VideoGridProps) {
     </section>
   );
 }
+

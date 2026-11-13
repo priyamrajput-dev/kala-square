@@ -103,3 +103,4 @@ export default function IMDbSection({ categories, imdb }: IMDbSectionProps) {
     </section>
   );
 }
+

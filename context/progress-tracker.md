@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Phase 4 - Prompt 4: Public Artist Profile Page (`/top-creators/[slug]`) - DONE
+- Phase 5 - Prompt 5: Admin Add / Edit Artist Form - DONE
 
 ## Current Goal
 
-- Ready for Prompt 5: Admin Add / Edit Artist Form
+- Ready for Prompt 6: Admin Home Page Manager + View All Artists + Enquiries
 
 ## Completed
 
@@ -92,13 +92,41 @@ Update this file whenever the current phase, active feature, or implementation s
   - Automated tests verified 100% of functional requirements and conditional visibility rules.
   - `pnpm typecheck` and `pnpm build` passed with zero errors.
 
+- **Prompt 5: Admin Add / Edit Artist Form (DONE)**
+  - Added dependencies `react-hook-form` (`^7.71.1`) and `@hookform/resolvers` (`^5.2.2`) in `apps/web`.
+  - Built Zod form validators in `apps/web/src/lib/validators/artist-form.ts`:
+    - Full publish validation schema (`artistFormSchema`) enforcing requirements across all sections.
+    - Relaxed draft schema (`artistDraftSchema`) requiring only `name`.
+  - Built weighted completeness algorithm (0-100%) in `apps/web/src/lib/completeness.ts`:
+    - Weights: Basic (20%), About (15%), Categories (10%), Social (10%), Fanbase (10%), Gallery (15%), Videos (5%), Campaigns/Awards (5%), SEO (10%).
+    - Dynamic next-step actionable tip directing user to incomplete sections.
+  - Built Admin Layout components in `apps/web/src/components/admin/`:
+    - `AdminLayout`: Sidebar with 6 navigation items (Dashboard, Artists, Home Page Manager, Enquiries, Venues, Settings), active route indicators, mobile toggle drawer, toast for unbuilt modules.
+    - `ArtistForm`: Comprehensive 10-section form with sticky left anchor nav, top bar actions, sticky bottom completeness bar, React Hook Form + Zod, auto-slug generation with custom override, character counters, modals for low completeness warning (<70%) and unpublish confirmation.
+    - `FormSection`: Reusable card wrapper with scroll anchors, section icons, and descriptions.
+    - `ImageUpload`: Single image picker supporting Square (1:1) and Banner (16:9) aspect preview, URL/file input, and removal.
+    - `GalleryUploader`: Multi-image manager up to 12 photos, cover badge, captions, up/down reordering, remove.
+    - `DynamicList`: Generic dynamic list manager for Performance Videos (max 6), Clips/Reels (max 8), Brand Campaigns (max 6), Awards (max 8), FAQs (max 8).
+    - `CompletenessBar`: Visual progress bar (0-100%) with color coding and dynamic optimization tip.
+    - `SEOPreview`: Live preview of canonical URL (`kalasquare.com/top-creators/{slug}`) and Google search snippet card with title, URL, and meta description.
+  - Built Admin routes in `apps/web/src/app/admin/`:
+    - `/admin/layout.tsx`: Root admin layout wrapping all admin subpages.
+    - `/admin/page.tsx`: Admin dashboard placeholder with quick action cards.
+    - `/admin/artists/page.tsx`: Artists directory placeholder with quick-edit cards for mock artists (`sahil-badal`, `test-artist`, `aarav-sharma`) and "Add New Artist" CTA.
+    - `/admin/artists/new/page.tsx`: Add Artist route initializing fresh form in `create` mode.
+    - `/admin/artists/[id]/edit/page.tsx`: Edit Artist route pre-filling data from `mockArtistProfiles` in `edit` mode.
+  - Implemented conditional visibility:
+    - FAQs section automatically hides unless Artist Class is set to 'Platinum'.
+    - IMDb / Screen credits fields conditionally show when Category includes 'Actor'.
+  - Implemented mock save to `localStorage['kalasquare_admin_artists']` with toast alerts and auto-redirection.
+  - Verified `pnpm typecheck` (0 errors across monorepo) and Next.js static build (`pnpm build`).
+
 ## In Progress
 
-- None (Prompt 4 completed).
+- None (Prompt 5 completed).
 
 ## Next Up
 
-- Prompt 5 - Admin Add / Edit Artist Form - Videos 6, Clips 8, Campaigns 6, Awards 8, FAQs 8, Gallery 12, Fanbase, SEO
 - Prompt 6 - Admin Home Page Manager + View All Artists + Enquiries
 - Prompt 7 - Backend APIs - Artists CRUD + Publish / Draft + Uploads + Home APIs
 - Prompt 8 - Live Deploy + Testing + Acceptance

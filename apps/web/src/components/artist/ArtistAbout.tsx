@@ -101,3 +101,4 @@ export default function ArtistAbout({ artist }: ArtistAboutProps) {
     </section>
   );
 }
+

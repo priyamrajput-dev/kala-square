@@ -191,3 +191,4 @@ export default function EnquiryCard({ artist }: EnquiryCardProps) {
     </>
   );
 }
+

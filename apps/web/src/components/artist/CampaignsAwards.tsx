@@ -110,3 +110,4 @@ export default function CampaignsAwards({ campaigns, awards }: CampaignsAwardsPr
     </section>
   );
 }
+

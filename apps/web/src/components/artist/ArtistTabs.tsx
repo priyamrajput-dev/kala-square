@@ -104,3 +104,4 @@ export default function ArtistTabs({ artist }: ArtistTabsProps) {
     </nav>
   );
 }
+

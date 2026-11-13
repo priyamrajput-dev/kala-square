@@ -131,3 +131,4 @@ export default function FanbaseChart({ fanbase }: FanbaseChartProps) {
     </section>
   );
 }
+

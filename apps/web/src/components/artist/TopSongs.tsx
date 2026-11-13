@@ -74,3 +74,4 @@ export default function TopSongs({ categories, songs }: TopSongsProps) {
     </section>
   );
 }
+
