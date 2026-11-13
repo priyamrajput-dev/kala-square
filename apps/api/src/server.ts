@@ -8,8 +8,8 @@ try {
     port: env.PORT,
     host: env.HOST,
   });
-  app.log.info(`🚀 Kalasquare API server running at http://${env.HOST}:${env.PORT}`);
-  app.log.info(`📚 Swagger documentation available at http://${env.HOST}:${env.PORT}/docs`);
+  app.log.info(`🚀 Kalasquare API server running at http://localhost:${env.PORT}`);
+  app.log.info(`📚 Swagger documentation available at http://localhost:${env.PORT}/docs`);
 } catch (err) {
   app.log.error(err);
   process.exit(1);

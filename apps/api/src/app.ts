@@ -99,7 +99,7 @@ export async function buildApp(): Promise<FastifyInstance> {
             docExpansion: 'list',
             deepLinking: false,
         },
-        staticCSP: true,
+        staticCSP: false,
     });
 
     // Also alias /api/docs to /docs
