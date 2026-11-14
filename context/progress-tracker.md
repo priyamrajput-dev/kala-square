@@ -4,6 +4,23 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
+- **Production Deployment to Vercel & Railway (DONE)**:
+  - **GitHub Repository**: Pushed full monorepo to `https://github.com/priyamrajput-dev/kala-square` on branch `main`.
+  - **Vercel Frontend Deployment**:
+    - Created and linked project `kala-square` under user account (`priyamrajput00` / `priyamrajput99@gmail.com`).
+    - Successfully compiled Next.js 16 App Router build (`apps/web`) with production target.
+    - Production URLs:
+      - **Primary Live Production URL**: `https://kala-square.vercel.app`
+      - Project Alias: `https://kala-square-priyamrajput00s-projects.vercel.app`
+      - Git Main Alias: `https://kala-square-git-main-priyamrajput00s-projects.vercel.app`
+    - Configured production environment variables (`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL`).
+    - Verified HTTP/2 200 responses on both home page (`/`) and artist profile routes (`/top-creators/priyam`).
+  - **Railway Backend Service**:
+    - Project created: `kalasquare-api` (`5cdbc14d-288b-4091-a908-e0c89ecb4b75`) in workspace `Priyam Rajput's Projects`.
+    - Service created: `api` (`9c680283-8f53-4fdc-8314-a34859bde4c4`).
+    - Public Domain assigned: `https://api-production-310c622d.up.railway.app`.
+    - Injected production environment variables (`DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH`, `CORS_ORIGIN=*`, `PORT=3001`, `NODE_ENV=production`).
+
 - **Share Profile & New Tab Link Resolution (DONE)**:
   - **Issue Diagnosed**:
     - Previously, `ArtistHero.tsx` invoked `navigator.share({ title, text, url })`, which triggered the native OS share sheet (e.g., macOS AirDrop/Mail/Messages/Copy).
