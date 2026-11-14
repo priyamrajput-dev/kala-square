@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://api-production-310c622d.up.railway.app' : 'http://localhost:3001');
     return [
       {
         source: '/uploads/:path*',

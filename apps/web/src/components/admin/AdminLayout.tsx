@@ -37,6 +37,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [venuesOpen, setVenuesOpen] = useState(false);
   const [waOpen, setWaOpen] = useState(false);
   const [usersOpen, setUsersOpen] = useState(false);
+  const [hasEditParam, setHasEditParam] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setHasEditParam(window.location.search.includes('edit='));
+    }
+  }, [pathname]);
 
   useEffect(() => {
     if (pathname === '/admin/login') {
@@ -55,14 +62,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   if (pathname === '/admin/login') {
     return <>{children}</>;
   }
-
-  const [hasEditParam, setHasEditParam] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setHasEditParam(window.location.search.includes('edit='));
-    }
-  }, [pathname]);
 
   const isViewAllArtistsActive = pathname === '/admin/artists';
   const isAddArtistActive = pathname === '/admin/artists/new' || pathname.includes('/edit');

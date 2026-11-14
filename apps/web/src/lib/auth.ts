@@ -1,3 +1,5 @@
+import { getApiBaseUrl } from './api';
+
 export interface AdminUser {
     id: string;
     email: string;
@@ -37,7 +39,7 @@ export function isLoggedIn(): boolean {
 }
 
 export async function login(email: string, password: string): Promise<{ success: boolean; error?: string }> {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const apiUrl = getApiBaseUrl();
     try {
         const res = await fetch(`${apiUrl}/api/auth/login`, {
             method: 'POST',
@@ -81,7 +83,7 @@ export async function login(email: string, password: string): Promise<{ success:
 }
 
 export async function logout(): Promise<void> {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const apiUrl = getApiBaseUrl();
     const token = getToken();
 
     if (token) {

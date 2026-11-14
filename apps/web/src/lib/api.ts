@@ -14,10 +14,23 @@ import {
 import { HomeConfig } from './validators/home-config';
 import { ArtistProfile } from './types';
 
+export function getApiBaseUrl(): string {
+    if (process.env.NEXT_PUBLIC_API_URL && process.env.NEXT_PUBLIC_API_URL !== 'http://localhost:3001') {
+        return process.env.NEXT_PUBLIC_API_URL;
+    }
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        return 'https://api-production-310c622d.up.railway.app';
+    }
+    if (process.env.NODE_ENV === 'production') {
+        return 'https://api-production-310c622d.up.railway.app';
+    }
+    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+}
+
 const API_BASE =
     (typeof window === 'undefined' && process.env.INTERNAL_API_URL)
         ? process.env.INTERNAL_API_URL
-        : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
+        : getApiBaseUrl();
 
 // Helper for authenticated admin headers
 function getAdminHeaders(): HeadersInit {

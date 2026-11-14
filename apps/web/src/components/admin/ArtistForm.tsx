@@ -20,7 +20,7 @@ import {
   ArtistFormData,
 } from '@/lib/validators/artist-form';
 import { calculateCompleteness } from '@/lib/completeness';
-import { createArtist, updateArtist } from '@/lib/api';
+import { createArtist, updateArtist, getApiBaseUrl } from '@/lib/api';
 
 interface ArtistFormProps {
   mode: 'create' | 'edit';
@@ -155,7 +155,7 @@ export default function ArtistForm({ mode, initialData, artistId }: ArtistFormPr
       const formData = new FormData();
       formData.append('file', file);
       const token = typeof window !== 'undefined' ? localStorage.getItem('kalasquare_token') : null;
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const apiUrl = getApiBaseUrl();
 
       // 4-second timeout to prevent any hanging if network/backend is unreachable
       const controller = new AbortController();

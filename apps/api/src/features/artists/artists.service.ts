@@ -101,11 +101,7 @@ export class ArtistsService {
             throw new NotFoundError('Artist not found');
         }
 
-        // Only draft artists return 404; pending and live/published artists can be viewed via direct slug URL
-        if (artist.status === 'draft') {
-            throw new NotFoundError('Artist not found');
-        }
-
+        // In Kalasquare reference HTML (manager.html), all created artist profiles can be viewed via direct slug
         const isPlatinum = artist.artistClass?.toLowerCase() === 'platinum';
 
         // Extract media

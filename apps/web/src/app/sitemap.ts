@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { mockArtists } from '@/lib/mock-data';
+import { getApiBaseUrl } from '@/lib/api';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kalasquare.com';
@@ -22,7 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let publishedSlugs: string[] = mockArtists.map((a) => a.slug);
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const apiUrl = getApiBaseUrl();
     const res = await fetch(`${apiUrl}/api/public/artists?limit=100`, {
       signal: AbortSignal.timeout(1000),
     });

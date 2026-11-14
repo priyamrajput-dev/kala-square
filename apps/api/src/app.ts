@@ -45,9 +45,20 @@ export async function buildApp(): Promise<FastifyInstance> {
     // Register plugins
     await app.register(sensible);
     await app.register(cors, {
-        origin: env.NODE_ENV === 'production' && env.CORS_ORIGIN !== '*'
-            ? [env.CORS_ORIGIN, 'https://kalasquare.com', 'https://www.kalasquare.com']
-            : true,
+        origin: (origin, cb) => {
+            if (!origin) return cb(null, true);
+            if (
+                origin.includes('localhost') ||
+                origin.includes('127.0.0.1') ||
+                origin.includes('kalasquare.com') ||
+                origin.endsWith('.vercel.app') ||
+                (env.CORS_ORIGIN && env.CORS_ORIGIN !== '*' && origin === env.CORS_ORIGIN) ||
+                env.CORS_ORIGIN === '*'
+            ) {
+                return cb(null, true);
+            }
+            return cb(new Error('Not allowed by CORS'), false);
+        },
         credentials: true,
     });
 

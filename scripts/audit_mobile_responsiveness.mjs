@@ -139,12 +139,13 @@ async function auditPage(url, pageName) {
 }
 
 async function main() {
-  await auditPage(`${BASE_URL}/`, 'home');
-  await auditPage(`${BASE_URL}/top-creators/priyam`, 'profile_priyam');
-  await auditPage(`${BASE_URL}/top-creators`, 'top_creators');
+  await auditPage(`${BASE_URL}/admin/artists`, 'admin_artists');
+  await auditPage(`${BASE_URL}/admin/artists/new`, 'admin_artists_new');
+  await auditPage(`${BASE_URL}/admin/login`, 'admin_login');
 }
 
 main().catch(err => {
   console.error('Audit failed:', err);
   process.exit(1);
 });
+

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArtistProfile } from '@/lib/types';
+import { getApiBaseUrl } from '@/lib/api';
 import { mapRecordToArtistProfile, mockArtists } from '@/lib/mock-data';
 import {
   ArtistHero,
@@ -29,6 +30,7 @@ interface ArtistProfileViewProps {
 
 export default function ArtistProfileView({ initialArtist, slug }: ArtistProfileViewProps) {
   const [artist, setArtist] = useState<ArtistProfile | null>(initialArtist);
+  const [isLoading, setIsLoading] = useState<boolean>(!initialArtist);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -45,6 +47,7 @@ export default function ArtistProfileView({ initialArtist, slug }: ArtistProfile
         if (found) {
           const mapped = mapRecordToArtistProfile(found);
           setArtist(mapped);
+          setIsLoading(false);
           return;
         }
       }
@@ -53,15 +56,40 @@ export default function ArtistProfileView({ initialArtist, slug }: ArtistProfile
     // If initialArtist is null, attempt client-side fetch as well
     if (!initialArtist) {
       const normalized = decodeURIComponent(slug).toLowerCase().trim();
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const apiUrl = getApiBaseUrl();
       fetch(`${apiUrl}/api/public/artists/${encodeURIComponent(normalized)}`)
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data) setArtist(data);
         })
-        .catch(() => {});
+        .catch(() => {})
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      setIsLoading(false);
     }
   }, [slug, initialArtist]);
+
+  if (isLoading) {
+    return (
+      <div className="wrap flex-1 flex flex-col items-center justify-center" style={{ minHeight: '60vh', padding: '80px 24px', textAlign: 'center' }}>
+        <div
+          style={{
+            width: '40px',
+            height: '40px',
+            border: '3px solid #f1dedc',
+            borderTopColor: '#eb4e62',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px',
+          }}
+        />
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+        <p style={{ color: 'var(--mute, #777)', fontSize: '15px' }}>Loading artist profile...</p>
+      </div>
+    );
+  }
 
   if (!artist) {
     return (

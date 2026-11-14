@@ -4,6 +4,16 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
+- **Login Redirect Fix, Admin Mobile Responsiveness & Multi-Origin Deployment Alignment (DONE)**:
+  - **Login Redirect Fix**: Identified and resolved React hook ordering violation in `apps/web/src/components/admin/AdminLayout.tsx` where `useState` and `useEffect` were declared after `if (pathname === '/admin/login') return <>{children}</>;`. During client-side App Router transition from `/admin/login` to `/admin/artists`, the layout preserved its component instance but rendered additional hooks, throwing `Rendered more hooks than during the previous render` and triggering Next.js default error boundary ("This page couldn't load. Reload to try again, or go back."). Moving all hooks unconditionally to the top resolved the crash.
+  - **Admin Mobile Responsiveness**: Ported `@media (max-width: 899px)` mobile navigation styles from `Kalasquare_Home_Page_Manager_2.html` lines 403-410 into `apps/web/src/app/globals.css`. Transforms the fixed 248px vertical sidebar into a horizontal, scrollable pill bar (`.nav`, `.nv`, `.kids`), hiding labels (`.navl`) and user info (`.who`), and setting single-column layout (`.app`). Audited across 9 viewports (320px to 1920px) with 0 horizontal overflow.
+  - **Production API & Share Link Resilience**:
+    - Created unified `getApiBaseUrl()` helper in `apps/web/src/lib/api.ts` that dynamically detects host environment: automatically points to `https://api-production-310c622d.up.railway.app` when deployed on Vercel or in production, and `http://localhost:3001` on local development.
+    - Updated `apps/api/src/app.ts` CORS policy to dynamically accept requests from all Vercel deployments (`*.vercel.app`), `kalasquare.com`, and local development.
+    - Updated `apps/api/src/features/artists/artists.service.ts` and `artists.repository.ts` to allow direct viewing of all created profiles by slug or ID, mirroring `Kalasquare_Home_Page_Manager_2.html`.
+    - Added loading skeleton state in `ArtistProfileView.tsx` to eliminate momentary "Artist Not Found" flashes while resolving API data.
+  - **Full Monorepo Build**: `pnpm -r build` passed cleanly across `packages/db`, `packages/shared`, `apps/api`, and `apps/web`.
+
 - **Mobile Responsiveness Restoration (Source of Truth Parity - DONE)**:
   - **Audit Across All 9 Breakpoints**: Executed automated CDP Chrome audit across 320px, 375px, 390px, 430px, 768px, 1024px, 1280px, 1440px, and 1920px viewports on Home (`/`), Artist Profile (`/top-creators/priyam`), and Directory (`/top-creators`). All 27 viewports passed with 0 horizontal overflow (`scrollWidth <= window.innerWidth`).
   - **DemoBar Fix**: Added `hidden sm:inline` to bold title text, allowed wrapping with compact padding on `<= 520px` screens, eliminating the fixed-width 385px container barrier.

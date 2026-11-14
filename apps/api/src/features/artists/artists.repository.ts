@@ -76,7 +76,8 @@ export class ArtistsRepository {
                 or(
                     eq(artists.slug, slug),
                     eq(artists.slug, decodedSlug),
-                    ilike(artists.slug, decodedSlug)
+                    ilike(artists.slug, decodedSlug),
+                    eq(artists.id, slug)
                 )
             )
             .limit(1);

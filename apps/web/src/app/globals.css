@@ -438,6 +438,47 @@ body {
   .app {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
+    padding-top: 12px;
+  }
+  .side {
+    position: static !important;
+    max-height: none !important;
+    padding: 12px 0 6px !important;
+    gap: 12px !important;
+  }
+  .who, .navl {
+    display: none !important;
+  }
+  .nav {
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    gap: 6px !important;
+    padding-bottom: 6px !important;
+    scrollbar-width: none !important;
+  }
+  .nav::-webkit-scrollbar {
+    display: none !important;
+  }
+  .nv {
+    width: auto !important;
+    white-space: nowrap !important;
+    background: var(--card) !important;
+    border: 1px solid var(--line) !important;
+    flex: none !important;
+  }
+  .kids {
+    flex-direction: row !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    gap: 6px !important;
+    display: flex !important;
+  }
+  .kids .nv {
+    font-size: 13px !important;
+  }
+  .top {
+    top: env(safe-area-inset-top, 0px) !important;
   }
 }
 
