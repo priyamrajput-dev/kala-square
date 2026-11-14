@@ -46,3 +46,4 @@ All bugs discovered during Prompt 8 production configuration, performance testin
 - **Root Cause**: `galleryItemFormSchema` strictly required `id: z.string()`, rejecting payloads where `id` was generated dynamically or omitted during raw API testing.
 - **Fix**: Made `id` optional in `galleryItemFormSchema` (`id: z.string().optional()`) and updated `GalleryItem` interface in `GalleryUploader.tsx`.
 - **Re-test Result**: `pnpm typecheck` passed with 0 errors across all 5 workspace projects.
+

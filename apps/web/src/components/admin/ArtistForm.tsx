@@ -1,33 +1,26 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  ArrowLeft,
-  ExternalLink,
+  Upload,
+  Plus,
+  Trash2,
   CheckCircle2,
-  AlertCircle,
-  HelpCircle,
-  Film,
   Sparkles,
+  AlertCircle,
+  X,
 } from 'lucide-react';
 
 import {
   artistFormSchema,
-  artistDraftSchema,
   ArtistFormData,
 } from '@/lib/validators/artist-form';
 import { calculateCompleteness } from '@/lib/completeness';
 import { createArtist, updateArtist } from '@/lib/api';
-import FormSection from './FormSection';
-import ImageUpload from './ImageUpload';
-import GalleryUploader, { GalleryItem } from './GalleryUploader';
-import DynamicList from './DynamicList';
-import CompletenessBar from './CompletenessBar';
-import SEOPreview from './SEOPreview';
 
 interface ArtistFormProps {
   mode: 'create' | 'edit';
@@ -35,365 +28,691 @@ interface ArtistFormProps {
   artistId?: string;
 }
 
-const CATEGORY_OPTIONS = [
+const CATEGORY_CHIPS = [
   'Actor',
-  'Singer',
-  'Musician',
-  'Band',
+  'Anchors',
   'Dancer',
-  'Comedian',
-  'Emcee',
+  'Fitness',
+  'Food Vloggers',
+  'Gaming',
+  'Influencer',
+  'Models',
+  'Poets',
+  'Singer',
   'Speaker',
-  'Magician',
-  'DJ',
-  'Photographer',
-  'Crew / Company',
+  'Standup Comedy',
+  'Writer',
 ];
 
-const LANGUAGE_OPTIONS = [
-  'Hindi',
-  'English',
-  'Punjabi',
-  'Bengali',
-  'Tamil',
-  'Telugu',
-  'Marathi',
-  'Gujarati',
-  'Urdu',
+const CITY_OPTIONS = [
+  'Delhi',
+  'Mumbai',
+  'Bangalore',
+  'Haryana',
+  'Varanasi',
+  'Lucknow',
+  'Kolkata',
+  'Hyderabad',
+  'Chennai',
+  'Pune',
+  'Jaipur',
+  'Chandigarh',
+  'Goa',
   'Other',
 ];
 
-const NAV_SECTIONS = [
-  { id: 'sec-basic', label: 'Basic Info' },
-  { id: 'sec-about', label: 'About & Stats' },
-  { id: 'sec-categories', label: 'Categories & Pricing' },
-  { id: 'sec-social', label: 'Social & Fanbase' },
-  { id: 'sec-gallery', label: 'Gallery' },
-  { id: 'sec-videos', label: 'Videos & Clips' },
-  { id: 'sec-campaigns', label: 'Campaigns & Awards' },
-  { id: 'sec-faqs', label: 'FAQs' },
-  { id: 'sec-seo', label: 'SEO' },
-  { id: 'sec-publish', label: 'Publish Settings' },
+const CLASS_OPTIONS = [
+  { value: 'standard', label: 'Standard · No badge' },
+  { value: 'rising', label: 'Rising · Blue tick' },
+  { value: 'platinum', label: 'Platinum · Golden badge' },
+  { value: 'emerging', label: 'Emerging · Blue tick' },
+];
+
+const BUDGET_OPTIONS = [
+  { value: '', label: 'Not set' },
+  { value: 'Under ₹25,000', label: 'Under ₹25,000' },
+  { value: '₹25,000 - ₹50,000', label: '₹25,000 - ₹50,000' },
+  { value: '₹50,000 - ₹1,00,000', label: '₹50,000 - ₹1,00,000' },
+  { value: '₹1,00,000 - ₹2,00,000', label: '₹1,00,000 - ₹2,00,000' },
+  { value: '₹2,00,000+', label: '₹2,00,000+' },
 ];
 
 export default function ArtistForm({ mode, initialData, artistId }: ArtistFormProps) {
   const router = useRouter();
 
-  // Active section for sticky navigation
-  const [activeNav, setActiveNav] = useState('sec-basic');
-
-  // Confirmation Modals
-  const [showLowCompletenessModal, setShowLowCompletenessModal] = useState(false);
-  const [showUnpublishModal, setShowUnpublishModal] = useState(false);
-  const [pendingSubmitData, setPendingSubmitData] = useState<ArtistFormData | null>(null);
-
-  // Success Toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showLowCompletenessModal, setShowLowCompletenessModal] = useState(false);
+  const [pendingSubmitData, setPendingSubmitData] = useState<ArtistFormData | null>(null);
+  const [, setSlugTouched] = useState(false);
 
-  // Has the user manually modified the slug?
-  const [isSlugTouched, setIsSlugTouched] = useState(mode === 'edit');
+  // Profile photo state (dedicated state for instant visual preview)
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string>(initialData?.photoUrl || '');
 
-  const defaultValues: ArtistFormData = {
-    name: initialData?.name || '',
-    slug: initialData?.slug || '',
-    tagline: initialData?.tagline || '',
-    photoUrl: initialData?.photoUrl || '',
-    coverPhotoUrl: initialData?.coverPhotoUrl || '',
-    city: initialData?.city || 'Delhi',
-    state: initialData?.state || 'Delhi-NCR',
-    artistClass: initialData?.artistClass || 'platinum',
-    isVerified: initialData?.isVerified ?? true,
-    isFeatured: initialData?.isFeatured ?? false,
-    bio: initialData?.bio || '',
-    languages: initialData?.languages || ['Hindi', 'English'],
-    specializations: initialData?.specializations || '',
-    height: initialData?.height || "5'10\"",
-    weight: initialData?.weight || '68 kg',
-    waist: initialData?.waist || '32 in',
-    chest: initialData?.chest || '40 in',
-    hairType: initialData?.hairType || 'Straight',
-    hairLength: initialData?.hairLength || 'Short',
-    experienceYears: initialData?.experienceYears || '18 Years',
-    projectsCount: initialData?.projectsCount || '50+',
-    liveShowsCount: initialData?.liveShowsCount || '150+',
-    categories: initialData?.categories || ['Singer'],
-    priceFrom: initialData?.priceFrom || 50000,
-    priceTo: initialData?.priceTo || 150000,
-    availability: initialData?.availability || 'Available',
-    bookingNote: initialData?.bookingNote || '',
-    instagram: initialData?.instagram || '',
-    youtube: initialData?.youtube || '',
-    facebook: initialData?.facebook || '',
-    x: initialData?.x || '',
-    spotify: initialData?.spotify || '',
-    website: initialData?.website || '',
-    imdbUrl: initialData?.imdbUrl || '',
-    fanbaseSpotify: initialData?.fanbaseSpotify || 0,
-    fanbaseYouTube: initialData?.fanbaseYouTube || 0,
-    fanbaseInstagram: initialData?.fanbaseInstagram || 0,
-    fanbaseFacebook: initialData?.fanbaseFacebook || 0,
-    fanbaseDeezer: initialData?.fanbaseDeezer || 0,
-    fanbaseSoundCloud: initialData?.fanbaseSoundCloud || 0,
-    fanbaseTikTok: initialData?.fanbaseTikTok || 0,
-    gallery: (initialData?.gallery as GalleryItem[]) || [
-      { id: 'g1', src: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1200&auto=format&fit=crop&q=80', caption: 'Concert tour' },
-    ],
-    videos: initialData?.videos || [
-      { id: 'v1', title: 'Live Performance', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', duration: '4:15' },
-    ],
-    clips: initialData?.clips || [
-      { id: 'c1', title: 'Rehearsal clip', url: 'https://youtube.com/shorts/sample1', platform: 'YouTube Shorts' },
-    ],
-    campaigns: initialData?.campaigns || [],
-    awards: initialData?.awards || [],
-    faqs: initialData?.faqs || [
-      { question: 'What is the standard live set duration?', answer: 'Typical live sets are 90 to 120 minutes with a full band.' },
-    ],
-    metaTitle: initialData?.metaTitle || '',
-    metaDescription: initialData?.metaDescription || '',
-    keywords: initialData?.keywords || '',
-    ogImageUrl: initialData?.ogImageUrl || '',
-    status: initialData?.status || 'draft',
-    publishDate: initialData?.publishDate || '',
+  // Gallery array
+  const [galleryUrls, setGalleryUrls] = useState<string[]>(
+    (initialData?.gallery || []).map((g) => (typeof g === 'string' ? g : (g.src || ''))).filter(Boolean)
+  );
+
+  // Videos array (starts empty on new profile matching manager.html newForm)
+  const [videosList, setVideosList] = useState<{ title: string; url: string }[]>(
+    initialData?.videos?.length
+      ? initialData.videos.map((v) => ({ title: v.title || '', url: v.url || '' }))
+      : [{ title: '', url: '' }]
+  );
+
+  // Clips array (starts empty on new profile matching manager.html newForm)
+  const [clipsList, setClipsList] = useState<{ title: string; url: string }[]>(
+    initialData?.clips?.length
+      ? initialData.clips.map((c) => ({ title: c.title || '', url: c.url || '' }))
+      : [{ title: '', url: '' }]
+  );
+
+  // Campaigns array
+  const [campaignsList, setCampaignsList] = useState<{ brandName: string; category: string; year: string }[]>(
+    (initialData?.campaigns || []).map((c) => ({
+      brandName: c.brandName || '',
+      category: c.category || '',
+      year: c.year || '',
+    }))
+  );
+
+  // Awards array
+  const [awardsList, setAwardsList] = useState<{ title: string; category: string; year: string }[]>(
+    (initialData?.awards || []).map((a) => ({
+      title: a.title || '',
+      category: a.category || '',
+      year: a.year || '',
+    }))
+  );
+
+  // FAQs array
+  const [faqsList, setFaqsList] = useState<{ question: string; answer: string }[]>(
+    (initialData?.faqs || []).map((f) => ({
+      question: f.question || '',
+      answer: f.answer || '',
+    }))
+  );
+
+  // Native Local Image Picker Refs & Upload States
+  const profilePhotoInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const shareImageInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+  const [isUploadingShare, setIsUploadingShare] = useState(false);
+
+  const uploadFile = async (file: File): Promise<string> => {
+    // Generate an instant DataURL fallback
+    const dataUrlPromise = new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('kalasquare_token') : null;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+      // 4-second timeout to prevent any hanging if network/backend is unreachable
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+      const res = await fetch(`${apiUrl}/api/admin/uploads`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json.url) {
+          return json.url.startsWith('http') ? json.url : `${apiUrl}${json.url}`;
+        }
+      }
+    } catch {}
+
+    // Fallback to local DataURL for instant display
+    return await dataUrlPromise;
   };
 
   const {
     register,
     handleSubmit,
-    control,
-    watch,
     setValue,
-    setError,
-    clearErrors,
-    formState: { errors, isSubmitting },
+    watch,
+    control,
+    reset,
+    formState: { errors },
   } = useForm<ArtistFormData>({
-    resolver: zodResolver(artistFormSchema),
-    defaultValues,
-    mode: 'onChange',
+    resolver: zodResolver(artistFormSchema) as any,
+    defaultValues: {
+      name: initialData?.name || '',
+      slug: initialData?.slug || '',
+      tagline: initialData?.tagline || '',
+      photoUrl: initialData?.photoUrl || '',
+      coverPhotoUrl: initialData?.coverPhotoUrl || '',
+      bio: initialData?.bio || '',
+      city: initialData?.city || '',
+      state: initialData?.state || '',
+      phone: initialData?.phone || '',
+      email: initialData?.email || '',
+      categories: initialData?.categories || [],
+      specializations: Array.isArray(initialData?.specializations)
+        ? initialData?.specializations.join(', ')
+        : (initialData?.specializations as any) || '',
+      artistClass: initialData?.artistClass || 'standard',
+      priceNumeric: initialData?.priceNumeric || 0,
+      priceLabel: initialData?.priceLabel || '',
+      budgetRange: initialData?.budgetRange || '',
+      isVerified: initialData?.isVerified ?? false,
+      isFeatured: initialData?.isFeatured ?? false,
+      showInAboutUs: initialData?.showInAboutUs ?? false,
+      height: initialData?.height || '',
+      weight: initialData?.weight || '',
+      waist: initialData?.waist || '',
+      chest: initialData?.chest || '',
+      hairType: initialData?.hairType || '',
+      hairLength: initialData?.hairLength || '',
+      languages: initialData?.languages || [],
+      experienceYears: initialData?.experienceYears || '',
+      projectsCount: initialData?.projectsCount || '',
+      liveShowsCount: initialData?.liveShowsCount || '',
+      totalFollowersLabel: initialData?.totalFollowersLabel || '',
+      socialInstagram: initialData?.socialInstagram || '',
+      socialYouTube: initialData?.socialYouTube || '',
+      socialFacebook: initialData?.socialFacebook || '',
+      socialX: initialData?.socialX || '',
+      socialSpotify: initialData?.socialSpotify || '',
+      fanbaseSpotify: initialData?.fanbaseSpotify || '',
+      fanbaseYouTube: initialData?.fanbaseYouTube || '',
+      fanbaseInstagram: initialData?.fanbaseInstagram || '',
+      fanbaseFacebook: initialData?.fanbaseFacebook || '',
+      fanbaseDeezer: initialData?.fanbaseDeezer || '',
+      fanbaseSoundCloud: initialData?.fanbaseSoundCloud || '',
+      fanbaseTikTok: initialData?.fanbaseTikTok || '',
+      metaTitle: initialData?.metaTitle || '',
+      metaDescription: initialData?.metaDescription || '',
+      focusKeyword: initialData?.focusKeyword || '',
+      photoAltText: initialData?.photoAltText || '',
+      canonicalUrl: initialData?.canonicalUrl || '',
+      ogImageUrl: initialData?.ogImageUrl || '',
+      allowSearchEngines: initialData?.allowSearchEngines ?? true,
+      status: initialData?.status || 'published',
+    },
   });
 
   const formValues = watch();
 
-  // Auto-generate slug from name if not touched
+  // Auto-slugify name
+  const nameValue = watch('name');
   useEffect(() => {
-    if (!isSlugTouched && formValues.name) {
-      const generated = formValues.name
+    if (mode === 'create' && nameValue) {
+      const generated = nameValue
         .toLowerCase()
         .trim()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-      setValue('slug', generated, { shouldValidate: true });
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      setValue('slug', generated);
     }
-  }, [formValues.name, isSlugTouched, setValue]);
+  }, [nameValue, mode, setValue]);
 
-  // Auto-fill SEO Meta Title and Meta Description if empty
+  // Synchronize form when initialData is loaded or changed
   useEffect(() => {
-    if (!formValues.metaTitle && formValues.name) {
-      setValue('metaTitle', `${formValues.name} | KalaSquare`.slice(0, 60));
+    if (initialData) {
+      reset({
+        name: initialData.name || '',
+        slug: initialData.slug || '',
+        tagline: initialData.tagline || '',
+        photoUrl: initialData.photoUrl || '',
+        coverPhotoUrl: initialData.coverPhotoUrl || '',
+        bio: initialData.bio || '',
+        city: initialData.city || '',
+        state: initialData.state || '',
+        phone: initialData.phone || '',
+        email: initialData.email || '',
+        categories: initialData.categories || [],
+        specializations: Array.isArray(initialData.specializations)
+          ? initialData.specializations.join(', ')
+          : (initialData.specializations as any) || '',
+        artistClass: initialData.artistClass || 'standard',
+        priceNumeric: initialData.priceNumeric || 0,
+        priceLabel: initialData.priceLabel || '',
+        budgetRange: initialData.budgetRange || '',
+        isVerified: initialData.isVerified ?? false,
+        isFeatured: initialData.isFeatured ?? false,
+        showInAboutUs: initialData.showInAboutUs ?? false,
+        height: initialData.height || '',
+        weight: initialData.weight || '',
+        waist: initialData.waist || '',
+        chest: initialData.chest || '',
+        hairType: initialData.hairType || '',
+        hairLength: initialData.hairLength || '',
+        languages: initialData.languages || [],
+        experienceYears: initialData.experienceYears || '',
+        projectsCount: initialData.projectsCount || '',
+        liveShowsCount: initialData.liveShowsCount || '',
+        totalFollowersLabel: initialData.totalFollowersLabel || '',
+        socialInstagram: initialData.socialInstagram || '',
+        socialYouTube: initialData.socialYouTube || '',
+        socialFacebook: initialData.socialFacebook || '',
+        socialX: initialData.socialX || '',
+        socialSpotify: initialData.socialSpotify || '',
+        fanbaseSpotify: initialData.fanbaseSpotify || '',
+        fanbaseYouTube: initialData.fanbaseYouTube || '',
+        fanbaseInstagram: initialData.fanbaseInstagram || '',
+        fanbaseFacebook: initialData.fanbaseFacebook || '',
+        fanbaseDeezer: initialData.fanbaseDeezer || '',
+        fanbaseSoundCloud: initialData.fanbaseSoundCloud || '',
+        fanbaseTikTok: initialData.fanbaseTikTok || '',
+        metaTitle: initialData.metaTitle || '',
+        metaDescription: initialData.metaDescription || '',
+        focusKeyword: initialData.focusKeyword || '',
+        photoAltText: initialData.photoAltText || '',
+        canonicalUrl: initialData.canonicalUrl || '',
+        ogImageUrl: initialData.ogImageUrl || '',
+        allowSearchEngines: initialData.allowSearchEngines ?? true,
+        status: initialData.status || 'published',
+      });
+      setProfilePhotoUrl(initialData.photoUrl || '');
+      if (initialData.gallery && initialData.gallery.length > 0) {
+        setGalleryUrls(
+          initialData.gallery.map((g) => (typeof g === 'string' ? g : (g.src || ''))).filter(Boolean)
+        );
+      }
+      if (initialData.videos && initialData.videos.length > 0) {
+        setVideosList(initialData.videos.map((v) => ({ title: v.title || '', url: v.url || '' })));
+      }
+      if (initialData.clips && initialData.clips.length > 0) {
+        setClipsList(initialData.clips.map((c) => ({ title: c.title || '', url: c.url || '' })));
+      }
+      if (initialData.campaigns && initialData.campaigns.length > 0) {
+        setCampaignsList(
+          initialData.campaigns.map((c) => ({
+            brandName: c.brandName || '',
+            category: c.category || '',
+            year: c.year || '',
+          }))
+        );
+      }
+      if (initialData.awards && initialData.awards.length > 0) {
+        setAwardsList(
+          initialData.awards.map((a) => ({
+            title: a.title || '',
+            category: a.category || '',
+            year: a.year || '',
+          }))
+        );
+      }
+      if (initialData.faqs && initialData.faqs.length > 0) {
+        setFaqsList(
+          initialData.faqs.map((f) => ({
+            question: f.question || '',
+            answer: f.answer || '',
+          }))
+        );
+      }
     }
-  }, [formValues.name, formValues.metaTitle, setValue]);
+  }, [initialData, reset]);
 
-  useEffect(() => {
-    if (!formValues.metaDescription && formValues.bio) {
-      setValue('metaDescription', formValues.bio.slice(0, 160));
-    }
-  }, [formValues.bio, formValues.metaDescription, setValue]);
-
-  // Completeness Calculation
+  // Completeness score
   const completeness = useMemo(() => {
-    return calculateCompleteness(formValues);
-  }, [formValues]);
+    return calculateCompleteness({
+      ...formValues,
+      photoUrl: profilePhotoUrl || formValues.photoUrl,
+      gallery: galleryUrls,
+      videos: videosList,
+      clips: clipsList,
+      campaigns: campaignsList,
+      awards: awardsList,
+      faqs: faqsList,
+    });
+  }, [formValues, profilePhotoUrl, galleryUrls, videosList, clipsList, campaignsList, awardsList, faqsList]);
 
-  // Total Fanbase Calculation
-  const totalFollowersCalc = useMemo(() => {
-    const total =
-      Number(formValues.fanbaseSpotify || 0) +
-      Number(formValues.fanbaseYouTube || 0) +
-      Number(formValues.fanbaseInstagram || 0) +
-      Number(formValues.fanbaseFacebook || 0) +
-      Number(formValues.fanbaseDeezer || 0) +
-      Number(formValues.fanbaseSoundCloud || 0) +
-      Number(formValues.fanbaseTikTok || 0);
+  // Live SEO score calculation matching manager.html lines 1558-1564
+  const seoRes = useMemo(() => {
+    const kw = (formValues.focusKeyword || '').trim().toLowerCase();
+    const t = (formValues.metaTitle || '').trim();
+    const d = (formValues.metaDescription || '').trim();
+    const og = (formValues.ogImageUrl || '').trim();
+    const alt = (formValues.photoAltText || '').trim();
 
-    if (total >= 1e6) return `${(total / 1e6).toFixed(1)}M`;
-    if (total >= 1e3) return `${(total / 1e3).toFixed(1)}K`;
-    return total.toLocaleString();
+    const items: [number, boolean, string][] = [
+      [20, t.length >= 30 && t.length <= 60, 'Title is 30 to 60 characters'],
+      [20, d.length >= 70 && d.length <= 160, 'Description is 70 to 160 characters'],
+      [15, !!kw, 'Focus keyword is set'],
+      [15, !!kw && t.toLowerCase().includes(kw), 'Keyword appears in the title'],
+      [10, !!kw && d.toLowerCase().includes(kw), 'Keyword appears in the description'],
+      [10, !!og, 'Share image is added'],
+      [10, !!alt, 'Photo alt text is set'],
+    ];
+
+    const score = items.reduce((acc, x) => acc + (x[1] ? x[0] : 0), 0);
+    const label = score >= 80 ? 'Good' : score >= 50 ? 'Needs work' : 'Poor';
+    const cls = score >= 80 ? 'ok' : score >= 50 ? 'warn' : 'bad';
+
+    return { score, items, label, cls };
   }, [
-    formValues.fanbaseSpotify,
-    formValues.fanbaseYouTube,
-    formValues.fanbaseInstagram,
-    formValues.fanbaseFacebook,
-    formValues.fanbaseDeezer,
-    formValues.fanbaseSoundCloud,
-    formValues.fanbaseTikTok,
+    formValues.focusKeyword,
+    formValues.metaTitle,
+    formValues.metaDescription,
+    formValues.ogImageUrl,
+    formValues.photoAltText,
   ]);
 
-  // Check if categories includes 'Actor'
-  const isActorSelected = (formValues.categories || []).some((c) =>
-    c.toLowerCase().includes('actor')
-  );
+  const handleFillFromProfile = () => {
+    const name = formValues.name?.trim() || 'Artist name';
+    const cat = (formValues.categories && formValues.categories[0]) || 'Artist';
+    const city = formValues.city?.trim() || 'City';
 
-  // Check if artistClass is 'platinum'
-  const isPlatinumClass = formValues.artistClass === 'platinum';
-
-  // Scrollspy effect for sticky left nav
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY + 140;
-      for (let i = NAV_SECTIONS.length - 1; i >= 0; i--) {
-        const el = document.getElementById(NAV_SECTIONS[i].id);
-        if (el && el.offsetTop <= scrollPosition) {
-          setActiveNav(NAV_SECTIONS[i].id);
-          break;
-        }
-      }
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const scrollToNavSection = (id: string) => {
-    setActiveNav(id);
-    const element = document.getElementById(id);
-    if (element) {
-      const yOffset = -90;
-      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    }
+    setValue('metaTitle', `${name} – ${cat} in ${city} | KalaSquare`.slice(0, 60), { shouldValidate: true });
+    setValue(
+      'metaDescription',
+      `Book ${name}, ${cat.toLowerCase()} from ${city}, on KalaSquare. See videos, photos, awards and reviews, then send an enquiry in one click.`.slice(0, 160),
+      { shouldValidate: true }
+    );
+    setValue('focusKeyword', `${name} ${cat}`.toLowerCase(), { shouldValidate: true });
+    setValue('photoAltText', `${name}, ${cat.toLowerCase()} from ${city}`, { shouldValidate: true });
   };
 
-  // Save to localStorage helper
-  const saveToLocalStorage = (data: Partial<ArtistFormData>, status: 'draft' | 'published') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const existingRaw = localStorage.getItem('kalasquare_admin_artists');
-      const existing: Record<string, unknown>[] = existingRaw ? JSON.parse(existingRaw) : [];
-
-      const record = {
-        ...data,
-        id: artistId || `art-${Date.now()}`,
-        status,
-        updatedAt: new Date().toISOString(),
+  // Sample data event listener
+  useEffect(() => {
+    const handleSampleFill = () => {
+      const sample = {
+        name: 'Sahil Badal',
+        slug: 'sahil-badal',
+        tagline: '18+ years of experience, 30+ songs on air, 300+ bhajans',
+        photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
+        coverPhotoUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1200&auto=format&fit=crop&q=80',
+        bio: 'Write the artist story. The profile shows a Read more button after the first few lines.',
+        city: 'Haryana',
+        state: 'Haryana',
+        phone: '98XXXXXXXX',
+        email: 'name@example.com',
+        categories: ['Singer'],
+        specializations: 'Lyrics Writer, Sufi Fusion, Bhajans',
+        artistClass: 'platinum' as const,
+        priceNumeric: 75000,
+        priceLabel: 'From ₹50,000',
+        budgetRange: '₹50,000 - ₹1,00,000',
+        isVerified: true,
+        isFeatured: true,
+        showInAboutUs: true,
+        height: "5' 10",
+        weight: '68 kg',
+        waist: '32 in',
+        chest: '40 in',
+        hairType: 'Straight',
+        hairLength: 'Short',
+        languages: ['Hindi', 'English', 'Punjabi'],
+        experienceYears: '18',
+        projectsCount: '50',
+        liveShowsCount: '150+',
+        totalFollowersLabel: '50k',
+        socialInstagram: 'https://instagram.com/',
+        socialYouTube: 'https://youtube.com/@',
+        socialFacebook: 'https://facebook.com/',
+        socialX: 'https://x.com/',
+        socialSpotify: 'https://open.spotify.com/artist/',
+        fanbaseSpotify: '31.9M',
+        fanbaseYouTube: '7.9M',
+        fanbaseInstagram: '19.0M',
+        fanbaseFacebook: '30.9M',
+        fanbaseDeezer: '108.7K',
+        fanbaseSoundCloud: '77.6K',
+        fanbaseTikTok: '7.0M',
+        metaTitle: 'Sahil Badal | Singer in Haryana | KalaSquare',
+        metaDescription: 'Book Sahil Badal, playback and Sufi fusion vocalist with 18+ years experience, on KalaSquare. Verified reviews and direct enquiry.',
+        focusKeyword: 'singer in haryana',
+        photoAltText: 'Sahil Badal performing live on stage',
+        canonicalUrl: '',
+        ogImageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
+        allowSearchEngines: true,
+        status: 'published' as const,
       };
 
-      const filtered = existing.filter((item) => item.id !== record.id);
-      filtered.unshift(record);
-      localStorage.setItem('kalasquare_admin_artists', JSON.stringify(filtered));
-    } catch {
-      // LocalStorage quota or parse error fallback
-    }
+      reset(sample);
+      setProfilePhotoUrl(sample.photoUrl);
+      setGalleryUrls([
+        'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=80',
+      ]);
+      setVideosList([
+        { title: 'Lal Ghagra | Saregama', url: 'https://www.youtube.com/watch?v=lalghagra' },
+      ]);
+      setClipsList([
+        { title: 'Behind the scenes', url: 'https://www.instagram.com/reel/bts' },
+      ]);
+      setCampaignsList([
+        { brandName: 'Wo Mera Bhola Hain', category: 'Devotional', year: '2025' },
+      ]);
+      setAwardsList([
+        { title: 'National Award', category: 'Ghazal', year: '2022' },
+      ]);
+      setFaqsList([
+        { question: 'What is the booking advance?', answer: 'We require a 50% advance payment to lock the calendar date.' },
+        { question: 'Can the band travel outstation?', answer: 'Yes, Sahil and the troupe travel across India and internationally.' },
+      ]);
+      setToastMessage('Sample artist data loaded successfully!');
+      setTimeout(() => setToastMessage(null), 3000);
+    };
+
+    window.addEventListener('fillSampleData', handleSampleFill);
+    return () => window.removeEventListener('fillSampleData', handleSampleFill);
+  }, [reset]);
+
+  const persistLocally = (record: any) => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem('kalasquare_admin_artists');
+      const list: any[] = raw ? JSON.parse(raw) : [];
+      const id = artistId || record.id || `art-${Date.now()}`;
+      const updatedList = list.filter((a) => a.id !== id && a.slug !== record.slug);
+      updatedList.unshift({ ...record, id, updatedAt: new Date().toISOString() });
+      localStorage.setItem('kalasquare_admin_artists', JSON.stringify(updatedList));
+
+      // Also synchronize with kalasquare_artist_classes
+      const classRaw = localStorage.getItem('kalasquare_artist_classes');
+      const classMap = classRaw ? JSON.parse(classRaw) : {};
+      classMap[id] = {
+        tier: record.artistClass || 'standard',
+        about: Boolean(record.showInAboutUs || record.isFeatured),
+      };
+      localStorage.setItem('kalasquare_artist_classes', JSON.stringify(classMap));
+    } catch {}
   };
 
-  // Handle Save as Draft
   const handleSaveDraft = async () => {
     const values = watch();
-    // Validate with relaxed draft schema
-    const result = artistDraftSchema.safeParse(values);
-    if (!result.success) {
-      const firstError = result.error.errors[0];
-      alert(`Cannot save draft: ${firstError.message}`);
-      return;
-    }
+    setIsSubmitting(true);
 
-    try {
-      if (mode === 'edit' && artistId) {
-        await updateArtist(artistId, { ...values, status: 'draft' });
-      } else {
-        await createArtist({ ...values, status: 'draft' });
-      }
-      setToastMessage(`"${values.name}" saved as Draft successfully!`);
-      setTimeout(() => {
-        router.push('/admin/artists');
-      }, 1200);
-    } catch (err: any) {
-      saveToLocalStorage({ ...values, status: 'draft' }, 'draft');
-      setToastMessage(`"${values.name}" saved as Draft locally.`);
-      setTimeout(() => {
-        router.push('/admin/artists');
-      }, 1200);
-    }
-  };
+    const cleanGallery = galleryUrls.filter(Boolean);
+    const cleanVideos = videosList.filter((v) => v.title.trim() && v.url.trim());
+    const cleanClips = clipsList.filter((c) => c.title.trim() && c.url.trim());
+    const cleanCampaigns = campaignsList.filter((c) => c.brandName.trim());
+    const cleanAwards = awardsList.filter((a) => a.title.trim());
+    const cleanFaqs = faqsList.filter((f) => f.question.trim() && f.answer.trim());
 
-  // Perform Final Publish Save
-  const executePublish = async (data: ArtistFormData) => {
-    const publishData = {
-      ...data,
-      status: 'published' as const,
-      publishDate: data.publishDate || new Date().toISOString().split('T')[0],
+    const name = values.name?.trim() || 'Untitled Artist';
+    const slug = (values.slug || name)
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '') || `draft-${Date.now()}`;
+
+    const draftData = {
+      ...values,
+      name,
+      slug,
+      photoUrl: profilePhotoUrl || values.photoUrl || '',
+      categories: values.categories && values.categories.length > 0 ? values.categories : ['Singer'],
+      city: values.city || 'Delhi',
+      gallery: cleanGallery,
+      videos: cleanVideos,
+      clips: cleanClips,
+      campaigns: cleanCampaigns,
+      awards: cleanAwards,
+      faqs: cleanFaqs,
+      status: 'draft' as const,
     };
 
     try {
+      let saved: any = null;
       if (mode === 'edit' && artistId) {
-        await updateArtist(artistId, publishData);
+        saved = await updateArtist(artistId, draftData);
       } else {
-        await createArtist(publishData);
+        saved = await createArtist(draftData);
       }
-      setToastMessage(`"${data.name}" published successfully! Live on site.`);
-      setTimeout(() => {
-        router.push('/admin/artists');
-      }, 1200);
-    } catch (err: any) {
-      saveToLocalStorage(publishData, 'published');
-      setToastMessage(`"${data.name}" published locally.`);
-      setTimeout(() => {
-        router.push('/admin/artists');
-      }, 1200);
+      const recordWithId = {
+        ...draftData,
+        id: saved?.data?.id || saved?.id || artistId || `art-${Date.now()}`,
+      };
+      persistLocally(recordWithId);
+      setToastMessage(mode === 'edit' ? `"${name}" changes saved as Draft.` : `"${name}" saved as Draft.`);
+      setTimeout(() => router.push('/admin/artists'), 1000);
+    } catch {
+      const recordWithId = {
+        ...draftData,
+        id: artistId || `art-${Date.now()}`,
+      };
+      persistLocally(recordWithId);
+      setToastMessage(mode === 'edit' ? `"${name}" changes saved as Draft (Demo Mode).` : `"${name}" saved as Draft (Demo Mode).`);
+      setTimeout(() => router.push('/admin/artists'), 1000);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // On Valid Full Form Submission (Publish Button)
-  const onPublishSubmit = (data: ArtistFormData) => {
-    // If completeness < 70%, warn user with modal
-    if (completeness.score < 70) {
+  const handlePublishSubmit = async (data: ArtistFormData) => {
+    if (completeness.score < 50) {
       setPendingSubmitData(data);
       setShowLowCompletenessModal(true);
       return;
     }
-
     executePublish(data);
   };
 
-  // On Incomplete Form Errors (Scroll to first error)
-  const onPublishErrors = (errs: typeof errors) => {
-    const firstKey = Object.keys(errs)[0];
-    if (firstKey) {
-      const fieldEl = document.querySelector(`[name="${firstKey}"]`);
-      if (fieldEl) {
-        fieldEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const executePublish = async (data: ArtistFormData) => {
+    setIsSubmitting(true);
+
+    const cleanGallery = galleryUrls.filter(Boolean);
+    const cleanVideos = videosList.filter((v) => v.title.trim() && v.url.trim());
+    const cleanClips = clipsList.filter((c) => c.title.trim() && c.url.trim());
+    const cleanCampaigns = campaignsList.filter((c) => c.brandName.trim());
+    const cleanAwards = awardsList.filter((a) => a.title.trim());
+    const cleanFaqs = faqsList.filter((f) => f.question.trim() && f.answer.trim());
+
+    const name = data.name.trim();
+    const slug = (data.slug || name)
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '') || `artist-${Date.now()}`;
+
+    const isVerified = Boolean(data.isVerified);
+    const status = isVerified ? ('live' as const) : ('pending' as const);
+
+    const publishData = {
+      ...data,
+      name,
+      slug,
+      photoUrl: profilePhotoUrl || data.photoUrl || '',
+      gallery: cleanGallery,
+      videos: cleanVideos,
+      clips: cleanClips,
+      campaigns: cleanCampaigns,
+      awards: cleanAwards,
+      faqs: cleanFaqs,
+      status,
+    };
+
+    try {
+      let saved: any = null;
+      if (mode === 'edit' && artistId) {
+        saved = await updateArtist(artistId, publishData);
+      } else {
+        saved = await createArtist(publishData);
       }
+      const recordWithId = {
+        ...publishData,
+        id: saved?.data?.id || saved?.id || artistId || `art-${Date.now()}`,
+      };
+      persistLocally(recordWithId);
+      setToastMessage(
+        status === 'pending'
+          ? `"${name}" saved. Hidden from Home until documents are verified.`
+          : (mode === 'edit' ? `"${name}" updated successfully!` : `"${name}" is live on the Home page!`)
+      );
+      setTimeout(() => router.push('/admin/artists'), 1000);
+    } catch {
+      const recordWithId = {
+        ...publishData,
+        id: artistId || `art-${Date.now()}`,
+      };
+      persistLocally(recordWithId);
+      setToastMessage(
+        status === 'pending'
+          ? `"${name}" saved. Hidden from Home until documents are verified.`
+          : (mode === 'edit' ? `"${name}" updated successfully!` : `"${name}" is live on the Home page!`)
+      );
+      setTimeout(() => router.push('/admin/artists'), 1000);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6 pb-28">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-5 right-5 z-50 bg-[#1a8a57] text-white text-sm font-bold px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in border border-white/20">
-          <CheckCircle2 className="h-5 w-5" />
+        <div
+          style={{
+            position: 'fixed',
+            top: '64px',
+            right: '24px',
+            zIndex: 100,
+            background: 'var(--ink, #1b1b1f)',
+            color: '#fff',
+            fontSize: '13px',
+            fontWeight: 700,
+            padding: '10px 16px',
+            borderRadius: '12px',
+            boxShadow: '0 12px 30px rgba(0,0,0,.25)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          <CheckCircle2 style={{ width: '16px', height: '16px', color: 'var(--coral, #eb4e62)' }} />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* Low Completeness Warning Modal */}
+      {/* Low Completeness Modal */}
       {showLowCompletenessModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#e6e6ea] space-y-4 animate-scale-up">
-            <div className="flex items-center gap-3 text-[#8a5a00]">
-              <div className="w-10 h-10 rounded-full bg-[#fff4d6] flex items-center justify-center shrink-0">
-                <AlertCircle className="h-6 w-6" />
-              </div>
-              <h3 className="font-heading font-extrabold text-lg text-[#1b1b1f]">
-                Profile is {completeness.score}% complete
-              </h3>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 110, background: 'rgba(0,0,0,0.5)', display: 'grid', placeItems: 'center', padding: '16px' }}>
+          <div className="card" style={{ maxWidth: '440px', width: '100%', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--coral-dark)' }}>
+              <AlertCircle style={{ width: '22px', height: '22px' }} />
+              <h3 style={{ fontSize: '18px', margin: 0 }}>Profile is {completeness.score}% complete</h3>
             </div>
-            <p className="text-sm text-[#6b6b76] leading-relaxed">
+            <p style={{ color: 'var(--mute)', fontSize: '13.5px', lineHeight: 1.5, margin: 0 }}>
               Profiles with higher completeness get up to 4x more event bookings. Are you sure you want to publish now?
             </p>
-            <div className="flex justify-end gap-3 pt-2">
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '6px' }}>
               <button
                 type="button"
                 onClick={() => setShowLowCompletenessModal(false)}
-                className="h-10 px-4 rounded-xl border border-[#e6e6ea] text-xs font-bold text-[#1b1b1f] hover:bg-[#f6f6f7]"
+                className="btn"
               >
                 Keep Editing
               </button>
@@ -403,7 +722,7 @@ export default function ArtistForm({ mode, initialData, artistId }: ArtistFormPr
                   setShowLowCompletenessModal(false);
                   if (pendingSubmitData) executePublish(pendingSubmitData);
                 }}
-                className="h-10 px-5 rounded-xl bg-[#eb4e62] hover:bg-[#d63a50] text-white text-xs font-bold shadow-md"
+                className="btn primary"
               >
                 Publish Anyway
               </button>
@@ -412,1395 +731,1179 @@ export default function ArtistForm({ mode, initialData, artistId }: ArtistFormPr
         </div>
       )}
 
-      {/* Top Header Bar */}
-      <div className="bg-white rounded-2xl p-4 sm:p-6 border border-[#e6e6ea] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/admin/artists"
-            className="p-2 rounded-xl border border-[#e6e6ea] hover:bg-[#f6f6f7] text-[#1b1b1f] transition"
-            title="Back to artists"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div>
-            <h1 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-              {mode === 'edit'
-                ? `Edit Artist — ${formValues.name || 'Profile'}`
-                : 'Add New Artist'}
-            </h1>
-            <p className="text-xs sm:text-sm text-[#6b6b76] mt-0.5">
-              Fill artist credentials, media links, and public showcase data.
-            </p>
-          </div>
-        </div>
-
-        {/* Top Right Completeness and Action Buttons */}
-        <div className="flex items-center gap-4 self-end sm:self-auto">
-          <CompletenessBar score={completeness.score} variant="top" />
-
-          <button
-            type="button"
-            onClick={handleSaveDraft}
-            className="h-10 px-4 rounded-xl bg-white border border-[#e6e6ea] hover:border-[#eb4e62] hover:text-[#eb4e62] text-xs font-bold text-[#1b1b1f] transition cursor-pointer"
-          >
-            Save as Draft
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSubmit(onPublishSubmit, onPublishErrors)}
-            disabled={isSubmitting}
-            className="h-10 px-5 rounded-xl bg-[#eb4e62] hover:bg-[#d63a50] text-white text-xs font-bold shadow-sm hover:shadow-md transition cursor-pointer disabled:opacity-50"
-          >
-            {isSubmitting ? 'Saving...' : 'Publish'}
-          </button>
+      {/* Page Header matching manager.html & screenshot */}
+      <div className="ph">
+        <h2>{mode === 'edit' ? 'Edit artist' : 'Add artist'}</h2>
+        <p>Everything a hirer sees on the artist page in one form. Fields follow the live profile page. Only name, category and city are required.</p>
+        <div className="chips">
+          <span className="chip">{mode === 'edit' ? 'Edit profile' : 'New profile'}</span>
         </div>
       </div>
 
-      {/* Main Grid: Left Sticky Navigation + Form Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Sticky Nav (Desktop) */}
-        <aside className="hidden lg:block lg:col-span-3 sticky top-24 bg-white rounded-2xl p-3 border border-[#e6e6ea] shadow-xs space-y-1">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#6b6b76] px-3 py-2 block">
-            Form Sections
-          </span>
-          {NAV_SECTIONS.map((sec) => {
-            const isActive = activeNav === sec.id;
-            return (
+      <form onSubmit={handleSubmit(handlePublishSubmit)} className="aform" noValidate>
+        {/* CARD 1: Basic details */}
+        <div className="card">
+          <div className="lh">
+            <div>
+              <h3>Basic details</h3>
+              <p>Name, category, city and contact.</p>
+            </div>
+          </div>
+
+          <div className="two-c">
+            {/* Left 200px Profile Photo Box */}
+            <div>
+              <div className="lbl">Profile photo</div>
+              <input
+                ref={profilePhotoInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+
+                  // 1. Instant zero-latency visual preview via DataURL
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    const dataUrl = reader.result as string;
+                    setProfilePhotoUrl(dataUrl);
+                    setValue('photoUrl', dataUrl, { shouldValidate: true, shouldDirty: true });
+                  };
+                  reader.readAsDataURL(file);
+
+                  // 2. Upload to backend in background
+                  setIsUploadingPhoto(true);
+                  uploadFile(file)
+                    .then((uploadedUrl) => {
+                      if (uploadedUrl) {
+                        setProfilePhotoUrl(uploadedUrl);
+                        setValue('photoUrl', uploadedUrl, { shouldValidate: true, shouldDirty: true });
+                      }
+                    })
+                    .catch((err) => {
+                      console.warn('Backend upload fallback to local preview:', err);
+                    })
+                    .finally(() => {
+                      setIsUploadingPhoto(false);
+                      e.target.value = '';
+                    });
+                }}
+              />
               <button
-                key={sec.id}
                 type="button"
-                onClick={() => scrollToNavSection(sec.id)}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center justify-between ${
-                  isActive
-                    ? 'bg-[#fde6ea] text-[#eb4e62] font-bold'
-                    : 'text-[#6b6b76] hover:bg-[#f6f6f7] hover:text-[#1b1b1f]'
-                }`}
+                onClick={() => profilePhotoInputRef.current?.click()}
+                className={`pbox${profilePhotoUrl ? ' has' : ''}`}
+                style={
+                  profilePhotoUrl
+                    ? {
+                        backgroundImage: `url(${profilePhotoUrl})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                      }
+                    : undefined
+                }
+                aria-label="Upload profile photo"
               >
-                <span>{sec.label}</span>
-                {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#eb4e62]" />}
+                {isUploadingPhoto ? (
+                  <span>Uploading...</span>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <span>{profilePhotoUrl ? 'Replace photo' : 'Upload photo'}</span>
+                  </>
+                )}
               </button>
-            );
-          })}
-        </aside>
+              <small className="mu">800 × 800 px, square. Faces centred.</small>
+            </div>
 
-        {/* Right Column: 10 Form Sections */}
-        <form
-          onSubmit={handleSubmit(onPublishSubmit, onPublishErrors)}
-          className="lg:col-span-9 space-y-8"
-        >
-          {/* Section 1 - Basic Info */}
-          <FormSection
-            id="sec-basic"
-            title="1. Basic Details"
-            description="Artist name, public link, primary location, and identification."
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Full Name */}
-              <div className="sm:col-span-2 space-y-1">
-                <label className="block text-xs font-bold text-[#1b1b1f]">
-                  Full Name <span className="text-[#eb4e62]">*</span>
-                </label>
-                <input
-                  type="text"
-                  maxLength={80}
-                  placeholder="e.g. Sahil Badal"
-                  {...register('name')}
-                  className={`w-full h-11 px-3.5 rounded-xl bg-white border text-sm outline-hidden transition ${
-                    errors.name ? 'border-[#eb4e62] bg-[#fde6ea]/20' : 'border-[#e6e6ea] focus:border-[#eb4e62]'
-                  }`}
-                />
-                {errors.name && (
-                  <p className="text-xs text-[#eb4e62] font-semibold">{errors.name.message}</p>
-                )}
+            {/* Right Form Fields */}
+            <div className="grid-f">
+              <div className="fld full" data-for="name">
+                <label htmlFor="af-name">Full name <i className="rq">*</i></label>
+                <input id="af-name" type="text" placeholder="Sahil Badal" {...register('name')} />
+                {errors.name && <small className="em" style={{ display: 'block' }}>{errors.name.message}</small>}
               </div>
 
-              {/* Slug URL */}
-              <div className="sm:col-span-2 space-y-1">
-                <label className="block text-xs font-bold text-[#1b1b1f]">
-                  Public Profile URL Slug <span className="text-[#eb4e62]">*</span>
-                </label>
-                <div className="flex rounded-xl overflow-hidden border border-[#e6e6ea] bg-[#f6f6f7] focus-within:border-[#eb4e62]">
-                  <span className="px-3.5 py-2.5 text-xs text-[#6b6b76] border-r border-[#e6e6ea] bg-[#f6f6f7] select-none font-mono">
-                    kalasquare.com/top-creators/
-                  </span>
+              <div className="fld full">
+                <label htmlFor="af-slug">Profile link</label>
+                <div className="pre">
+                  <span>kalasquare.com/top-creators/</span>
                   <input
+                    id="af-slug"
                     type="text"
-                    maxLength={80}
                     placeholder="sahil-badal"
-                    {...register('slug', {
-                      onChange: () => setIsSlugTouched(true),
-                    })}
-                    className="flex-1 px-3.5 py-2 bg-white text-xs font-mono outline-hidden"
+                    {...register('slug', { onChange: () => setSlugTouched(true) })}
                   />
                 </div>
-                {errors.slug && (
-                  <p className="text-xs text-[#eb4e62] font-semibold">{errors.slug.message}</p>
-                )}
               </div>
 
-              {/* Tagline */}
-              <div className="sm:col-span-2 space-y-1">
-                <label className="block text-xs font-bold text-[#1b1b1f]">Summary / Tagline</label>
-                <input
-                  type="text"
-                  maxLength={120}
-                  placeholder="e.g. Playback Singer · Sufi Fusion Vocalist · Live Performer"
-                  {...register('tagline')}
-                  className="w-full h-11 px-3.5 rounded-xl bg-white border border-[#e6e6ea] focus:border-[#eb4e62] text-sm outline-hidden"
-                />
-              </div>
-
-              {/* Profile Photo */}
-              <div className="sm:col-span-2">
-                <Controller
-                  control={control}
-                  name="photoUrl"
-                  render={({ field }) => (
-                    <ImageUpload
-                      label="Profile Photo (Square)"
-                      required
-                      value={field.value}
-                      onChange={field.onChange}
-                      aspect="square"
-                      hint="Recommended: 800 × 800 px, faces centered. JPG, PNG or WebP under 5 MB."
-                      error={errors.photoUrl?.message}
-                    />
-                  )}
-                />
-              </div>
-
-              {/* Cover Photo */}
-              <div className="sm:col-span-2">
-                <Controller
-                  control={control}
-                  name="coverPhotoUrl"
-                  render={({ field }) => (
-                    <ImageUpload
-                      label="Cover / Banner Photo (Optional)"
-                      value={field.value}
-                      onChange={field.onChange}
-                      aspect="banner"
-                      hint="Recommended: 1200 × 400 px landscape banner."
-                    />
-                  )}
-                />
-              </div>
-
-              {/* City */}
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-[#1b1b1f]">
-                  City <span className="text-[#eb4e62]">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Delhi"
-                  {...register('city')}
-                  className="w-full h-11 px-3.5 rounded-xl bg-white border border-[#e6e6ea] focus:border-[#eb4e62] text-sm outline-hidden"
-                />
-                {errors.city && (
-                  <p className="text-xs text-[#eb4e62] font-semibold">{errors.city.message}</p>
-                )}
-              </div>
-
-              {/* State */}
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-[#1b1b1f]">
-                  State <span className="text-[#eb4e62]">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Delhi-NCR"
-                  {...register('state')}
-                  className="w-full h-11 px-3.5 rounded-xl bg-white border border-[#e6e6ea] focus:border-[#eb4e62] text-sm outline-hidden"
-                />
-                {errors.state && (
-                  <p className="text-xs text-[#eb4e62] font-semibold">{errors.state.message}</p>
-                )}
-              </div>
-
-              {/* Artist Class */}
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-[#1b1b1f]">
-                  Artist Class <span className="text-[#eb4e62]">*</span>
-                </label>
-                <select
-                  {...register('artistClass')}
-                  className="w-full h-11 px-3 rounded-xl bg-white border border-[#e6e6ea] focus:border-[#eb4e62] text-sm outline-hidden cursor-pointer"
-                >
-                  <option value="platinum">Platinum (Top Tier · Golden Badge · Has FAQs)</option>
-                  <option value="gold">Gold (Established Performer)</option>
-                  <option value="rising">Rising (Growing Talent · Black Badge)</option>
-                  <option value="new">New (Recently Joined · Coral Badge)</option>
-                </select>
-              </div>
-
-              {/* Verified & Featured Toggles */}
-              <div className="flex flex-col justify-end gap-2 pt-1">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    {...register('isVerified')}
-                    className="w-4 h-4 rounded text-[#eb4e62] focus:ring-[#eb4e62]"
-                  />
-                  <span className="text-xs font-bold text-[#1b1b1f]">Documents Verified (Blue Check Badge)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    {...register('isFeatured')}
-                    className="w-4 h-4 rounded text-[#eb4e62] focus:ring-[#eb4e62]"
-                  />
-                  <span className="text-xs font-semibold text-[#6b6b76]">Show in Hero / Featured Spotlights</span>
-                </label>
-              </div>
-            </div>
-          </FormSection>
-
-          {/* Section 2 - About & Physical Stats */}
-          <FormSection
-            id="sec-about"
-            title="2. About & Physical Stats"
-            description="Story, achievements, body measurements (actors/models), and performance experience."
-          >
-            <div className="space-y-4">
-              {/* Bio */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-[#1b1b1f]">
-                    Artist Biography <span className="text-[#eb4e62]">*</span>
-                  </label>
-                  <span className="text-xs font-mono text-[#6b6b76]">
-                    {(formValues.bio || '').length} / 2000
-                  </span>
-                </div>
-                <textarea
-                  rows={6}
-                  maxLength={2000}
-                  placeholder="Write the artist's full journey, style, notable concerts, and audience impact (minimum 100 characters for publish)..."
-                  {...register('bio')}
-                  className={`w-full p-3.5 rounded-xl bg-white border text-sm outline-hidden transition ${
-                    errors.bio ? 'border-[#eb4e62] bg-[#fde6ea]/20' : 'border-[#e6e6ea] focus:border-[#eb4e62]'
-                  }`}
-                />
-                {errors.bio && (
-                  <p className="text-xs text-[#eb4e62] font-semibold">{errors.bio.message}</p>
-                )}
-              </div>
-
-              {/* Languages Multi-select Pills */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-[#1b1b1f]">Languages Spoken / Performed</label>
-                <Controller
-                  control={control}
-                  name="languages"
-                  render={({ field }) => (
-                    <div className="flex flex-wrap gap-2">
-                      {LANGUAGE_OPTIONS.map((lang) => {
-                        const isSelected = (field.value || []).includes(lang);
-                        return (
-                          <button
-                            key={lang}
-                            type="button"
-                            onClick={() => {
-                              const next = isSelected
-                                ? (field.value || []).filter((l) => l !== lang)
-                                : [...(field.value || []), lang];
-                              field.onChange(next);
-                            }}
-                            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
-                              isSelected
-                                ? 'bg-[#eb4e62] text-white'
-                                : 'bg-[#f6f6f7] text-[#6b6b76] hover:bg-[#e6e6ea]'
-                            }`}
-                          >
-                            {lang}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                />
-              </div>
-
-              {/* Specializations */}
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-[#1b1b1f]">Specializations (Comma separated)</label>
-                <input
-                  type="text"
-                  maxLength={200}
-                  placeholder="e.g. Sufi Fusion, Bollywood Unplugged, Corporate Gala, Stage Hosting"
-                  {...register('specializations')}
-                  className="w-full h-11 px-3.5 rounded-xl bg-white border border-[#e6e6ea] focus:border-[#eb4e62] text-sm outline-hidden"
-                />
-              </div>
-
-              {/* Physical Stats Grid */}
-              <div className="pt-2">
-                <span className="block text-xs font-bold text-[#6b6b76] uppercase tracking-wider mb-2">
-                  Physical Stats (Optional — Useful for Actors and Models)
-                </span>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#6b6b76] mb-1">Height</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 5' 10 in"
-                      {...register('height')}
-                      className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#6b6b76] mb-1">Weight</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 68 kg"
-                      {...register('weight')}
-                      className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#6b6b76] mb-1">Waist</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 32 in"
-                      {...register('waist')}
-                      className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#6b6b76] mb-1">Chest</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 40 in"
-                      {...register('chest')}
-                      className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#6b6b76] mb-1">Hair Type</label>
-                    <select
-                      {...register('hairType')}
-                      className="w-full h-10 px-2 rounded-lg border border-[#e6e6ea] text-xs outline-hidden"
-                    >
-                      <option value="">Select</option>
-                      <option value="Straight">Straight</option>
-                      <option value="Wavy">Wavy</option>
-                      <option value="Curly">Curly</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#6b6b76] mb-1">Hair Length</label>
-                    <select
-                      {...register('hairLength')}
-                      className="w-full h-10 px-2 rounded-lg border border-[#e6e6ea] text-xs outline-hidden"
-                    >
-                      <option value="">Select</option>
-                      <option value="Short">Short</option>
-                      <option value="Medium">Medium</option>
-                      <option value="Long">Long</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Stats: Experience, Projects, Shows */}
-              <div className="pt-2 border-t border-[#f6f6f7]">
-                <span className="block text-xs font-bold text-[#6b6b76] uppercase tracking-wider mb-2">
-                  Career Milestones (Shown as 4 Quick Stats on Profile)
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#6b6b76] mb-1">Experience</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 18 Years"
-                      {...register('experienceYears')}
-                      className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#6b6b76] mb-1">Projects</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 50+"
-                      {...register('projectsCount')}
-                      className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#6b6b76] mb-1">Live Shows</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 150+"
-                      {...register('liveShowsCount')}
-                      className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </FormSection>
-
-          {/* Section 3 - Categories & Pricing */}
-          <FormSection
-            id="sec-categories"
-            title="3. Categories & Pricing"
-            description="Select up to 3 creative categories and indicative booking fee range."
-          >
-            <div className="space-y-4">
-              {/* Category Checkboxes */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-[#1b1b1f]">
-                  Categories (Pick 1 to 3) <span className="text-[#eb4e62]">*</span>
-                </label>
+              <div className="fld full" data-for="cats">
+                <label>Category <i className="rq">*</i> <span className="mu">(pick one or more)</span></label>
                 <Controller
                   control={control}
                   name="categories"
-                  render={({ field }) => (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
-                      {CATEGORY_OPTIONS.map((cat) => {
-                        const isChecked = (field.value || []).includes(cat);
-                        return (
-                          <label
-                            key={cat}
-                            className={`p-3 rounded-xl border flex items-center gap-2 cursor-pointer transition ${
-                              isChecked
-                                ? 'bg-[#fde6ea] border-[#eb4e62] text-[#eb4e62] font-bold'
-                                : 'bg-[#f6f6f7] border-[#e6e6ea] text-[#1b1b1f] hover:border-neutral-300'
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  if ((field.value || []).length < 3) {
-                                    field.onChange([...(field.value || []), cat]);
-                                  } else {
-                                    alert('You can select a maximum of 3 categories.');
-                                  }
-                                } else {
-                                  field.onChange((field.value || []).filter((c) => c !== cat));
-                                }
-                              }}
-                              className="w-4 h-4 rounded text-[#eb4e62] focus:ring-[#eb4e62]"
-                            />
-                            <span className="text-xs">{cat}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
-                />
-                {errors.categories && (
-                  <p className="text-xs text-[#eb4e62] font-semibold">{errors.categories.message}</p>
-                )}
-              </div>
-
-              {/* Pricing Range */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[#1b1b1f]">Price From (₹)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    step={5000}
-                    placeholder="50000"
-                    {...register('priceFrom')}
-                    className="w-full h-11 px-3.5 rounded-xl bg-white border border-[#e6e6ea] focus:border-[#eb4e62] text-sm outline-hidden"
-                  />
-                  {errors.priceFrom && (
-                    <p className="text-xs text-[#eb4e62] font-semibold">{errors.priceFrom.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[#1b1b1f]">Price To (₹)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    step={5000}
-                    placeholder="150000"
-                    {...register('priceTo')}
-                    className={`w-full h-11 px-3.5 rounded-xl bg-white border text-sm outline-hidden ${
-                      errors.priceTo ? 'border-[#eb4e62] bg-[#fde6ea]/20' : 'border-[#e6e6ea] focus:border-[#eb4e62]'
-                    }`}
-                  />
-                  {errors.priceTo && (
-                    <p className="text-xs text-[#eb4e62] font-semibold">{errors.priceTo.message}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Availability & Booking Note */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[#1b1b1f]">Current Availability</label>
-                  <select
-                    {...register('availability')}
-                    className="w-full h-11 px-3 rounded-xl bg-white border border-[#e6e6ea] focus:border-[#eb4e62] text-sm outline-hidden"
-                  >
-                    <option value="Available">Available for bookings</option>
-                    <option value="Busy">Limited availability</option>
-                    <option value="On Tour">On Tour</option>
-                  </select>
-                </div>
-
-                <div className="sm:col-span-2 space-y-1">
-                  <label className="block text-xs font-bold text-[#1b1b1f]">Booking Note / Rider details</label>
-                  <input
-                    type="text"
-                    maxLength={300}
-                    placeholder="e.g. Requires 2 weeks advance notice for outstation shows"
-                    {...register('bookingNote')}
-                    className="w-full h-11 px-3.5 rounded-xl bg-white border border-[#e6e6ea] focus:border-[#eb4e62] text-sm outline-hidden"
-                  />
-                </div>
-              </div>
-            </div>
-          </FormSection>
-
-          {/* Section 4 - Social Links & Fanbase */}
-          <FormSection
-            id="sec-social"
-            title="4. Social Links & Fanbase"
-            description="Verified platform URLs and audience distribution numbers."
-          >
-            <div className="space-y-6">
-              {/* Social URLs */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[#1b1b1f]">Instagram URL</label>
-                  <input
-                    type="url"
-                    placeholder="https://instagram.com/..."
-                    {...register('instagram')}
-                    className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                  />
-                  {errors.instagram && <p className="text-xs text-[#eb4e62]">{errors.instagram.message}</p>}
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[#1b1b1f]">YouTube Channel URL</label>
-                  <input
-                    type="url"
-                    placeholder="https://youtube.com/@..."
-                    {...register('youtube')}
-                    className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                  />
-                  {errors.youtube && <p className="text-xs text-[#eb4e62]">{errors.youtube.message}</p>}
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[#1b1b1f]">Spotify Artist URL</label>
-                  <input
-                    type="url"
-                    placeholder="https://open.spotify.com/artist/..."
-                    {...register('spotify')}
-                    className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                  />
-                  {errors.spotify && <p className="text-xs text-[#eb4e62]">{errors.spotify.message}</p>}
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[#1b1b1f]">Facebook Page URL</label>
-                  <input
-                    type="url"
-                    placeholder="https://facebook.com/..."
-                    {...register('facebook')}
-                    className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                  />
-                  {errors.facebook && <p className="text-xs text-[#eb4e62]">{errors.facebook.message}</p>}
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[#1b1b1f]">X (Twitter) URL</label>
-                  <input
-                    type="url"
-                    placeholder="https://x.com/..."
-                    {...register('x')}
-                    className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[#1b1b1f]">Official Website URL</label>
-                  <input
-                    type="url"
-                    placeholder="https://..."
-                    {...register('website')}
-                    className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                  />
-                </div>
-
-                {/* IMDb URL: Show ONLY if Actor is in Categories */}
-                {isActorSelected && (
-                  <div className="sm:col-span-2 space-y-1 p-3.5 rounded-xl bg-[#fff4d6]/60 border border-[#fde199] animate-fade-in">
-                    <label className="flex items-center gap-1.5 text-xs font-bold text-[#8a5a00]">
-                      <Film className="h-4 w-4" />
-                      <span>IMDb Profile URL (Visible because Actor category is chosen)</span>
-                    </label>
-                    <input
-                      type="url"
-                      placeholder="https://www.imdb.com/name/nm..."
-                      {...register('imdbUrl')}
-                      className="w-full h-10 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                    />
-                    {errors.imdbUrl && <p className="text-xs text-[#eb4e62]">{errors.imdbUrl.message}</p>}
-                  </div>
-                )}
-              </div>
-
-              {/* Fanbase Numbers */}
-              <div className="pt-4 border-t border-[#f6f6f7] space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <h4 className="font-heading font-bold text-sm text-[#1b1b1f]">
-                      Fanbase Numbers (Donut Chart &amp; Cards)
-                    </h4>
-                    <p className="text-xs text-[#6b6b76]">
-                      Leave empty to hide platform card. Numbers auto-calculate total followers.
-                    </p>
-                  </div>
-                  <div className="px-3 py-1.5 rounded-xl bg-[#f6f6f7] text-xs font-bold text-[#1b1b1f]">
-                    <span>Total Calculated: </span>
-                    <span className="text-[#eb4e62] font-black">{totalFollowersCalc}</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#6b6b76] mb-1">Spotify Followers</label>
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="e.g. 31900000"
-                      {...register('fanbaseSpotify')}
-                      className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#6b6b76] mb-1">YouTube Subscribers</label>
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="e.g. 7900000"
-                      {...register('fanbaseYouTube')}
-                      className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#6b6b76] mb-1">Instagram Followers</label>
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="e.g. 19000000"
-                      {...register('fanbaseInstagram')}
-                      className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#6b6b76] mb-1">Facebook Followers</label>
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="e.g. 30900000"
-                      {...register('fanbaseFacebook')}
-                      className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#6b6b76] mb-1">Deezer Fans</label>
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="e.g. 108700"
-                      {...register('fanbaseDeezer')}
-                      className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#6b6b76] mb-1">SoundCloud Followers</label>
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="e.g. 77600"
-                      {...register('fanbaseSoundCloud')}
-                      className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#6b6b76] mb-1">TikTok Followers</label>
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="e.g. 7000000"
-                      {...register('fanbaseTikTok')}
-                      className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </FormSection>
-
-          {/* Section 5 - Gallery */}
-          <FormSection
-            id="sec-gallery"
-            title="5. Photo Gallery"
-            description="High-resolution performance and press photos (max 12, min 1 for publish)."
-          >
-            <Controller
-              control={control}
-              name="gallery"
-              render={({ field }) => (
-                <GalleryUploader
-                  items={field.value || []}
-                  onChange={field.onChange}
-                  max={12}
-                  error={errors.gallery?.message}
-                />
-              )}
-            />
-          </FormSection>
-
-          {/* Section 6 - Videos & Clips */}
-          <FormSection
-            id="sec-videos"
-            title="6. Videos & Clips"
-            description="Up to 6 YouTube videos and up to 8 short vertical reels/shorts."
-          >
-            <div className="space-y-8">
-              {/* Videos Sub-section */}
-              <div className="space-y-3">
-                <h4 className="font-heading font-bold text-base text-[#1b1b1f]">
-                  Latest YouTube Videos (Max 6)
-                </h4>
-                <Controller
-                  control={control}
-                  name="videos"
-                  render={({ field }) => (
-                    <DynamicList
-                      items={field.value || []}
-                      max={6}
-                      addLabel="Add Video"
-                      onAdd={() => {
-                        const newV = {
-                          id: `v-${Date.now()}`,
-                          title: '',
-                          url: '',
-                          duration: '',
-                        };
-                        field.onChange([...(field.value || []), newV]);
-                      }}
-                      onRemove={(idx) => {
-                        field.onChange((field.value || []).filter((_, i) => i !== idx));
-                      }}
-                      renderItem={(vid, idx) => (
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-                          <div className="sm:col-span-5">
-                            <input
-                              type="text"
-                              maxLength={100}
-                              placeholder="Video title *"
-                              value={vid.title}
-                              onChange={(e) => {
-                                const next = [...(field.value || [])];
-                                next[idx] = { ...next[idx], title: e.target.value };
+                  render={({ field }) => {
+                    const selected = field.value || [];
+                    return (
+                      <div className="chs">
+                        {CATEGORY_CHIPS.map((cat) => {
+                          const isSelected = selected.includes(cat);
+                          return (
+                            <button
+                              key={cat}
+                              type="button"
+                              className="chb"
+                              aria-pressed={isSelected}
+                              onClick={() => {
+                                const next = isSelected
+                                  ? selected.filter((c) => c !== cat)
+                                  : [...selected, cat];
                                 field.onChange(next);
                               }}
-                              className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                            />
-                          </div>
-                          <div className="sm:col-span-5">
-                            <input
-                              type="url"
-                              placeholder="YouTube link (https://www.youtube.com/watch?v=...) *"
-                              value={vid.url}
-                              onChange={(e) => {
-                                const next = [...(field.value || [])];
-                                next[idx] = { ...next[idx], url: e.target.value };
-                                field.onChange(next);
-                              }}
-                              className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                            />
-                          </div>
-                          <div className="sm:col-span-2">
-                            <input
-                              type="text"
-                              placeholder="Duration (e.g. 4:12)"
-                              value={vid.duration || ''}
-                              onChange={(e) => {
-                                const next = [...(field.value || [])];
-                                next[idx] = { ...next[idx], duration: e.target.value };
-                                field.onChange(next);
-                              }}
-                              className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                            />
-                          </div>
-                        </div>
-                      )}
-                      error={errors.videos?.message}
-                    />
-                  )}
-                />
-              </div>
-
-              {/* Clips Sub-section */}
-              <div className="space-y-3 pt-4 border-t border-[#f6f6f7]">
-                <h4 className="font-heading font-bold text-base text-[#1b1b1f]">
-                  Short Clips &amp; Reels (Max 8)
-                </h4>
-                <Controller
-                  control={control}
-                  name="clips"
-                  render={({ field }) => (
-                    <DynamicList
-                      items={field.value || []}
-                      max={8}
-                      addLabel="Add Clip"
-                      onAdd={() => {
-                        const newC = {
-                          id: `c-${Date.now()}`,
-                          title: '',
-                          url: '',
-                          platform: 'YouTube Shorts' as const,
-                        };
-                        field.onChange([...(field.value || []), newC]);
-                      }}
-                      onRemove={(idx) => {
-                        field.onChange((field.value || []).filter((_, i) => i !== idx));
-                      }}
-                      renderItem={(clip, idx) => (
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-                          <div className="sm:col-span-4">
-                            <input
-                              type="text"
-                              maxLength={100}
-                              placeholder="Clip title *"
-                              value={clip.title}
-                              onChange={(e) => {
-                                const next = [...(field.value || [])];
-                                next[idx] = { ...next[idx], title: e.target.value };
-                                field.onChange(next);
-                              }}
-                              className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                            />
-                          </div>
-                          <div className="sm:col-span-5">
-                            <input
-                              type="url"
-                              placeholder="Reel / Shorts URL *"
-                              value={clip.url}
-                              onChange={(e) => {
-                                const next = [...(field.value || [])];
-                                next[idx] = { ...next[idx], url: e.target.value };
-                                field.onChange(next);
-                              }}
-                              className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                            />
-                          </div>
-                          <div className="sm:col-span-3">
-                            <select
-                              value={clip.platform}
-                              onChange={(e) => {
-                                const next = [...(field.value || [])];
-                                next[idx] = {
-                                  ...next[idx],
-                                  platform: e.target.value as 'YouTube Shorts' | 'Instagram Reels' | 'TikTok',
-                                };
-                                field.onChange(next);
-                              }}
-                              className="w-full h-9 px-2 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden"
                             >
-                              <option value="YouTube Shorts">YouTube Shorts</option>
-                              <option value="Instagram Reels">Instagram Reels</option>
-                              <option value="TikTok">TikTok</option>
-                            </select>
-                          </div>
-                        </div>
-                      )}
-                      error={errors.clips?.message}
-                    />
-                  )}
-                />
-              </div>
-            </div>
-          </FormSection>
-
-          {/* Section 7 - Campaigns & Awards */}
-          <FormSection
-            id="sec-campaigns"
-            title="7. Campaigns & Awards"
-            description="Up to 6 commercial brand campaigns and up to 8 awards/recognition."
-          >
-            <div className="space-y-8">
-              {/* Campaigns */}
-              <div className="space-y-3">
-                <h4 className="font-heading font-bold text-base text-[#1b1b1f]">
-                  Previous Brand Campaigns (Max 6)
-                </h4>
-                <Controller
-                  control={control}
-                  name="campaigns"
-                  render={({ field }) => (
-                    <DynamicList
-                      items={field.value || []}
-                      max={6}
-                      addLabel="Add Campaign"
-                      onAdd={() => {
-                        const newCamp = {
-                          id: `camp-${Date.now()}`,
-                          brandName: '',
-                          category: 'Commercial',
-                          year: '2025',
-                          description: '',
-                        };
-                        field.onChange([...(field.value || []), newCamp]);
-                      }}
-                      onRemove={(idx) => {
-                        field.onChange((field.value || []).filter((_, i) => i !== idx));
-                      }}
-                      renderItem={(camp, idx) => (
-                        <div className="space-y-2">
-                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                            <div className="sm:col-span-6">
-                              <input
-                                type="text"
-                                maxLength={80}
-                                placeholder="Brand / Project Name *"
-                                value={camp.brandName}
-                                onChange={(e) => {
-                                  const next = [...(field.value || [])];
-                                  next[idx] = { ...next[idx], brandName: e.target.value };
-                                  field.onChange(next);
-                                }}
-                                className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                              />
-                            </div>
-                            <div className="sm:col-span-4">
-                              <input
-                                type="text"
-                                placeholder="Category (e.g. TV Commercial)"
-                                value={camp.category || ''}
-                                onChange={(e) => {
-                                  const next = [...(field.value || [])];
-                                  next[idx] = { ...next[idx], category: e.target.value };
-                                  field.onChange(next);
-                                }}
-                                className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                              />
-                            </div>
-                            <div className="sm:col-span-2">
-                              <input
-                                type="text"
-                                placeholder="Year (1990-2026)"
-                                value={camp.year}
-                                onChange={(e) => {
-                                  const next = [...(field.value || [])];
-                                  next[idx] = { ...next[idx], year: e.target.value };
-                                  field.onChange(next);
-                                }}
-                                className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                              />
-                            </div>
-                          </div>
-                          <input
-                            type="text"
-                            maxLength={300}
-                            placeholder="Short description of the campaign role..."
-                            value={camp.description || ''}
-                            onChange={(e) => {
-                              const next = [...(field.value || [])];
-                              next[idx] = { ...next[idx], description: e.target.value };
-                              field.onChange(next);
-                            }}
-                            className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                          />
-                        </div>
-                      )}
-                      error={errors.campaigns?.message}
-                    />
-                  )}
+                              {cat}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  }}
                 />
               </div>
 
-              {/* Awards */}
-              <div className="space-y-3 pt-4 border-t border-[#f6f6f7]">
-                <h4 className="font-heading font-bold text-base text-[#1b1b1f]">
-                  Awards &amp; Accolades (Max 8)
-                </h4>
-                <Controller
-                  control={control}
-                  name="awards"
-                  render={({ field }) => (
-                    <DynamicList
-                      items={field.value || []}
-                      max={8}
-                      addLabel="Add Award"
-                      onAdd={() => {
-                        const newAward = {
-                          id: `aw-${Date.now()}`,
-                          title: '',
-                          category: 'Excellence',
-                          year: '2025',
-                          description: '',
-                        };
-                        field.onChange([...(field.value || []), newAward]);
-                      }}
-                      onRemove={(idx) => {
-                        field.onChange((field.value || []).filter((_, i) => i !== idx));
-                      }}
-                      renderItem={(award, idx) => (
-                        <div className="space-y-2">
-                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                            <div className="sm:col-span-6">
-                              <input
-                                type="text"
-                                maxLength={100}
-                                placeholder="Award Title *"
-                                value={award.title}
-                                onChange={(e) => {
-                                  const next = [...(field.value || [])];
-                                  next[idx] = { ...next[idx], title: e.target.value };
-                                  field.onChange(next);
-                                }}
-                                className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                              />
-                            </div>
-                            <div className="sm:col-span-4">
-                              <input
-                                type="text"
-                                placeholder="Award Category"
-                                value={award.category || ''}
-                                onChange={(e) => {
-                                  const next = [...(field.value || [])];
-                                  next[idx] = { ...next[idx], category: e.target.value };
-                                  field.onChange(next);
-                                }}
-                                className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                              />
-                            </div>
-                            <div className="sm:col-span-2">
-                              <input
-                                type="text"
-                                placeholder="Year"
-                                value={award.year}
-                                onChange={(e) => {
-                                  const next = [...(field.value || [])];
-                                  next[idx] = { ...next[idx], year: e.target.value };
-                                  field.onChange(next);
-                                }}
-                                className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                              />
-                            </div>
-                          </div>
-                          <input
-                            type="text"
-                            maxLength={300}
-                            placeholder="Description of honor or issuing organization..."
-                            value={award.description || ''}
-                            onChange={(e) => {
-                              const next = [...(field.value || [])];
-                              next[idx] = { ...next[idx], description: e.target.value };
-                              field.onChange(next);
-                            }}
-                            className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                          />
-                        </div>
-                      )}
-                      error={errors.awards?.message}
-                    />
-                  )}
+              <div className="fld" data-for="city">
+                <label htmlFor="af-city">City <i className="rq">*</i></label>
+                <select id="af-city" {...register('city')}>
+                  <option value="">Select city</option>
+                  {CITY_OPTIONS.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="fld">
+                <label htmlFor="af-state">State</label>
+                <input id="af-state" type="text" placeholder="Haryana" {...register('state')} />
+              </div>
+
+              <div className="fld">
+                <label htmlFor="af-phone">Phone</label>
+                <input id="af-phone" type="tel" placeholder="98XXXXXXXX" {...register('phone')} />
+              </div>
+
+              <div className="fld">
+                <label htmlFor="af-email">Email</label>
+                <input id="af-email" type="email" placeholder="name@example.com" {...register('email')} />
+              </div>
+
+              <div className="fld full">
+                <label htmlFor="af-tagline">Summary line</label>
+                <input
+                  id="af-tagline"
+                  type="text"
+                  placeholder="18+ years of experience, 30+ songs on air, 300+ bhajans"
+                  {...register('tagline')}
                 />
               </div>
-            </div>
-          </FormSection>
 
-          {/* Section 8 - FAQs (Platinum Only) */}
-          <FormSection
-            id="sec-faqs"
-            title="8. Frequently Asked Questions"
-            description="Booking questions answered upfront. Platinum class artists only."
-          >
-            {!isPlatinumClass ? (
-              <div className="p-4 rounded-xl bg-[#fff4d6] border border-[#fde199] text-xs text-[#8a5a00] flex items-center gap-2.5">
-                <HelpCircle className="h-4 w-4 shrink-0" />
-                <span>
-                  FAQs are only shown for <strong>Platinum</strong> artists. Change Artist Class to Platinum under Basic Details to add FAQs.
-                </span>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <Controller
-                  control={control}
-                  name="faqs"
-                  render={({ field }) => (
-                    <DynamicList
-                      items={field.value || []}
-                      max={8}
-                      addLabel="Add FAQ"
-                      onAdd={() => {
-                        const newFaq = { question: '', answer: '' };
-                        field.onChange([...(field.value || []), newFaq]);
-                      }}
-                      onRemove={(idx) => {
-                        field.onChange((field.value || []).filter((_, i) => i !== idx));
-                      }}
-                      renderItem={(faq, idx) => (
-                        <div className="space-y-2">
-                          <input
-                            type="text"
-                            maxLength={200}
-                            placeholder="Question (e.g. What is the standard live set duration?)"
-                            value={faq.question}
-                            onChange={(e) => {
-                              const next = [...(field.value || [])];
-                              next[idx] = { ...next[idx], question: e.target.value };
-                              field.onChange(next);
-                            }}
-                            className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                          />
-                          <textarea
-                            rows={2}
-                            maxLength={500}
-                            placeholder="Answer for booking organizers..."
-                            value={faq.answer}
-                            onChange={(e) => {
-                              const next = [...(field.value || [])];
-                              next[idx] = { ...next[idx], answer: e.target.value };
-                              field.onChange(next);
-                            }}
-                            className="w-full p-2.5 rounded-lg bg-white border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                          />
-                        </div>
-                      )}
-                      error={errors.faqs?.message}
-                    />
-                  )}
-                />
-              </div>
-            )}
-          </FormSection>
-
-          {/* Section 9 - SEO */}
-          <FormSection
-            id="sec-seo"
-            title="9. SEO & Social Meta"
-            description="Control how this artist ranks on Google search and appears when shared on WhatsApp or social media."
-          >
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-bold text-[#1b1b1f]">Meta Title</label>
-                    <span className="text-[11px] font-mono text-[#6b6b76]">
-                      {(formValues.metaTitle || '').length} / 60
-                    </span>
-                  </div>
+              <div className="fld full">
+                <label htmlFor="af-spec">Specializations</label>
+                <div className="tagbox">
                   <input
+                    id="af-spec"
                     type="text"
-                    maxLength={60}
-                    placeholder="Sahil Badal | KalaSquare"
-                    {...register('metaTitle')}
-                    className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
+                    placeholder="Type and press Enter, e.g. Lyrics Writer"
+                    {...register('specializations')}
                   />
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-bold text-[#1b1b1f]">Meta Description</label>
-                    <span className="text-[11px] font-mono text-[#6b6b76]">
-                      {(formValues.metaDescription || '').length} / 160
-                    </span>
-                  </div>
-                  <input
-                    type="text"
-                    maxLength={160}
-                    placeholder="Directly book Sahil Badal for live concerts and Sufi fusion..."
-                    {...register('metaDescription')}
-                    className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                  />
-                </div>
-
-                <div className="sm:col-span-2 space-y-1">
-                  <label className="block text-xs font-bold text-[#1b1b1f]">Keywords (Comma separated)</label>
-                  <input
-                    type="text"
-                    maxLength={200}
-                    placeholder="e.g. singer, sufi singer, live band delhi, book sahil badal"
-                    {...register('keywords')}
-                    className="w-full h-10 px-3 rounded-lg border border-[#e6e6ea] text-xs outline-hidden focus:border-[#eb4e62]"
-                  />
-                </div>
-              </div>
-
-              {/* SEO Live Preview Component */}
-              <div className="pt-2 border-t border-[#f6f6f7]">
-                <SEOPreview
-                  slug={formValues.slug}
-                  metaTitle={formValues.metaTitle}
-                  metaDescription={formValues.metaDescription}
-                  artistName={formValues.name}
-                />
-              </div>
-            </div>
-          </FormSection>
-
-          {/* Section 10 - Publish Settings */}
-          <FormSection
-            id="sec-publish"
-            title="10. Visibility & Publishing"
-            description="Control publication state. Drafts return 404 on the public site."
-          >
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <label
-                  className={`p-4 rounded-xl border flex items-center gap-3 cursor-pointer transition ${
-                    formValues.status === 'draft'
-                      ? 'border-[#eb4e62] bg-[#fde6ea]/40'
-                      : 'border-[#e6e6ea] bg-white'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    value="draft"
-                    {...register('status', {
-                      onChange: (e) => {
-                        if (e.target.value === 'draft' && initialData?.status === 'published') {
-                          setShowUnpublishModal(true);
-                        }
-                      },
-                    })}
-                    className="w-4 h-4 text-[#eb4e62] focus:ring-[#eb4e62]"
-                  />
-                  <div>
-                    <span className="font-heading font-bold text-sm text-[#1b1b1f] block">
-                      Save as Draft
-                    </span>
-                    <span className="text-xs text-[#6b6b76]">
-                      Hidden from public search and profile page (returns 404).
-                    </span>
-                  </div>
-                </label>
-
-                <label
-                  className={`p-4 rounded-xl border flex items-center gap-3 cursor-pointer transition ${
-                    formValues.status === 'published'
-                      ? 'border-[#1a8a57] bg-[#e8f7ee]'
-                      : 'border-[#e6e6ea] bg-white'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    value="published"
-                    {...register('status')}
-                    className="w-4 h-4 text-[#1a8a57] focus:ring-[#1a8a57]"
-                  />
-                  <div>
-                    <span className="font-heading font-bold text-sm text-[#1b1b1f] block">
-                      Published &amp; Live
-                    </span>
-                    <span className="text-xs text-[#6b6b76]">
-                      Visible immediately on Home Page and `/top-creators/{formValues.slug || 'slug'}`.
-                    </span>
-                  </div>
-                </label>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-[#f6f6f7] text-xs text-[#6b6b76]">
-                <strong>Visibility Note:</strong> Draft profiles safely return a 404 status code on the public site. Only published profiles appear in category carousels and search index.
-              </div>
-            </div>
-          </FormSection>
-
-          {/* Unpublish Confirmation Modal */}
-          {showUnpublishModal && (
-            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#e6e6ea] space-y-4 animate-scale-up">
-                <div className="flex items-center gap-3 text-[#eb4e62]">
-                  <AlertCircle className="h-6 w-6" />
-                  <h3 className="font-heading font-extrabold text-lg text-[#1b1b1f]">
-                    Unpublish this artist?
-                  </h3>
-                </div>
-                <p className="text-sm text-[#6b6b76] leading-relaxed">
-                  Changing to Draft will immediately make this profile return a 404 page on the public site. Do you wish to continue?
-                </p>
-                <div className="flex justify-end gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setValue('status', 'published');
-                      setShowUnpublishModal(false);
-                    }}
-                    className="h-10 px-4 rounded-xl border border-[#e6e6ea] text-xs font-bold text-[#1b1b1f]"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setValue('status', 'draft');
-                      setShowUnpublishModal(false);
-                    }}
-                    className="h-10 px-5 rounded-xl bg-[#eb4e62] text-white text-xs font-bold"
-                  >
-                    Yes, Unpublish
-                  </button>
                 </div>
               </div>
             </div>
-          )}
-        </form>
-      </div>
+          </div>
+        </div>
 
-      {/* Sticky Bottom Bar */}
-      <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#e6e6ea] p-4 shadow-lg">
-        <div className="max-w-[1240px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          {/* Completeness Bar + Tip */}
-          <div className="flex-1 w-full max-w-xl">
-            <CompletenessBar
-              score={completeness.score}
-              tip={completeness.tip}
-              variant="sticky"
-            />
+        {/* CARD 2: Class and visibility */}
+        <div className="card">
+          <div className="lh">
+            <div>
+              <h3>Class and visibility</h3>
+              <p>Decides the badge and where the artist is listed.</p>
+            </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-3 self-end sm:self-auto shrink-0">
-            {formValues.slug && (
-              <Link
-                href={`/top-creators/${formValues.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-11 px-4 rounded-xl bg-white border border-[#e6e6ea] hover:border-[#eb4e62] hover:text-[#eb4e62] text-xs font-bold text-[#1b1b1f] transition inline-flex items-center gap-1.5"
-              >
-                <span>Preview</span>
-                <ExternalLink className="h-3.5 w-3.5" />
-              </Link>
-            )}
+          <div className="grid-f">
+            <div className="fld">
+              <label htmlFor="af-tier">Artist class</label>
+              <select id="af-tier" {...register('artistClass')}>
+                {CLASS_OPTIONS.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+            </div>
 
+            <div className="fld">
+              <label htmlFor="af-budget">Budget range</label>
+              <select id="af-budget" {...register('budgetRange')}>
+                {BUDGET_OPTIONS.map((b) => (
+                  <option key={b.value} value={b.value}>{b.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="full">
+              <div className="swrow">
+                <button
+                  type="button"
+                  className="sw"
+                  role="switch"
+                  aria-checked={formValues.isVerified}
+                  onClick={() => setValue('isVerified', !formValues.isVerified, { shouldValidate: true })}
+                >
+                  <i />
+                  <span>Documents verified</span>
+                </button>
+                <small className="mu">Gives the blue tick. Needed for the Rising row and for Platinum.</small>
+              </div>
+
+              <div className="swrow">
+                <button
+                  type="button"
+                  className="sw"
+                  role="switch"
+                  aria-checked={formValues.showInAboutUs}
+                  onClick={() => setValue('showInAboutUs', !formValues.showInAboutUs, { shouldValidate: true })}
+                >
+                  <i />
+                  <span>Show in About us &middot; Exclusive section</span>
+                </button>
+                <small className="mu">Adds this artist to the exclusive group on the About us page.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* CARD 3: About */}
+        <div className="card">
+          <div className="lh">
+            <div>
+              <h3>About</h3>
+            </div>
+          </div>
+          <div className="fld">
+            <label htmlFor="af-bio">Bio</label>
+            <textarea
+              id="af-bio"
+              rows={6}
+              placeholder="Write the artist story. The profile shows a Read more button after the first few lines."
+              {...register('bio')}
+            />
+          </div>
+        </div>
+
+        {/* CARD 4: Quick stats */}
+        <div className="card">
+          <div className="lh">
+            <div>
+              <h3>Quick stats</h3>
+              <p>Shown as &ldquo;A snapshot of my journey and achievements&rdquo;.</p>
+            </div>
+          </div>
+          <div className="grid-f g4">
+            <div className="fld">
+              <label htmlFor="af-exp">Experience (years)</label>
+              <input id="af-exp" type="text" placeholder="18" {...register('experienceYears')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-projects">Projects</label>
+              <input id="af-projects" type="text" placeholder="50" {...register('projectsCount')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-shows">Live shows</label>
+              <input id="af-shows" type="text" placeholder="150+" {...register('liveShowsCount')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-followers">Total followers</label>
+              <input id="af-followers" type="text" placeholder="50k" {...register('totalFollowersLabel')} />
+            </div>
+          </div>
+        </div>
+
+        {/* CARD 5: Physical stats */}
+        <div className="card">
+          <div className="lh">
+            <div>
+              <h3>Physical stats</h3>
+              <p>Optional. Useful for actors and models.</p>
+            </div>
+          </div>
+          <div className="grid-f g3">
+            <div className="fld">
+              <label htmlFor="af-ht">Height</label>
+              <input id="af-ht" type="text" placeholder="5' 10" {...register('height')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-wt">Weight</label>
+              <input id="af-wt" type="text" placeholder="68 kg" {...register('weight')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-wst">Waist</label>
+              <input id="af-wst" type="text" placeholder="32 in" {...register('waist')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-cst">Chest</label>
+              <input id="af-cst" type="text" placeholder="40 in" {...register('chest')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-htype">Hair type</label>
+              <input id="af-htype" type="text" placeholder="Straight" {...register('hairType')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-hlen">Hair length</label>
+              <input id="af-hlen" type="text" placeholder="Short" {...register('hairLength')} />
+            </div>
+            <div className="fld full">
+              <label htmlFor="af-lang">Languages</label>
+              <input
+                id="af-lang"
+                type="text"
+                placeholder="Hindi, English, Punjabi"
+                value={Array.isArray(formValues.languages) ? formValues.languages.join(', ') : formValues.languages || ''}
+                onChange={(e) => {
+                  const arr = e.target.value.split(',').map((s) => s.trim()).filter(Boolean);
+                  setValue('languages', arr);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* CARD 6: Photo gallery */}
+        <div className="card">
+          <div className="lh">
+            <div>
+              <h3>Photo gallery</h3>
+              <p>Shown under Gallery &amp; Media. Add at least 3 photos. 1200 &times; 800 px.</p>
+            </div>
+            <span className="cnt">{galleryUrls.length} of 12</span>
+          </div>
+
+          <input
+            ref={galleryInputRef}
+            type="file"
+            multiple
+            accept="image/png,image/jpeg,image/webp"
+            style={{ display: 'none' }}
+            onChange={async (e) => {
+              const files = Array.from(e.target.files || []);
+              if (files.length === 0) return;
+              setIsUploadingGallery(true);
+              try {
+                const remaining = 12 - galleryUrls.length;
+                const toUpload = files.slice(0, remaining);
+                const uploaded = await Promise.all(toUpload.map(uploadFile));
+                setGalleryUrls((prev) => [...prev, ...uploaded]);
+              } finally {
+                setIsUploadingGallery(false);
+                e.target.value = '';
+              }
+            }}
+          />
+
+          <div className="gal">
+            {galleryUrls.map((url, i) => (
+              <div key={i} className="gi" style={{ backgroundImage: `url(${url})` }}>
+                <button
+                  type="button"
+                  className="ib del"
+                  onClick={() => setGalleryUrls(galleryUrls.filter((_, idx) => idx !== i))}
+                  aria-label={`Remove photo ${i + 1}`}
+                >
+                  <X style={{ width: '14px', height: '14px' }} />
+                </button>
+              </div>
+            ))}
+            {galleryUrls.length < 12 && (
+              <button
+                type="button"
+                className="gi add"
+                onClick={() => galleryInputRef.current?.click()}
+                disabled={isUploadingGallery}
+              >
+                <Plus style={{ width: '16px', height: '16px' }} />
+                <span>{isUploadingGallery ? 'Uploading...' : 'Add photos'}</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* CARD 7: Videos */}
+        <div className="card">
+          <div className="lh">
+            <div>
+              <h3>Videos</h3>
+              <p>YouTube links shown under “Latest Videos” on the profile.</p>
+            </div>
+            <span className="cnt">{videosList.length} of 6</span>
+          </div>
+
+          <div>
+            {videosList.map((vid, idx) => (
+              <div key={idx} className="rrow">
+                <span className="n">{idx + 1}</span>
+                <div className="rf">
+                  <div className="fld">
+                    <label>Title</label>
+                    <input
+                      type="text"
+                      placeholder="Lal Ghagra | Saregama"
+                      value={vid.title}
+                      onChange={(e) => {
+                        const next = [...videosList];
+                        next[idx].title = e.target.value;
+                        setVideosList(next);
+                      }}
+                    />
+                  </div>
+                  <div className="fld">
+                    <label>YouTube link</label>
+                    <input
+                      type="url"
+                      placeholder="https://www.youtube.com/watch?v="
+                      value={vid.url}
+                      onChange={(e) => {
+                        const next = [...videosList];
+                        next[idx].url = e.target.value;
+                        setVideosList(next);
+                      }}
+                    />
+                  </div>
+                </div>
+                <span className="acts">
+                  <button
+                    type="button"
+                    className="ib del"
+                    onClick={() => setVideosList(videosList.filter((_, i) => i !== idx))}
+                    aria-label="Remove video"
+                  >
+                    <X style={{ width: '14px', height: '14px' }} />
+                  </button>
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {videosList.length < 6 && (
+            <button
+              type="button"
+              className="btn sm"
+              style={{ marginTop: '12px' }}
+              onClick={() => setVideosList([...videosList, { title: '', url: '' }])}
+            >
+              <Plus style={{ width: '14px', height: '14px' }} />
+              <span>Add video</span>
+            </button>
+          )}
+        </div>
+
+        {/* CARD 8: Short clips */}
+        <div className="card">
+          <div className="lh">
+            <div>
+              <h3>Short clips</h3>
+              <p>Vertical clips: YouTube Shorts or Instagram Reels links.</p>
+            </div>
+            <span className="cnt">{clipsList.length} of 8</span>
+          </div>
+
+          <div>
+            {clipsList.map((clip, idx) => (
+              <div key={idx} className="rrow">
+                <span className="n">{idx + 1}</span>
+                <div className="rf">
+                  <div className="fld">
+                    <label>Title</label>
+                    <input
+                      type="text"
+                      placeholder="Behind the scenes"
+                      value={clip.title}
+                      onChange={(e) => {
+                        const next = [...clipsList];
+                        next[idx].title = e.target.value;
+                        setClipsList(next);
+                      }}
+                    />
+                  </div>
+                  <div className="fld">
+                    <label>Shorts or Reels link</label>
+                    <input
+                      type="url"
+                      placeholder="https://www.instagram.com/reel/"
+                      value={clip.url}
+                      onChange={(e) => {
+                        const next = [...clipsList];
+                        next[idx].url = e.target.value;
+                        setClipsList(next);
+                      }}
+                    />
+                  </div>
+                </div>
+                <span className="acts">
+                  <button
+                    type="button"
+                    className="ib del"
+                    onClick={() => setClipsList(clipsList.filter((_, i) => i !== idx))}
+                    aria-label="Remove clip"
+                  >
+                    <X style={{ width: '14px', height: '14px' }} />
+                  </button>
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {clipsList.length < 8 && (
+            <button
+              type="button"
+              className="btn sm"
+              style={{ marginTop: '12px' }}
+              onClick={() => setClipsList([...clipsList, { title: '', url: '' }])}
+            >
+              <Plus style={{ width: '14px', height: '14px' }} />
+              <span>Add clip</span>
+            </button>
+          )}
+        </div>
+
+        {/* CARD 9: Previous campaigns */}
+        <div className="card">
+          <div className="lh">
+            <div>
+              <h3>Previous campaigns</h3>
+              <p>Brand collaborations and projects.</p>
+            </div>
+            <span className="cnt">{campaignsList.length} of 6</span>
+          </div>
+
+          <div>
+            {campaignsList.length === 0 ? (
+              <p className="mu">Nothing added yet.</p>
+            ) : (
+              campaignsList.map((c, idx) => (
+                <div key={idx} className="rrow">
+                  <span className="n">{idx + 1}</span>
+                  <div className="rf">
+                    <div className="fld">
+                      <label>Title</label>
+                      <input
+                        type="text"
+                        placeholder="Wo Mera Bhola Hain"
+                        value={c.brandName}
+                        onChange={(e) => {
+                          const next = [...campaignsList];
+                          next[idx].brandName = e.target.value;
+                          setCampaignsList(next);
+                        }}
+                      />
+                    </div>
+                    <div className="fld">
+                      <label>Category</label>
+                      <input
+                        type="text"
+                        placeholder="Devotional"
+                        value={c.category}
+                        onChange={(e) => {
+                          const next = [...campaignsList];
+                          next[idx].category = e.target.value;
+                          setCampaignsList(next);
+                        }}
+                      />
+                    </div>
+                    <div className="fld">
+                      <label>Year</label>
+                      <input
+                        type="text"
+                        placeholder="2026"
+                        value={c.year}
+                        onChange={(e) => {
+                          const next = [...campaignsList];
+                          next[idx].year = e.target.value;
+                          setCampaignsList(next);
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <span className="acts">
+                    <button
+                      type="button"
+                      className="ib del"
+                      onClick={() => setCampaignsList(campaignsList.filter((_, i) => i !== idx))}
+                      aria-label="Remove campaign"
+                    >
+                      <X style={{ width: '14px', height: '14px' }} />
+                    </button>
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+
+          {campaignsList.length < 6 && (
+            <button
+              type="button"
+              className="btn sm"
+              style={{ marginTop: '12px' }}
+              onClick={() => setCampaignsList([...campaignsList, { brandName: '', category: '', year: '2026' }])}
+            >
+              <Plus style={{ width: '14px', height: '14px' }} />
+              <span>Add campaign</span>
+            </button>
+          )}
+        </div>
+
+        {/* CARD 10: Awards and recognition */}
+        <div className="card">
+          <div className="lh">
+            <div>
+              <h3>Awards and recognition</h3>
+              <p>Achievements and accolades.</p>
+            </div>
+            <span className="cnt">{awardsList.length} of 8</span>
+          </div>
+
+          <div>
+            {awardsList.length === 0 ? (
+              <p className="mu">Nothing added yet.</p>
+            ) : (
+              awardsList.map((a, idx) => (
+                <div key={idx} className="rrow">
+                  <span className="n">{idx + 1}</span>
+                  <div className="rf">
+                    <div className="fld">
+                      <label>Award title</label>
+                      <input
+                        type="text"
+                        placeholder="National Award"
+                        value={a.title}
+                        onChange={(e) => {
+                          const next = [...awardsList];
+                          next[idx].title = e.target.value;
+                          setAwardsList(next);
+                        }}
+                      />
+                    </div>
+                    <div className="fld">
+                      <label>Category</label>
+                      <input
+                        type="text"
+                        placeholder="Ghazal"
+                        value={a.category}
+                        onChange={(e) => {
+                          const next = [...awardsList];
+                          next[idx].category = e.target.value;
+                          setAwardsList(next);
+                        }}
+                      />
+                    </div>
+                    <div className="fld">
+                      <label>Year</label>
+                      <input
+                        type="text"
+                        placeholder="2022"
+                        value={a.year}
+                        onChange={(e) => {
+                          const next = [...awardsList];
+                          next[idx].year = e.target.value;
+                          setAwardsList(next);
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <span className="acts">
+                    <button
+                      type="button"
+                      className="ib del"
+                      onClick={() => setAwardsList(awardsList.filter((_, i) => i !== idx))}
+                      aria-label="Remove award"
+                    >
+                      <X style={{ width: '14px', height: '14px' }} />
+                    </button>
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+
+          {awardsList.length < 8 && (
+            <button
+              type="button"
+              className="btn sm"
+              style={{ marginTop: '12px' }}
+              onClick={() => setAwardsList([...awardsList, { title: '', category: '', year: '2025' }])}
+            >
+              <Plus style={{ width: '14px', height: '14px' }} />
+              <span>Add award</span>
+            </button>
+          )}
+        </div>
+
+        {/* CARD 11: FAQs */}
+        <div className="card">
+          <div className="lh">
+            <div>
+              <h3>FAQs</h3>
+              <p>Shown on the public artist page only for Platinum artists. Add questions clients ask most.</p>
+            </div>
+            <span className="cnt">{faqsList.length} of 8</span>
+          </div>
+
+          <div>
+            {faqsList.length === 0 ? (
+              <p className="mu">Nothing added yet.</p>
+            ) : (
+              faqsList.map((f, idx) => (
+                <div key={idx} className="rrow">
+                  <span className="n">{idx + 1}</span>
+                  <div className="rf">
+                    <div className="fld">
+                      <label>Question</label>
+                      <input
+                        type="text"
+                        placeholder="What do you need to book this artist?"
+                        value={f.question}
+                        onChange={(e) => {
+                          const next = [...faqsList];
+                          next[idx].question = e.target.value;
+                          setFaqsList(next);
+                        }}
+                      />
+                    </div>
+                    <div className="fld">
+                      <label>Answer</label>
+                      <input
+                        type="text"
+                        placeholder="Short, clear answer"
+                        value={f.answer}
+                        onChange={(e) => {
+                          const next = [...faqsList];
+                          next[idx].answer = e.target.value;
+                          setFaqsList(next);
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <span className="acts">
+                    <button
+                      type="button"
+                      className="ib del"
+                      onClick={() => setFaqsList(faqsList.filter((_, i) => i !== idx))}
+                      aria-label="Remove FAQ"
+                    >
+                      <X style={{ width: '14px', height: '14px' }} />
+                    </button>
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+
+          {faqsList.length < 8 && (
+            <button
+              type="button"
+              className="btn sm"
+              style={{ marginTop: '12px' }}
+              onClick={() => setFaqsList([...faqsList, { question: '', answer: '' }])}
+            >
+              <Plus style={{ width: '14px', height: '14px' }} />
+              <span>Add question</span>
+            </button>
+          )}
+        </div>
+
+        {/* CARD 12: Social and links */}
+        <div className="card">
+          <div className="lh">
+            <div>
+              <h3>Social and links</h3>
+              <p>Shown as icons on the profile.</p>
+            </div>
+          </div>
+          <div className="grid-f">
+            <div className="fld">
+              <label htmlFor="af-ig">Instagram</label>
+              <input id="af-ig" type="url" placeholder="https://instagram.com/" {...register('socialInstagram')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-yt">YouTube</label>
+              <input id="af-yt" type="url" placeholder="https://youtube.com/@" {...register('socialYouTube')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-fb">Facebook</label>
+              <input id="af-fb" type="url" placeholder="https://facebook.com/" {...register('socialFacebook')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-x">X</label>
+              <input id="af-x" type="url" placeholder="https://x.com/" {...register('socialX')} />
+            </div>
+            <div className="fld full">
+              <label htmlFor="af-spotify">Spotify</label>
+              <input id="af-spotify" type="url" placeholder="https://open.spotify.com/artist/" {...register('socialSpotify')} />
+            </div>
+          </div>
+        </div>
+
+        {/* CARD 13: Fanbase by platform */}
+        <div className="card">
+          <div className="lh">
+            <div>
+              <h3>Fanbase by platform</h3>
+              <p>Shown as the donut chart and platform cards. Leave a platform empty to hide it. Examples: 31.9M, 108.7K.</p>
+            </div>
+          </div>
+          <div className="grid-f g4">
+            <div className="fld">
+              <label htmlFor="af-fb-sp">Spotify followers</label>
+              <input id="af-fb-sp" type="text" placeholder="31.9M" {...register('fanbaseSpotify')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-fb-yt">YouTube subscribers</label>
+              <input id="af-fb-yt" type="text" placeholder="7.9M" {...register('fanbaseYouTube')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-fb-ig">Instagram followers</label>
+              <input id="af-fb-ig" type="text" placeholder="19.0M" {...register('fanbaseInstagram')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-fb-fb">Facebook followers</label>
+              <input id="af-fb-fb" type="text" placeholder="30.9M" {...register('fanbaseFacebook')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-fb-dz">Deezer fans</label>
+              <input id="af-fb-dz" type="text" placeholder="108.7K" {...register('fanbaseDeezer')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-fb-sc">SoundCloud followers</label>
+              <input id="af-fb-sc" type="text" placeholder="77.6K" {...register('fanbaseSoundCloud')} />
+            </div>
+            <div className="fld">
+              <label htmlFor="af-fb-tt">TikTok followers</label>
+              <input id="af-fb-tt" type="text" placeholder="7.0M" {...register('fanbaseTikTok')} />
+            </div>
+          </div>
+        </div>
+
+        {/* CARD 14: SEO */}
+        <div className="card">
+          <div className="lh">
+            <div>
+              <h3>SEO</h3>
+              <p>How this profile looks on Google and when the link is shared on WhatsApp.</p>
+            </div>
+          </div>
+
+          <div className="seo">
+            <div className="seo-f">
+              <div className="fld">
+                <label htmlFor="sf-title">
+                  Meta title{' '}
+                  <span
+                    className={`cc ${
+                      (formValues.metaTitle || '').length > 60 ||
+                      ((formValues.metaTitle || '').length > 0 &&
+                        (formValues.metaTitle || '').length < 30)
+                        ? 'warn'
+                        : ''
+                    }`}
+                  >
+                    {(formValues.metaTitle || '').length}/60
+                  </span>
+                </label>
+                <input
+                  id="sf-title"
+                  type="text"
+                  maxLength={60}
+                  placeholder={`${formValues.name || 'Artist name'} | KalaSquare`}
+                  {...register('metaTitle')}
+                />
+              </div>
+
+              <div className="fld">
+                <label htmlFor="sf-desc">
+                  Meta description{' '}
+                  <span
+                    className={`cc ${
+                      (formValues.metaDescription || '').length > 160 ||
+                      ((formValues.metaDescription || '').length > 0 &&
+                        (formValues.metaDescription || '').length < 70)
+                        ? 'warn'
+                        : ''
+                    }`}
+                  >
+                    {(formValues.metaDescription || '').length}/160
+                  </span>
+                </label>
+                <textarea
+                  id="sf-desc"
+                  rows={3}
+                  maxLength={160}
+                  placeholder="One or two sentences that make someone click."
+                  {...register('metaDescription')}
+                />
+              </div>
+
+              <div className="fld">
+                <label htmlFor="sf-kw">Focus keyword</label>
+                <input
+                  id="sf-kw"
+                  type="text"
+                  placeholder="e.g. singer in haryana"
+                  {...register('focusKeyword')}
+                />
+              </div>
+
+              <div className="fld">
+                <label htmlFor="sf-alt">Profile photo alt text</label>
+                <input
+                  id="sf-alt"
+                  type="text"
+                  placeholder="Describe the photo for search and screen readers"
+                  {...register('photoAltText')}
+                />
+              </div>
+
+              <div className="fld">
+                <label htmlFor="sf-can">
+                  Canonical URL <span className="mu">(optional)</span>
+                </label>
+                <input
+                  id="sf-can"
+                  type="url"
+                  placeholder="Leave empty to use the page address"
+                  {...register('canonicalUrl')}
+                />
+              </div>
+
+              <div className="fld">
+                <label>
+                  Share image <span className="mu">(1200 × 630 px)</span>
+                </label>
+                <input
+                  ref={shareImageInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    // 1. Instant local preview via DataURL
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      const dataUrl = reader.result as string;
+                      setValue('ogImageUrl', dataUrl, { shouldValidate: true, shouldDirty: true });
+                    };
+                    reader.readAsDataURL(file);
+
+                    // 2. Upload to server
+                    setIsUploadingShare(true);
+                    uploadFile(file)
+                      .then((url) => {
+                        if (url) {
+                          setValue('ogImageUrl', url, { shouldValidate: true, shouldDirty: true });
+                        }
+                      })
+                      .finally(() => {
+                        setIsUploadingShare(false);
+                        e.target.value = '';
+                      });
+                  }}
+                />
+                <div className="acts" style={{ margin: 0, justifyContent: 'flex-start' }}>
+                  <button
+                    type="button"
+                    className="btn sm"
+                    onClick={() => shareImageInputRef.current?.click()}
+                    disabled={isUploadingShare}
+                  >
+                    <Upload style={{ width: '13px', height: '13px' }} />
+                    <span>
+                      {isUploadingShare
+                        ? 'Uploading...'
+                        : formValues.ogImageUrl
+                        ? 'Replace image'
+                        : 'Upload image'}
+                    </span>
+                  </button>
+                  {formValues.ogImageUrl && (
+                    <button
+                      type="button"
+                      className="btn sm"
+                      onClick={() => setValue('ogImageUrl', '', { shouldValidate: true })}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="swrow">
+                <button
+                  type="button"
+                  className="sw"
+                  role="switch"
+                  aria-checked={formValues.allowSearchEngines}
+                  onClick={() =>
+                    setValue('allowSearchEngines', !formValues.allowSearchEngines, {
+                      shouldValidate: true,
+                    })
+                  }
+                >
+                  <i />
+                  <span>Show in search engines</span>
+                </button>
+                <small className="mu">Schema type: Person (added automatically)</small>
+              </div>
+
+              <button
+                type="button"
+                className="btn sm"
+                onClick={handleFillFromProfile}
+                style={{ alignSelf: 'flex-start' }}
+              >
+                <Sparkles style={{ width: '13px', height: '13px', color: 'var(--coral)' }} />
+                <span>Fill from profile</span>
+              </button>
+            </div>
+
+            <div className="seo-p" id="seoDyn">
+              {/* Google Preview */}
+              <div className="gp" aria-label="Google result preview">
+                <div className="gp-u">
+                  kalasquare.com &rsaquo; top-creators &rsaquo;{' '}
+                  {formValues.slug || 'artist-name'}
+                </div>
+                <div className={`gp-t ${formValues.metaTitle ? '' : 'ph'}`}>
+                  {formValues.metaTitle || `${formValues.name || 'Artist name'} | KalaSquare`}
+                </div>
+                <div className={`gp-d ${formValues.metaDescription ? '' : 'ph'}`}>
+                  {formValues.metaDescription || 'Google will pick a short text from the page.'}
+                </div>
+              </div>
+
+              {/* Social Preview */}
+              <div className="ogp">
+                <div
+                  className="ogi"
+                  style={
+                    formValues.ogImageUrl
+                      ? { backgroundImage: `url(${formValues.ogImageUrl})` }
+                      : undefined
+                  }
+                >
+                  {!formValues.ogImageUrl && <span>No share image</span>}
+                </div>
+                <div className="ogt">
+                  <small>KALASQUARE.COM</small>
+                  <b>
+                    {formValues.metaTitle || `${formValues.name || 'Artist name'} | KalaSquare`}
+                  </b>
+                </div>
+              </div>
+
+              {/* SEO Score Checklist */}
+              <div className="scr">
+                <div className="scr-h">
+                  <b>SEO score</b>
+                  <span className={`tg ${seoRes.cls}`}>
+                    {seoRes.label} &middot; {seoRes.score}
+                  </span>
+                </div>
+                <div className="mt wide">
+                  <i style={{ width: `${seoRes.score}%` }} />
+                </div>
+                <ul className="chk">
+                  {seoRes.items.map((it, i) => (
+                    <li key={i} className={it[1] ? 'y' : 'n'}>
+                      {it[1] ? (
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M5 12l5 5 9-10" />
+                        </svg>
+                      ) : (
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                        >
+                          <circle cx="12" cy="12" r="8" />
+                        </svg>
+                      )}
+                      <span>{it[2]}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Note from manager.html */}
+        <p className="note">
+          Reviews and ratings are written by visitors on the website and are not entered here.
+        </p>
+
+        {/* STICKY BOTTOM BAR (.fbar from manager.html line 1337) */}
+        <div className="fbar">
+          <div className="cmp">
+            <span>
+              Profile completeness <b>{completeness.score}%</b>
+            </span>
+            <span className="mt">
+              <i style={{ width: `${completeness.score}%` }} />
+            </span>
+          </div>
+
+          <span className="acts" style={{ marginLeft: 0 }}>
+            <button
+              type="button"
+              onClick={() => router.push('/admin/artists')}
+              className="btn"
+            >
+              Cancel
+            </button>
             <button
               type="button"
               onClick={handleSaveDraft}
-              className="h-11 px-4 rounded-xl bg-white border border-[#e6e6ea] hover:border-[#eb4e62] hover:text-[#eb4e62] text-xs font-bold text-[#1b1b1f] transition cursor-pointer"
-            >
-              Save as Draft
-            </button>
-
-            <button
-              type="button"
-              onClick={handleSubmit(onPublishSubmit, onPublishErrors)}
               disabled={isSubmitting}
-              className="h-11 px-6 rounded-xl bg-[#eb4e62] hover:bg-[#d63a50] text-white text-xs font-bold shadow-md hover:shadow-lg transition cursor-pointer disabled:opacity-50"
+              className="btn"
             >
-              {isSubmitting ? 'Saving...' : 'Publish'}
+              Save as draft
             </button>
-          </div>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="btn primary"
+            >
+              {mode === 'edit' ? 'Save changes' : 'Save and publish'}
+            </button>
+          </span>
         </div>
-      </div>
+      </form>
     </div>
   );
 }

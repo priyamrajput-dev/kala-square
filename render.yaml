@@ -20,3 +20,4 @@ services:
         sync: false
       - key: CORS_ORIGIN
         value: https://kalasquare.com
+

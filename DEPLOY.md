@@ -111,3 +111,4 @@ The following test records were created during automated acceptance testing:
   - `draft-test` (Status: Draft)
   - `persistence-test-artist` (Status: Published)
 - **Question for User**: *Would you like me to keep these test records for your visual inspection in Admin, or run a cleanup query to remove them and keep only the 3 seeded artists (`sahil-badal`, `test-artist`, `aarav-sharma`)?*
+

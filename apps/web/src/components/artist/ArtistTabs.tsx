@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ArtistProfile } from '@/lib/types';
 
 interface TabItem {
@@ -14,6 +14,10 @@ interface ArtistTabsProps {
 
 export default function ArtistTabs({ artist }: ArtistTabsProps) {
     const [activeTab, setActiveTab] = useState<string>('about');
+    const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
+    const tabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+
+    const reviewsNum = (artist.reviews && artist.reviews.length > 0) ? artist.reviews.length : (artist.reviewsCount || 0);
 
     const tabs: TabItem[] = [
         { id: 'about', label: 'About' },
@@ -21,7 +25,7 @@ export default function ArtistTabs({ artist }: ArtistTabsProps) {
             ? [{ id: 'fanbase', label: 'Fanbase' }]
             : []),
         ...(artist.gallery && artist.gallery.length > 0
-            ? [{ id: 'gallery', label: `Gallery (${artist.gallery.length})` }]
+            ? [{ id: 'gallery', label: 'Gallery' }]
             : []),
         ...(artist.videos && artist.videos.length > 0 ? [{ id: 'videos', label: 'Videos' }] : []),
         ...(artist.clips && artist.clips.length > 0 ? [{ id: 'reels', label: 'Reels' }] : []),
@@ -35,19 +39,27 @@ export default function ArtistTabs({ artist }: ArtistTabsProps) {
         ...(artist.categories.includes('Actor') && artist.imdb
             ? [{ id: 'imdb', label: 'IMDb' }]
             : []),
-        ...(artist.artistClass === 'platinum' && artist.faqs && artist.faqs.length > 0
-            ? [{ id: 'faq', label: 'FAQs' }]
-            : []),
         {
             id: 'reviews',
-            label: `Reviews${artist.reviewsCount ? ` (${artist.reviewsCount})` : ''}`,
+            label: `Reviews${reviewsNum > 0 ? ` (${reviewsNum})` : ''}`,
         },
     ];
+
+    // Update red underline indicator position
+    useEffect(() => {
+        const activeBtn = tabRefs.current[activeTab];
+        if (activeBtn) {
+            setIndicatorStyle({
+                left: activeBtn.offsetLeft,
+                width: activeBtn.offsetWidth,
+            });
+        }
+    }, [activeTab]);
 
     // Scrollspy effect
     useEffect(() => {
         const handleScroll = () => {
-            const scrollPosition = window.scrollY + 160;
+            const scrollPosition = window.scrollY + 180;
 
             for (let i = tabs.length - 1; i >= 0; i--) {
                 const el = document.getElementById(`pp-${tabs[i].id}`);
@@ -66,37 +78,36 @@ export default function ArtistTabs({ artist }: ArtistTabsProps) {
         setActiveTab(id);
         const element = document.getElementById(`pp-${id}`);
         if (element) {
-            const yOffset = -120; // Account for sticky header + tabs
+            const yOffset = -140; // Sticky header + tab bar offset
             const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
             window.scrollTo({ top: y, behavior: 'smooth' });
         }
     };
 
     return (
-        <nav className="sticky top-[72px] z-40 bg-white/95 backdrop-blur-md border-b border-[#e6e6ea] shadow-xs">
-            <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-                <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-2.5">
-                    {tabs.map((tab) => {
-                        const isActive = activeTab === tab.id;
-                        return (
-                            <button
-                                key={tab.id}
-                                type="button"
-                                onClick={() => scrollToSection(tab.id)}
-                                className={`relative px-3.5 py-2 text-sm font-semibold rounded-lg whitespace-nowrap transition cursor-pointer ${
-                                    isActive
-                                        ? 'text-[#eb4e62] bg-[#fde6ea]/50'
-                                        : 'text-[#6b6b76] hover:text-[#1b1b1f] hover:bg-[#f6f6f7]'
-                                }`}
-                            >
-                                <span>{tab.label}</span>
-                                {isActive && (
-                                    <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-[#eb4e62] rounded-full" />
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
+        <nav className="pp-tabs" id="ppTabs" aria-label="Profile sections">
+            <div className="wrap">
+                {tabs.map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    return (
+                        <button
+                            key={tab.id}
+                            ref={(el) => { tabRefs.current[tab.id] = el; }}
+                            type="button"
+                            onClick={() => scrollToSection(tab.id)}
+                            className={isActive ? 'on' : ''}
+                        >
+                            {tab.label}
+                        </button>
+                    );
+                })}
+                <i
+                    className="pp-ind"
+                    style={{
+                        transform: `translateX(${indicatorStyle.left}px)`,
+                        width: `${indicatorStyle.width}px`,
+                    }}
+                />
             </div>
         </nav>
     );

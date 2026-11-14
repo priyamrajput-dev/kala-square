@@ -28,3 +28,4 @@ console.log(hash);
 console.log('--------------------------------------------------');
 console.log('Add to your .env.production as:');
 console.log(`ADMIN_PASSWORD_HASH=${hash}\n`);
+

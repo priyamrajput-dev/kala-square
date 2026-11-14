@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { Award, Check, Star, MapPin, Share2, Heart, Phone, ArrowLeft } from 'lucide-react';
 import { ArtistProfile } from '@/lib/types';
 
 interface ArtistHeroProps {
@@ -13,211 +11,332 @@ interface ArtistHeroProps {
 export default function ArtistHero({ artist }: ArtistHeroProps) {
     const [isSaved, setIsSaved] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+    const showToast = (msg: string) => {
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(null), 3000);
+    };
 
     const handleShare = async () => {
-        if (typeof window !== 'undefined' && navigator.share) {
+        const cleanUrl = typeof window !== 'undefined'
+            ? `${window.location.origin}/top-creators/${artist.slug}`
+            : `https://kalasquare.com/top-creators/${artist.slug}`;
+
+        let success = false;
+        if (typeof window !== 'undefined' && navigator.clipboard?.writeText) {
             try {
-                await navigator.share({
-                    title: `${artist.name} | KalaSquare`,
-                    text: artist.tagline || `Book ${artist.name} on KalaSquare`,
-                    url: window.location.href,
-                });
-                return;
+                await navigator.clipboard.writeText(cleanUrl);
+                success = true;
             } catch {
-                // Fallback to clipboard
+                success = false;
             }
         }
-        if (typeof window !== 'undefined' && navigator.clipboard) {
-            await navigator.clipboard.writeText(window.location.href);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
+        if (!success && typeof document !== 'undefined') {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = cleanUrl;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                success = true;
+            } catch {
+                success = false;
+            }
+        }
+
+        showToast('Profile link copied.');
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleToggleSave = () => {
+        const next = !isSaved;
+        setIsSaved(next);
+        showToast(next ? 'Saved to your list.' : 'Removed from your list.');
+    };
+
+    // Social links
+    const soc = [
+        ['Instagram', artist.social?.instagram],
+        ['YouTube', artist.social?.youtube],
+        ['Facebook', artist.social?.facebook],
+        ['Spotify', artist.social?.spotify],
+        ['X', artist.social?.x],
+        ['IMDb', artist.social?.imdb],
+    ].filter((x) => Boolean(x[1])) as [string, string][];
+
+    // Tagline lines split by bullet or newline
+    const lines = (artist.tagline || '')
+        .split(/\s*[·\n]\s*/)
+        .map((l) => l.trim())
+        .filter(Boolean);
+
+    const handleScrollToBook = (e: React.MouseEvent) => {
+        e.preventDefault();
+        const bookEl = document.getElementById('ppBook');
+        if (bookEl) {
+            const y = bookEl.getBoundingClientRect().top + window.scrollY - 120;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+            const input = bookEl.querySelector('input');
+            if (input) {
+                setTimeout(() => input.focus({ preventScroll: true }), 400);
+            }
         }
     };
 
-    const socialList = [
-        { name: 'Instagram', url: artist.social.instagram },
-        { name: 'YouTube', url: artist.social.youtube },
-        { name: 'Facebook', url: artist.social.facebook },
-        { name: 'Spotify', url: artist.social.spotify },
-        { name: 'IMDb', url: artist.social.imdb },
-        { name: 'X', url: artist.social.x },
-    ].filter((s) => Boolean(s.url));
+    // Initial character
+    const avaChar = artist.name.replace(/^Dr\.\s*/i, '').charAt(0).toUpperCase();
+
+    // Review counts & rating (0 when no reviews, matching manager.html line 2023)
+    const hasReviews = (artist.reviews && artist.reviews.length > 0) || (artist.reviewsCount ? artist.reviewsCount > 0 : false);
+    const ratingVal = artist.rating > 0 ? artist.rating.toFixed(1) : '0.0';
+    const reviewsNum = artist.reviewsCount || 0;
+
+    const isPlatinum = artist.artistClass === 'platinum';
+    const isVerified = artist.isVerified;
 
     return (
-        <header className="relative bg-white border-b border-[#e6e6ea] pt-6 pb-10 overflow-hidden">
-            {/* Background Accent Gradients */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-[#fde6ea]/60 to-transparent rounded-full blur-3xl -z-10 pointer-events-none" />
-            <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-[#fde6ea]/40 rounded-full blur-2xl -z-10 pointer-events-none" />
+        <header className="pp-hero">
+            {/* Blurred background photo */}
+            {artist.photoUrl && (
+                <div
+                    className="pp-bg"
+                    style={{ backgroundImage: `url(${artist.photoUrl})` }}
+                />
+            )}
+            <div className="pp-shape s1" />
+            <div className="pp-shape s2" />
 
-            <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-                {/* Top bar: Back to Home link */}
-                <div className="flex items-center justify-between mb-8">
-                    <Link
-                        href="/"
-                        className="inline-flex items-center gap-2 text-sm font-semibold text-[#6b6b76] hover:text-[#eb4e62] transition"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                        <span>Back to home</span>
+            <div className="wrap pp-hw">
+                {/* Top bar: Back to Home + Edit in Admin */}
+                <div className="pp-bar">
+                    <Link href="/" className="pp-back">
+                        <svg
+                            viewBox="0 0 24 24"
+                            width="16"
+                            height="16"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                        Back to home
                     </Link>
 
                     <Link
-                        href="/admin"
-                        className="hidden sm:inline-flex items-center text-xs font-bold text-[#eb4e62] hover:text-[#d63a50] px-3 py-1.5 rounded-lg border border-[#e6e6ea] bg-white transition"
+                        href={`/admin/artists/new?edit=${artist.id}`}
+                        className="dm-edit-b"
                     >
                         Edit in Admin
                     </Link>
                 </div>
 
-                {/* Hero Grid: Photo Left + Info Right */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-start">
-                    {/* Left: Profile Photo (Square 800x800, rounded 20px, 320px on desktop) */}
-                    <div className="md:col-span-5 lg:col-span-4 flex justify-center md:justify-start">
-                        <div className="relative w-full max-w-[320px] aspect-square rounded-[20px] overflow-hidden border border-[#e6e6ea] shadow-md bg-[#f6f6f7] group">
-                            <Image
-                                src={artist.photoUrl}
-                                alt={artist.name}
-                                fill
-                                priority
-                                className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                sizes="(max-width: 768px) 100vw, 320px"
-                            />
-
-                            {/* Rating Star Badge overlaid at bottom of photo */}
-                            <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5 text-xs font-bold text-[#1b1b1f]">
-                                <Star className="h-4 w-4 fill-[#eb4e62] text-[#eb4e62]" />
-                                <span>{artist.rating.toFixed(1)}</span>
-                                <span className="text-[#6b6b76] font-normal">
-                                    ({artist.reviewsCount} reviews)
-                                </span>
-                            </div>
+                {/* Hero Grid */}
+                <div className="pp-hg">
+                    {/* Left: Avatar / Photo */}
+                    <div
+                        className={`pp-ph ${artist.photoUrl ? 'has' : ''}`}
+                        style={artist.photoUrl ? { backgroundImage: `url(${artist.photoUrl})` } : undefined}
+                    >
+                        {!artist.photoUrl && <span>{avaChar}</span>}
+                        <div className="pp-rate">
+                            <svg
+                                viewBox="0 0 24 24"
+                                width="18"
+                                height="18"
+                                fill="#f5a300"
+                                stroke="#f5a300"
+                                strokeWidth="1.6"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                            >
+                                <path d="M12 3l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 16.9 6.6 19.8l1.1-6.1L3.2 9.4l6.1-.8z" />
+                            </svg>
+                            <b>{hasReviews ? ratingVal : 'New'}</b>
+                            {hasReviews && <small>{reviewsNum} review{reviewsNum > 1 ? 's' : ''}</small>}
                         </div>
                     </div>
 
-                    {/* Right: Badges, Name, Tagline, Location, Categories, Action Buttons */}
-                    <div className="md:col-span-7 lg:col-span-8 space-y-4">
+                    {/* Right: Info */}
+                    <div className="pp-hi">
                         {/* Badges */}
-                        <div className="flex flex-wrap items-center gap-2.5">
-                            {artist.artistClass === 'platinum' && (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#fff4d6] text-[#8a5a00] border border-[#fde199]">
-                                    <Award className="h-3.5 w-3.5" />
-                                    <span>Platinum artist</span>
-                                </span>
-                            )}
-                            {artist.isVerified && (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#e8f3ff] text-[#0066cc] border border-[#cce4ff]">
-                                    <Check className="h-3.5 w-3.5" />
-                                    <span>Verified by KalaSquare</span>
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Name & Tagline */}
-                        <div>
-                            <h1 className="font-heading font-extrabold text-3xl sm:text-4xl lg:text-[40px] text-[#1b1b1f] tracking-tight leading-tight">
-                                {artist.name}
-                            </h1>
-                            {artist.tagline && (
-                                <p className="text-base sm:text-lg text-[#6b6b76] mt-1.5 leading-snug">
-                                    {artist.tagline}
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Location & Categories */}
-                        <div className="flex flex-wrap items-center gap-2 text-sm text-[#6b6b76]">
-                            <span className="inline-flex items-center gap-1 font-medium text-[#1b1b1f]">
-                                <MapPin className="h-4 w-4 text-[#eb4e62]" />
-                                {artist.city}
-                                {artist.state && `, ${artist.state}`}
-                            </span>
-                            <span className="text-neutral-300">·</span>
-                            <span className="font-medium text-[#1b1b1f]">
-                                {artist.categories.join(' · ')}
-                            </span>
-                        </div>
-
-                        {/* Specializations Pills (Peach bg, Coral text) */}
-                        {artist.specializations && artist.specializations.length > 0 && (
-                            <div className="flex flex-wrap gap-2 pt-1">
-                                {artist.specializations.map((spec) => (
-                                    <span
-                                        key={spec}
-                                        className="px-3 py-1 rounded-full text-xs font-semibold bg-[#fde6ea] text-[#eb4e62]"
+                        <div className="pp-bds">
+                            {isPlatinum ? (
+                                <span
+                                    className="pp-bd g"
+                                    tabIndex={0}
+                                    data-tip="Platinum: one of the top artists on KalaSquare. Documents verified."
+                                >
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        width="14"
+                                        height="14"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
                                     >
-                                        {spec}
-                                    </span>
+                                        <circle cx="12" cy="8" r="6" />
+                                        <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
+                                    </svg>
+                                    Platinum artist
+                                </span>
+                            ) : isVerified ? (
+                                <span
+                                    className="pp-bd b"
+                                    tabIndex={0}
+                                    data-tip="Verified: KalaSquare has checked this artist's documents."
+                                >
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        width="14"
+                                        height="14"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2.5"
+                                    >
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    Verified by KalaSquare
+                                </span>
+                            ) : null}
+                        </div>
+
+                        {/* Name */}
+                        <h1>{artist.name}</h1>
+
+                        {/* Tagline lines */}
+                        {lines.length > 0 && (
+                            <div className="pp-ln">
+                                {lines.map((l, i) => (
+                                    <p key={i} style={{ ['--i' as any]: i }}>
+                                        {l}
+                                    </p>
                                 ))}
                             </div>
                         )}
 
-                        {/* Action Buttons */}
-                        <div className="flex flex-wrap items-center gap-3 pt-4">
-                            {/* Primary: Send Enquiry */}
-                            <a
-                                href="#pp-enquiry"
-                                className="h-11 px-7 rounded-[10px] bg-[#eb4e62] hover:bg-[#d63a50] text-white font-bold text-sm shadow-md transition flex items-center justify-center"
+                        {/* Location & Categories */}
+                        <p className="pp-loc">
+                            <svg
+                                viewBox="0 0 24 24"
+                                width="16"
+                                height="16"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
                             >
-                                Send Enquiry
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                <circle cx="12" cy="10" r="3" />
+                            </svg>
+                            {artist.city}
+                            {artist.state ? `, ${artist.state}` : ''}
+                            <i />
+                            {artist.categories.join(' · ')}
+                        </p>
+
+                        {/* Specializations pills */}
+                        {artist.specializations && artist.specializations.length > 0 && (
+                            <div className="pp-sp">
+                                {artist.specializations.map((spec) => (
+                                    <span key={spec}>{spec}</span>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Action buttons */}
+                        <div className="pp-cta">
+                            <a className="btn fill" href="#ppBook" onClick={handleScrollToBook}>
+                                Send enquiry
                             </a>
 
-                            {/* Secondary: Talk to creator (tel link) */}
                             {artist.phone && (
-                                <a
-                                    href={`tel:${artist.phone}`}
-                                    className="h-11 px-5 rounded-[10px] bg-white border border-[#e6e6ea] hover:border-[#eb4e62] hover:text-[#eb4e62] text-[#1b1b1f] font-bold text-sm transition flex items-center gap-2"
-                                >
-                                    <Phone className="h-4 w-4 text-[#eb4e62]" />
-                                    <span>Talk to creator</span>
+                                <a className="btn line" href={`tel:${artist.phone}`}>
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        width="16"
+                                        height="16"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                                    </svg>
+                                    Talk to creator
                                 </a>
                             )}
 
-                            {/* Tertiary: Share */}
                             <button
                                 type="button"
+                                className="pp-ib"
                                 onClick={handleShare}
                                 aria-label="Share profile"
-                                className="h-11 w-11 rounded-[10px] bg-white border border-[#e6e6ea] hover:border-[#eb4e62] hover:text-[#eb4e62] text-[#1b1b1f] flex items-center justify-center transition"
-                                title={copied ? 'Link copied!' : 'Share profile'}
+                                title={copied ? 'Profile link copied.' : 'Share profile'}
                             >
-                                <Share2 className="h-4 w-4" />
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    width="18"
+                                    height="18"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <circle cx="18" cy="5" r="3" />
+                                    <circle cx="6" cy="12" r="3" />
+                                    <circle cx="18" cy="19" r="3" />
+                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                                </svg>
                             </button>
 
-                            {/* Quaternary: Save */}
                             <button
                                 type="button"
-                                onClick={() => setIsSaved(!isSaved)}
+                                className={`pp-ib ${isSaved ? 'on' : ''}`}
+                                onClick={handleToggleSave}
                                 aria-label="Save artist"
                                 aria-pressed={isSaved}
-                                className={`h-11 w-11 rounded-[10px] border transition flex items-center justify-center ${
-                                    isSaved
-                                        ? 'bg-[#fde6ea] border-[#eb4e62] text-[#eb4e62]'
-                                        : 'bg-white border-[#e6e6ea] hover:border-[#eb4e62] text-[#1b1b1f]'
-                                }`}
-                                title={isSaved ? 'Saved to favorites' : 'Save to favorites'}
+                                title={isSaved ? 'Saved to your list.' : 'Save artist'}
                             >
-                                <Heart className={`h-4 w-4 ${isSaved ? 'fill-[#eb4e62]' : ''}`} />
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    width="18"
+                                    height="18"
+                                    fill={isSaved ? 'currentColor' : 'none'}
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                </svg>
                             </button>
-
-                            {copied && (
-                                <span className="text-xs font-semibold text-[#eb4e62]">
-                                    Link copied!
-                                </span>
-                            )}
                         </div>
 
                         {/* Social Links */}
-                        {socialList.length > 0 && (
-                            <div className="pt-2 flex flex-wrap items-center gap-3 text-xs text-[#6b6b76]">
-                                <span className="font-semibold text-[#1b1b1f]">Connect on:</span>
-                                {socialList.map((soc) => (
+                        {soc.length > 0 && (
+                            <div className="pp-so">
+                                <small>Connect on</small>
+                                {soc.map(([name, url]) => (
                                     <a
-                                        key={soc.name}
-                                        href={soc.url}
+                                        key={name}
+                                        href={url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="hover:text-[#eb4e62] hover:underline transition font-medium"
                                     >
-                                        {soc.name}
+                                        {name}
                                     </a>
                                 ))}
                             </div>
@@ -225,6 +344,32 @@ export default function ArtistHero({ artist }: ArtistHeroProps) {
                     </div>
                 </div>
             </div>
+
+            {/* Floating Toast notification (matching Kalasquare HTML line 382 & line 2134) */}
+            {toastMessage && (
+                <div
+                    className="toast show"
+                    role="status"
+                    aria-live="polite"
+                    style={{
+                        position: 'fixed',
+                        left: '50%',
+                        bottom: 'max(20px, env(safe-area-inset-bottom, 0px))',
+                        transform: 'translate(-50%, 0)',
+                        zIndex: 9999,
+                        background: 'var(--ink, #1b1b1f)',
+                        color: 'var(--bg, #ffffff)',
+                        padding: '11px 16px',
+                        borderRadius: '12px',
+                        fontWeight: 600,
+                        fontSize: '14px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                        pointerEvents: 'none',
+                    }}
+                >
+                    {toastMessage}
+                </div>
+            )}
         </header>
     );
 }

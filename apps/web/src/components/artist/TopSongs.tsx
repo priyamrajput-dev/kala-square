@@ -1,5 +1,6 @@
+'use client';
+
 import React from 'react';
-import { Music, Play, ExternalLink } from 'lucide-react';
 import { SongItem } from '@/lib/types';
 
 interface TopSongsProps {
@@ -15,63 +16,41 @@ export default function TopSongs({ categories, songs }: TopSongsProps) {
     if (!isSinger || !songs || songs.length === 0) return null;
 
     return (
-        <section
-            className="scroll-mt-36 bg-white rounded-[20px] p-6 sm:p-8 border border-[#e6e6ea] shadow-xs space-y-6"
-            id="pp-music"
-        >
-            <div className="flex items-center justify-between">
-                <div>
-                    <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#1DB954]/15 text-[#1DB954]">
-                            Spotify
-                        </span>
-                        <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                            Top songs
-                        </h2>
-                    </div>
-                    <p className="text-sm text-[#6b6b76] mt-1">
-                        Popular tracks, studio releases, and live singles on Spotify.
-                    </p>
-                </div>
+        <section className="pp-s rv in" id="pp-music">
+            <div className="pp-sh">
+                <h2>
+                    <span className="pp-spot">Spotify</span>
+                    Top songs
+                </h2>
+                <p>Popular tracks.</p>
             </div>
 
-            <div className="space-y-2.5">
-                {songs.slice(0, 5).map((song, idx) => (
-                    <a
-                        key={song.id || idx}
-                        href={song.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-[#f6f6f7] hover:bg-[#fde6ea]/40 border border-transparent hover:border-[#eb4e62]/30 transition duration-200"
-                    >
-                        {/* Left: Index + Music icon + Title */}
-                        <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
-                            <span className="font-heading font-bold text-sm text-[#6b6b76] w-5 text-center group-hover:text-[#eb4e62]">
-                                {idx + 1}
-                            </span>
-
-                            <div className="w-10 h-10 rounded-xl bg-white border border-[#e6e6ea] flex items-center justify-center text-[#1DB954] group-hover:bg-[#1DB954] group-hover:text-white transition">
-                                <Music className="h-5 w-5" />
-                            </div>
-
-                            <div className="min-w-0">
-                                <p className="font-heading font-bold text-sm text-[#1b1b1f] group-hover:text-[#eb4e62] transition truncate">
-                                    {song.title}
-                                </p>
-                                <div className="flex items-center gap-2 text-xs text-[#6b6b76] mt-0.5">
-                                    {song.plays && <span>{song.plays}</span>}
-                                    {song.plays && song.duration && <span>·</span>}
-                                    {song.duration && <span>{song.duration}</span>}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Right: Listen Button */}
-                        <div className="flex items-center gap-2 text-xs font-semibold text-[#1DB954] group-hover:text-[#eb4e62] transition shrink-0 pl-3">
-                            <span className="hidden sm:inline">Play on Spotify</span>
-                            <ExternalLink className="h-4 w-4" />
-                        </div>
-                    </a>
+            <div className="pp-ig">
+                {songs.map((x, i) => (
+                    <div key={x.id || i} className="pp-xc sp">
+                        <span className="pst">
+                            <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
+                                <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.563.387-.857.207-2.348-1.435-5.304-1.76-8.785-.963-.335.077-.67-.133-.747-.468-.077-.334.133-.67.468-.747 3.808-.871 7.076-.496 9.714 1.115.295.18.387.563.207.856zm1.223-2.724c-.227.37-.714.487-1.084.26-2.688-1.652-6.785-2.131-9.965-1.166-.416.127-.859-.107-.986-.523-.127-.416.107-.859.523-.986 3.633-1.102 8.147-.568 11.252 1.331.37.227.487.714.26 1.084zm.106-2.835C14.692 8.95 9.375 8.775 6.297 9.71c-.494.15-1.02-.13-1.17-.624-.15-.494.13-1.02.624-1.17 3.532-1.072 9.404-.866 13.115 1.338.445.264.59.838.326 1.282-.264.444-.838.59-1.282.326z" />
+                            </svg>
+                        </span>
+                        <b>{x.title}</b>
+                        <small>{x.plays ? `${x.plays} plays` : 'Single'}</small>
+                        {x.url && (
+                            <a
+                                className="lk"
+                                href={x.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Open track"
+                            >
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                    <polyline points="15 3 21 3 21 9" />
+                                    <line x1="10" y1="14" x2="21" y2="3" />
+                                </svg>
+                            </a>
+                        )}
+                    </div>
                 ))}
             </div>
         </section>

@@ -1,173 +1,197 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Music2, Mic, Video, Palette, MapPin, Briefcase } from 'lucide-react';
 
-interface HeroProps {
-  heroConfig?: {
-    eyebrow?: string;
-    heading?: string;
-    subtext?: string;
-    primaryButtonText?: string;
-    secondaryButtonText?: string;
-    artistsCount?: string;
-    eventsCount?: string;
-    rating?: string;
-    showStats?: boolean;
-  };
-}
-
-export default function Hero({ heroConfig }: HeroProps = {}) {
-  const eyebrow = heroConfig?.eyebrow || 'DISCOVER & HIRE VERIFIED ARTISTS';
-  const heading = heroConfig?.heading || "Book India's Top Talent For Your Next Big Event";
-  const subtext =
-    heroConfig?.subtext ||
-    'Directly connect with 12,000+ curated performers, musicians, comedians, and creators. Transparent pricing, verified reviews, seamless booking.';
-  const primaryBtn = heroConfig?.primaryButtonText || 'Explore Artists';
-  const secondaryBtn = heroConfig?.secondaryButtonText || 'List Your Talent';
-  const showStats = heroConfig?.showStats ?? true;
-  const artistsCount = heroConfig?.artistsCount || '12,000+';
-  const eventsCount = heroConfig?.eventsCount || '850+';
-  const rating = heroConfig?.rating || '4.9★';
-
+export default function Hero() {
   return (
-    <section className="bg-[#f3f3f5] py-12 md:py-20 overflow-hidden border-b border-[#e6e6ea]">
-      <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-          {/* Left Column: Heading, Subtext, Buttons, Stats */}
-          <div className="lg:col-span-6 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fde6ea] text-[#eb4e62] text-xs font-bold tracking-wider uppercase">
-              <span>{eyebrow}</span>
-            </div>
-
-            <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-[54px] text-[#1b1b1f] tracking-tight leading-[1.08]">
-              {heading}
+    <section
+      className="overflow-hidden border-b border-[#e6e6ea]"
+      style={{
+        background: 'radial-gradient(900px 520px at 72% 35%, #FFE9ED, transparent 70%), #FFFFFF',
+      }}
+    >
+      <div className="max-w-[1180px] mx-auto px-4 sm:px-6 py-10 sm:py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+          {/* Left Column: Heading, Subtext, Buttons */}
+          <div className="lg:col-span-6 space-y-4">
+            <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-[54px] text-[#1b1b1f] tracking-tight leading-[1.06]">
+              <span className="block">Where India&apos;s</span>
+              <span className="block text-[#eb4e62]">Creative</span>
+              <span className="block">Industry Connects</span>
             </h1>
 
-            <p className="text-lg text-[#6b6b76] max-w-xl leading-relaxed">
-              {subtext}
+            {/* Coral Bar Underline */}
+            <div className="w-24 h-1 rounded-full bg-[#eb4e62] my-4" />
+
+            <p className="text-[17px] text-[#6b6b76] max-w-md leading-relaxed">
+              Discover artists, venues, events, gigs and collaborations, all in one place.
             </p>
 
-            <div className="flex flex-wrap items-center gap-4 pt-2">
+            <div className="flex flex-wrap items-center gap-3 pt-2">
               <Link
-                href="/top-creators"
-                className="h-12 px-7 rounded-[10px] bg-[#eb4e62] hover:bg-[#d63a50] text-white font-bold text-base transition flex items-center justify-center shadow-sm"
+                href="#talent"
+                className="h-11 px-6 rounded-[10px] bg-[#eb4e62] hover:bg-[#d63a50] text-white font-heading font-bold text-sm transition flex items-center justify-center shadow-[0_10px_20px_-10px_rgba(235,78,98,0.8)]"
               >
-                {primaryBtn}
+                Explore talent
               </Link>
-              <Link
-                href="/admin"
-                className="h-12 px-7 rounded-[10px] bg-white border border-[#e6e6ea] hover:border-[#eb4e62] hover:text-[#eb4e62] text-[#1b1b1f] font-bold text-base transition flex items-center justify-center shadow-sm"
+              <button
+                type="button"
+                className="h-11 px-6 rounded-[10px] bg-white border border-[#e6e6ea] hover:border-[#eb4e62] text-[#1b1b1f] font-heading font-bold text-sm transition flex items-center justify-center shadow-xs cursor-pointer"
               >
-                {secondaryBtn}
-              </Link>
+                Join as artist
+              </button>
             </div>
-
-            {/* Quick Stats */}
-            {showStats && (
-              <div className="pt-8 border-t border-[#e6e6ea] grid grid-cols-3 gap-6">
-                <div>
-                  <p className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f]">
-                    {artistsCount}
-                  </p>
-                  <p className="text-xs sm:text-sm text-[#6b6b76] mt-0.5">Verified Artists</p>
-                </div>
-                <div>
-                  <p className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f]">
-                    {eventsCount}
-                  </p>
-                  <p className="text-xs sm:text-sm text-[#6b6b76] mt-0.5">Live Venues &amp; Events</p>
-                </div>
-                <div>
-                  <p className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f]">
-                    {rating}
-                  </p>
-                  <p className="text-xs sm:text-sm text-[#6b6b76] mt-0.5">Average Rating</p>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Right Column: 4 Gradient Tiles + 3 Overlapping Floating Cards */}
+          {/* Right Column: Visual Collage (.mw) */}
           <div className="lg:col-span-6 relative flex justify-center items-center">
-            <div className="relative w-full max-w-[500px] h-[460px] sm:h-[480px]">
-              {/* 2x2 Grid of Gradient Tiles */}
-              <div className="grid grid-cols-2 gap-4 w-full h-full p-2">
-                {/* Tile 1: Music note icon, Coral gradient */}
-                <div className="gradient-hero-1 rounded-[20px] p-6 flex flex-col justify-between text-white shadow-sm transition hover:scale-[1.02]">
-                  <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <Music2 className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="font-bold text-sm">Singers &amp; Musicians</span>
-                </div>
+            <div className="relative w-full max-w-[520px] aspect-[1.42] select-none">
+              {/* Dotted Grid Decoration in bottom-left */}
+              <div className="absolute -bottom-4 left-6 grid grid-cols-6 gap-2 opacity-35 pointer-events-none z-0">
+                {Array.from({ length: 24 }).map((_, i) => (
+                  <span key={i} className="w-1.5 h-1.5 rounded-full bg-[#6b6b76]" />
+                ))}
+              </div>
 
-                {/* Tile 2: Mic icon, Orange gradient */}
-                <div className="gradient-hero-2 rounded-[20px] p-6 flex flex-col justify-between text-white shadow-sm transition hover:scale-[1.02]">
-                  <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <Mic className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="font-bold text-sm">Stand-up &amp; Emcees</span>
-                </div>
+              {/* Tile 1: Top-Left Singer (Microphone icon) */}
+              <div
+                className="absolute left-[3%] top-0 w-[39%] h-[62%] rounded-[22px] overflow-hidden flex items-center justify-center shadow-lg -rotate-2"
+                style={{
+                  backgroundImage: 'linear-gradient(150deg, #f58a9a 0%, #eb4e62 100%)',
+                }}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-12 h-12 text-white stroke-current fill-none stroke-[1.8] stroke-linecap-round stroke-linejoin-round"
+                >
+                  <rect x="9" y="3" width="6" height="11" rx="3" />
+                  <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+                </svg>
+              </div>
 
-                {/* Tile 3: Video / Camera icon, Blue gradient */}
-                <div className="gradient-hero-3 rounded-[20px] p-6 flex flex-col justify-between text-white shadow-sm transition hover:scale-[1.02]">
-                  <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <Video className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="font-bold text-sm">Dancers &amp; Actors</span>
-                </div>
+              {/* Tile 2: Top-Right Star icon */}
+              <div
+                className="absolute right-0 top-[7%] w-[27%] h-[48%] rounded-[22px] overflow-hidden flex items-center justify-center shadow-lg rotate-3"
+                style={{
+                  backgroundImage: 'linear-gradient(150deg, #f7a08f 0%, #d63a50 100%)',
+                }}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-10 h-10 text-white stroke-current fill-none stroke-[1.8] stroke-linecap-round stroke-linejoin-round"
+                >
+                  <path d="M12 3l2.5 5.5 6 .7-4.5 4 1.3 6L12 16.3 6.7 19.2 8 13.2 3.5 9.2l6-.7z" />
+                </svg>
+              </div>
 
-                {/* Tile 4: Palette icon, Violet gradient */}
-                <div className="gradient-hero-4 rounded-[20px] p-6 flex flex-col justify-between text-white shadow-sm transition hover:scale-[1.02]">
-                  <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <Palette className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="font-bold text-sm">Creators &amp; Visual</span>
+              {/* Tile 3: Bottom-Left Camera icon */}
+              <div
+                className="absolute left-[15%] bottom-0 w-[42%] h-[42%] rounded-[22px] overflow-hidden flex items-center justify-center shadow-lg -rotate-[1.5deg]"
+                style={{
+                  backgroundImage: 'linear-gradient(150deg, #ee6579 0%, #b62c44 100%)',
+                }}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-10 h-10 text-white stroke-current fill-none stroke-[1.8] stroke-linecap-round stroke-linejoin-round"
+                >
+                  <rect x="3" y="7" width="18" height="12" rx="3" />
+                  <circle cx="12" cy="13" r="3.5" />
+                  <path d="M8 7l1.5-2.5h5L16 7" />
+                </svg>
+              </div>
+
+              {/* Tile 4: Bottom-Right Crowd icon */}
+              <div
+                className="absolute right-0 bottom-[1%] w-[36%] h-[40%] rounded-[22px] overflow-hidden flex items-center justify-center shadow-lg rotate-2"
+                style={{
+                  backgroundImage: 'linear-gradient(150deg, #f0647a 0%, #c23048 100%)',
+                }}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-10 h-10 text-white stroke-current fill-none stroke-[1.8] stroke-linecap-round stroke-linejoin-round"
+                >
+                  <circle cx="9" cy="8" r="3" />
+                  <path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M16 5.5a3 3 0 0 1 0 5.5M17 14.5c2.3.7 4 2.8 4 5.5" />
+                </svg>
+              </div>
+
+              {/* Overlapping Card 1: Venue Card (.vc) */}
+              <div className="absolute left-[43%] -top-[2%] w-[27%] h-[50%] bg-white rounded-[20px] p-2 shadow-2xl rotate-2 z-10 border border-[#e6e6ea]/60">
+                <div
+                  className="h-[68%] rounded-[14px] flex items-center justify-center relative shadow-inner"
+                  style={{
+                    backgroundImage: 'linear-gradient(150deg, #f58a9a 0%, #eb4e62 60%, #c23048 100%)',
+                  }}
+                >
+                  <span className="absolute top-2 left-2 bg-[#eb4e62] text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+                    Popular venue
+                  </span>
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-8 h-8 text-white stroke-current fill-none stroke-[1.6]"
+                  >
+                    <path d="M3 20h18M5 20V9l7-5 7 5v11M9 20v-6h6v6" />
+                  </svg>
+                </div>
+                <div className="pt-2 px-1">
+                  <b className="font-heading font-extrabold text-[13px] text-[#1b1b1f] block truncate">
+                    Rasā – The Stage
+                  </b>
+                  <small className="text-[11px] text-[#6b6b76] block truncate">
+                    Mumbai
+                  </small>
                 </div>
               </div>
 
-              {/* Overlapping Card 1: Artist card - Sahil Badal, Singer, "Featured Artist" */}
-              <div className="absolute -top-3 -right-2 sm:-right-4 bg-white rounded-[16px] p-3.5 shadow-xl border border-[#e6e6ea] flex items-center gap-3.5 w-64 z-20 animate-fade-in">
-                <div className="relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-[#f6f6f7]">
+              {/* Overlapping Card 2: Artist Card (.pc) */}
+              <Link
+                href="/top-creators/jai-vijay-sachan"
+                className="absolute -left-[5%] top-[50%] w-[42%] bg-white hover:border-[#eb4e62] transition-all rounded-[18px] p-3 shadow-2xl flex items-center gap-3 z-20 border border-[#e6e6ea]/60 group cursor-pointer"
+              >
+                <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0">
                   <Image
-                    src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=200&auto=format&fit=crop&q=80"
-                    alt="Sahil Badal"
+                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80"
+                    alt="Jai Vijay Sachan"
                     fill
-                    className="object-cover"
+                    className="object-cover group-hover:scale-105 transition"
                     sizes="48px"
                   />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <span className="inline-flex items-center text-[10px] uppercase font-bold tracking-wider text-[#eb4e62]">
-                    Featured Artist
+                <div className="min-w-0">
+                  <b className="font-heading font-extrabold text-[14px] text-[#1b1b1f] group-hover:text-[#eb4e62] transition block truncate">
+                    Jai Vijay Sachan
+                  </b>
+                  <em className="text-[11.5px] text-[#eb4e62] font-bold not-italic block truncate">
+                    Actor
+                  </em>
+                  <span className="text-[11px] text-[#6b6b76] block truncate">
+                    Delhi
                   </span>
-                  <h4 className="font-bold text-sm text-[#1b1b1f] truncate">Sahil Badal</h4>
-                  <p className="text-xs text-[#6b6b76] truncate">Singer · Delhi-NCR</p>
+                  <span className="text-[11px] text-[#1b1b1f] font-semibold block truncate">
+                    ✓ Platinum artist
+                  </span>
                 </div>
-              </div>
+              </Link>
 
-              {/* Overlapping Card 2: Venue card - Siri Fort Auditorium, Delhi, "Top Venue" */}
-              <div className="absolute bottom-16 -left-3 sm:-left-5 bg-white rounded-[16px] p-3.5 shadow-xl border border-[#e6e6ea] flex items-center gap-3 w-64 z-20">
-                <div className="w-11 h-11 rounded-xl bg-[#fde6ea] flex items-center justify-center flex-shrink-0 text-[#eb4e62]">
-                  <MapPin className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#eb4e62]">Top Venue</span>
-                  <h4 className="font-bold text-sm text-[#1b1b1f] truncate">Siri Fort Auditorium</h4>
-                  <p className="text-xs text-[#6b6b76]">Delhi · 1,865 Capacity</p>
-                </div>
-              </div>
-
-              {/* Overlapping Card 3: Opportunity card - "Bollywood Playback", Delhi, "Live Audition" */}
-              <div className="absolute -bottom-4 right-6 bg-white rounded-[16px] p-3.5 shadow-xl border border-[#e6e6ea] flex items-center gap-3 w-64 z-20">
-                <div className="w-10 h-10 rounded-xl bg-[#f6f6f7] flex items-center justify-center flex-shrink-0 text-[#1b1b1f]">
-                  <Briefcase className="h-5 w-5 text-[#eb4e62]" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#eb4e62]">Live Audition</span>
-                  <h4 className="font-bold text-xs text-[#1b1b1f] truncate">Bollywood Playback</h4>
-                  <p className="text-xs text-[#6b6b76]">Delhi · Open Call</p>
-                </div>
+              {/* Overlapping Card 3: Dark Opportunity Card (.dk) */}
+              <div className="absolute left-[47%] top-[50%] w-[25%] bg-[#17171c] text-white rounded-[16px] p-3 shadow-2xl rotate-1 z-30">
+                <small className="text-[11px] font-bold text-[#eb4e62] block">
+                  Looking for
+                </small>
+                <b className="font-heading font-extrabold text-[14px] leading-tight block mt-1">
+                  Anchor needed for corporate show
+                </b>
+                <span className="text-[11px] text-white/70 block mt-1">
+                  Delhi
+                </span>
+                <Link
+                  href="#events"
+                  className="block mt-2.5 bg-[#eb4e62] text-center text-white text-[11px] font-bold py-1.5 rounded-md hover:bg-[#d63a50] transition"
+                >
+                  View details
+                </Link>
               </div>
             </div>
           </div>

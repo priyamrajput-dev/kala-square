@@ -9,6 +9,7 @@ import {
     mockFAQs,
     mockSpotlights,
     mockHomeConfig,
+    getArtistProfileBySlug,
 } from './mock-data';
 import { HomeConfig } from './validators/home-config';
 import { ArtistProfile } from './types';
@@ -96,14 +97,11 @@ export async function fetchPublicArtists(query: {
 
 export async function fetchPublicArtistBySlug(slug: string): Promise<ArtistProfile | null> {
     try {
-        const res = await fetch(`${API_BASE}/api/public/artists/${slug}`, {
-            next: { revalidate: 60 },
-            signal: AbortSignal.timeout(2000),
+        const decodedSlug = decodeURIComponent(slug).trim().toLowerCase();
+        const res = await fetch(`${API_BASE}/api/public/artists/${encodeURIComponent(decodedSlug)}`, {
+            cache: 'no-store',
+            signal: AbortSignal.timeout(8000),
         });
-
-        if (res.status === 404) {
-            return null;
-        }
 
         if (res.ok) {
             return await res.json();
@@ -112,7 +110,7 @@ export async function fetchPublicArtistBySlug(slug: string): Promise<ArtistProfi
         // Fallback to mock data if API is offline
     }
 
-    const found = mockArtistProfiles.find((p) => p.slug === slug);
+    const found = getArtistProfileBySlug(slug);
     return found || null;
 }
 

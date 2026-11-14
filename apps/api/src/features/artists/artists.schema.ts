@@ -42,11 +42,14 @@ export const faqItemFormSchema = z.object({
   answer: z.string().min(1, 'Answer is required').max(500, 'Answer too long (max 500)'),
 });
 
-export const galleryItemFormSchema = z.object({
-  id: z.string().optional(),
-  src: z.string().min(1, 'Image source is required'),
-  caption: z.string().max(80, 'Caption too long (max 80)').optional(),
-});
+export const galleryItemFormSchema = z.union([
+  z.string(),
+  z.object({
+    id: z.string().optional(),
+    src: z.string().min(1, 'Image source is required'),
+    caption: z.string().max(80, 'Caption too long (max 80)').optional(),
+  }),
+]);
 
 export const artistBaseSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(80, 'Name cannot exceed 80 characters'),
@@ -79,6 +82,9 @@ export const artistBaseSchema = z.object({
   liveShowsCount: z.string().max(20).optional(),
 
   categories: z.array(z.string()).default([]),
+  priceNumeric: z.coerce.number().optional(),
+  priceLabel: z.string().optional(),
+  budgetRange: z.string().optional(),
   priceFrom: z.coerce.number().min(0, 'Price must be positive').optional(),
   priceTo: z.coerce.number().min(0, 'Price must be positive').optional(),
   availability: z.enum(['Available', 'Busy', 'On Tour']).default('Available'),
@@ -91,14 +97,19 @@ export const artistBaseSchema = z.object({
   spotify: z.string().url('Invalid Spotify URL').or(z.literal('')).optional(),
   website: z.string().url('Invalid Website URL').or(z.literal('')).optional(),
   imdbUrl: z.string().url('Invalid IMDb URL').or(z.literal('')).optional(),
+  socialInstagram: z.string().optional(),
+  socialYouTube: z.string().optional(),
+  socialFacebook: z.string().optional(),
+  socialX: z.string().optional(),
+  socialSpotify: z.string().optional(),
 
-  fanbaseSpotify: z.coerce.number().min(0).optional(),
-  fanbaseYouTube: z.coerce.number().min(0).optional(),
-  fanbaseInstagram: z.coerce.number().min(0).optional(),
-  fanbaseFacebook: z.coerce.number().min(0).optional(),
-  fanbaseDeezer: z.coerce.number().min(0).optional(),
-  fanbaseSoundCloud: z.coerce.number().min(0).optional(),
-  fanbaseTikTok: z.coerce.number().min(0).optional(),
+  fanbaseSpotify: z.union([z.string(), z.number()]).optional(),
+  fanbaseYouTube: z.union([z.string(), z.number()]).optional(),
+  fanbaseInstagram: z.union([z.string(), z.number()]).optional(),
+  fanbaseFacebook: z.union([z.string(), z.number()]).optional(),
+  fanbaseDeezer: z.union([z.string(), z.number()]).optional(),
+  fanbaseSoundCloud: z.union([z.string(), z.number()]).optional(),
+  fanbaseTikTok: z.union([z.string(), z.number()]).optional(),
 
   gallery: z.array(galleryItemFormSchema).max(12, 'Maximum 12 photos allowed in gallery').default([]),
   videos: z.array(videoItemFormSchema).max(6, 'Maximum 6 videos allowed').default([]),

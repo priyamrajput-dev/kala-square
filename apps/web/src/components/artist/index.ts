@@ -13,3 +13,4 @@ export { default as FAQAccordion } from './FAQAccordion';
 export { default as ReviewsSection } from './ReviewsSection';
 export { default as SimilarArtists } from './SimilarArtists';
 export { default as EnquiryCard } from './EnquiryCard';
+export { default as ArtistProfileView } from './ArtistProfileView';

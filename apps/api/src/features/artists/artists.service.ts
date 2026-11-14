@@ -16,72 +16,52 @@ export class ArtistsService {
     }
 
     calculateCompleteness(data: Partial<ArtistFormData>): { completeness: number; missing: string[]; tip: string } {
-        let score = 0;
-        const missing: string[] = [];
-
-        // 1. Basic (20%)
-        const hasBasic = Boolean(
-            data.name &&
-            data.name.trim().length >= 2 &&
-            data.city &&
-            data.artistClass &&
-            (data.photoUrl || (data as any).profilePhotoUrl)
+        const soc = Boolean(
+            data.instagram ||
+            data.youtube ||
+            data.facebook ||
+            data.spotify ||
+            data.x ||
+            data.website ||
+            data.imdbUrl ||
+            (data as any).socialInstagram ||
+            (data as any).socialYouTube ||
+            (data as any).socialFacebook ||
+            (data as any).socialX ||
+            (data as any).socialSpotify
         );
-        if (hasBasic) score += 20;
-        else missing.push('Basic Information & Photo');
 
-        // 2. About (15%)
-        const bioLen = (data.bio || '').trim().length;
-        if (bioLen >= 100) score += 15;
-        else if (bioLen > 0) score += 7;
-        else missing.push('Biography');
+        const chk = [
+            Boolean(data.name && data.name.trim().length > 0),
+            Boolean(data.photoUrl || (data as any).profilePhotoUrl),
+            Boolean(data.categories && data.categories.length > 0),
+            Boolean(data.city && data.city.trim().length > 0),
+            Boolean(data.tagline && data.tagline.trim().length > 0),
+            Boolean(data.bio && data.bio.trim().length > 0),
+            Boolean(data.experienceYears && String(data.experienceYears).trim().length > 0),
+            Boolean(data.projectsCount && String(data.projectsCount).trim().length > 0),
+            Boolean(data.liveShowsCount && String(data.liveShowsCount).trim().length > 0),
+            Boolean((data as any).totalFollowersLabel && String((data as any).totalFollowersLabel).trim().length > 0),
+            Boolean(
+                (Array.isArray(data.specializations) && data.specializations.length > 0) ||
+                (typeof data.specializations === 'string' && data.specializations.trim().length > 0)
+            ),
+            Boolean(data.gallery && data.gallery.length >= 3),
+            Boolean(data.videos && data.videos.some((v: any) => v.url && v.url.trim().length > 0)),
+            Boolean(data.clips && data.clips.some((c: any) => c.url && c.url.trim().length > 0)),
+            Boolean((data as any).songs && (data as any).songs.some((s: any) => s.url && s.url.trim().length > 0)),
+            Boolean(data.campaigns && data.campaigns.length > 0),
+            Boolean(data.awards && data.awards.length > 0),
+            soc,
+            Boolean((data as any).phone && String((data as any).phone).trim().length > 0),
+        ];
 
-        // 3. Categories (10%)
-        if ((data.categories || []).length >= 1) score += 10;
-        else missing.push('Categories');
-
-        // 4. Social (10%)
-        const hasSocial = Boolean(
-            data.instagram || data.youtube || data.facebook || data.spotify || data.x || data.website || data.imdbUrl
-        );
-        if (hasSocial) score += 10;
-        else missing.push('Social Links');
-
-        // 5. Fanbase (10%)
-        const totalFanbase =
-            Number(data.fanbaseSpotify || 0) +
-            Number(data.fanbaseYouTube || 0) +
-            Number(data.fanbaseInstagram || 0) +
-            Number(data.fanbaseFacebook || 0) +
-            Number(data.fanbaseDeezer || 0) +
-            Number(data.fanbaseSoundCloud || 0) +
-            Number(data.fanbaseTikTok || 0);
-        if (totalFanbase > 0) score += 10;
-        else missing.push('Fanbase Reach');
-
-        // 6. Gallery (15%)
-        const galCount = (data.gallery || []).length;
-        if (galCount >= 3) score += 15;
-        else if (galCount >= 1) score += 8;
-        else missing.push('Photo Gallery');
-
-        // 7. Videos (5%)
-        if (data.videos && data.videos.length > 0 && data.videos.some((v) => v.url)) score += 5;
-        else missing.push('Videos');
-
-        // 8. Campaigns / Awards (5%)
-        if ((data.campaigns && data.campaigns.length > 0) || (data.awards && data.awards.length > 0)) score += 5;
-        else missing.push('Campaigns or Awards');
-
-        // 9. SEO (10%)
-        if (data.metaTitle && data.metaDescription) score += 10;
-        else missing.push('SEO Metadata');
-
-        const tip = missing.length > 0
-            ? `Complete ${missing[0]} to raise profile completeness.`
-            : 'Profile is 100% complete!';
-
-        return { completeness: Math.min(100, score), missing, tip };
+        const score = Math.round((chk.filter(Boolean).length / chk.length) * 100);
+        return {
+            completeness: score,
+            missing: [],
+            tip: score === 100 ? 'Profile complete' : `Profile is ${score}% complete`,
+        };
     }
 
     async getPublicArtists(query: PublicArtistQuery) {
@@ -170,6 +150,25 @@ export class ArtistsService {
                   .map((w) => ({ question: w.title, answer: w.description || '' }))
             : [];
 
+        const isSinger = (Array.isArray(artist.categories) ? artist.categories : []).some(
+            (c: string) => c.toLowerCase().includes('singer')
+        );
+        const isActor = (Array.isArray(artist.categories) ? artist.categories : []).some(
+            (c: string) => c.toLowerCase().includes('actor') || c.toLowerCase().includes('theatre')
+        );
+
+        const songs = isSinger
+            ? artist.work
+                  .filter((w) => w.kind === 'song')
+                  .map((w) => ({ title: w.title, duration: w.category || '', plays: w.year || '', url: w.description || '' }))
+            : [];
+
+        const film = isActor
+            ? artist.work
+                  .filter((w) => w.kind === 'film')
+                  .map((w) => ({ title: w.title, role: w.category || '', year: w.year || '', description: w.description || '' }))
+            : [];
+
         // Social & Fanbase
         const social = artist.social;
         const totalFollowers =
@@ -191,8 +190,8 @@ export class ArtistsService {
             isExclusive: s.isExclusive,
             categories: Array.isArray(s.categories) ? s.categories : [],
             profilePhotoUrl: s.profilePhotoUrl,
-            rating: 4.9,
-            reviewCount: 16,
+            rating: 0,
+            reviewCount: 0,
             priceLabel: 'On Request',
         }));
 
@@ -209,30 +208,34 @@ export class ArtistsService {
             categories: Array.isArray(artist.categories) ? artist.categories : [],
             specializations: Array.isArray(artist.specializations) ? artist.specializations : [],
             bio: artist.bio || '',
-            photoUrl: artist.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800',
-            profilePhotoUrl: artist.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800',
-            rating: 4.9,
-            reviewCount: 32,
-            stats: {
-                experience: artist.experienceYears ? `${artist.experienceYears} Years` : '5+ Years',
-                projects: artist.projectsCount ? `${artist.projectsCount}+` : '50+',
-                liveShows: artist.liveShowsCount ? `${artist.liveShowsCount}+` : '100+',
-                followers: artist.totalFollowersLabel || (totalFollowers > 0 ? `${Math.round(totalFollowers / 1000)}K+` : '100K+'),
-            },
-            physicalStats: {
-                height: artist.height || "5'9\"",
-                weight: artist.weightKg ? `${artist.weightKg} kg` : '68 kg',
-                chest: artist.chestIn ? `${artist.chestIn}"` : '38"',
-                waist: artist.waistIn ? `${artist.waistIn}"` : '32"',
-                hairType: artist.hairType || 'Wavy',
-                hairLength: artist.hairLength || 'Medium',
-                languages: Array.isArray(artist.languages) && artist.languages.length > 0 ? artist.languages : ['Hindi', 'English'],
-            },
+            photoUrl: artist.profilePhotoUrl || '',
+            profilePhotoUrl: artist.profilePhotoUrl || '',
+            rating: 0,
+            reviewCount: 0,
+            stats: (artist.experienceYears || artist.projectsCount || artist.liveShowsCount || artist.totalFollowersLabel)
+                ? {
+                    experience: artist.experienceYears ? `${artist.experienceYears} Years` : undefined,
+                    projects: artist.projectsCount ? `${artist.projectsCount}+` : undefined,
+                    liveShows: artist.liveShowsCount ? `${artist.liveShowsCount}+` : undefined,
+                    followers: artist.totalFollowersLabel || (totalFollowers > 0 ? `${Math.round(totalFollowers / 1000)}K+` : undefined),
+                }
+                : undefined,
+            physicalStats: (artist.height || artist.weightKg || artist.chestIn || artist.waistIn || artist.hairType || artist.hairLength || (Array.isArray(artist.languages) && artist.languages.length > 0))
+                ? {
+                    height: artist.height || undefined,
+                    weight: artist.weightKg ? `${artist.weightKg} kg` : undefined,
+                    chest: artist.chestIn ? `${artist.chestIn}"` : undefined,
+                    waist: artist.waistIn ? `${artist.waistIn}"` : undefined,
+                    hairType: artist.hairType || undefined,
+                    hairLength: artist.hairLength || undefined,
+                    languages: Array.isArray(artist.languages) && artist.languages.length > 0 ? artist.languages : undefined,
+                }
+                : undefined,
             fanbase: [
-                { platform: 'Spotify' as const, count: social?.spotifyFollowersLabel || '250K', percentage: 35, color: '#1DB954' },
-                { platform: 'YouTube' as const, count: social?.youtubeSubscribersLabel || '500K', percentage: 40, color: '#FF0000' },
-                { platform: 'Instagram' as const, count: social?.instagramFollowersLabel || '1.2M', percentage: 25, color: '#E4405F' },
-            ],
+                social?.spotifyFollowersLabel ? { platform: 'Spotify' as const, count: social.spotifyFollowersLabel, percentage: 35, color: '#1DB954' } : null,
+                social?.youtubeSubscribersLabel ? { platform: 'YouTube' as const, count: social.youtubeSubscribersLabel, percentage: 40, color: '#FF0000' } : null,
+                social?.instagramFollowersLabel ? { platform: 'Instagram' as const, count: social.instagramFollowersLabel, percentage: 25, color: '#E4405F' } : null,
+            ].filter(Boolean) as any[],
             socialLinks: {
                 instagram: social?.instagramUrl || undefined,
                 youtube: social?.youtubeUrl || undefined,
@@ -243,24 +246,22 @@ export class ArtistsService {
             gallery,
             videos,
             clips,
+            songs,
             campaigns,
             awards,
             faqs,
-            reviews: [
-                {
-                    id: 'rev-1',
-                    author: 'Priya Sharma',
-                    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150',
-                    rating: 5,
-                    date: 'March 2026',
-                    eventType: 'Corporate Annual Gala',
-                    comment: 'Absolutely phenomenal performance! Mesmerized the entire audience.',
-                },
-            ],
+            imdb: isActor
+                ? {
+                      imdbUrl: undefined,
+                      credits: film,
+                      knownFor: [],
+                  }
+                : undefined,
+            reviews: [],
             similarArtists,
-            budgetRange: artist.budgetRange,
+            budgetRange: artist.budgetRange && artist.budgetRange !== 'not_set' ? artist.budgetRange : undefined,
             availability: 'Available',
-            priceLabel: '₹50,000 Onwards',
+            priceLabel: artist.budgetRange && artist.budgetRange !== 'not_set' ? artist.budgetRange : undefined,
         };
     }
 
@@ -341,6 +342,14 @@ export class ArtistsService {
             .filter((w) => w.kind === 'faq')
             .map((w) => ({ question: w.title, answer: w.description || '' }));
 
+        const songs = artist.work
+            .filter((w) => w.kind === 'song')
+            .map((w) => ({ id: w.id, title: w.title, duration: w.category || '', plays: w.year || '', url: w.description || '' }));
+
+        const film = artist.work
+            .filter((w) => w.kind === 'film')
+            .map((w) => ({ id: w.id, title: w.title, category: w.category || '', year: w.year || '', description: w.description || '' }));
+
         const social = artist.social;
 
         return {
@@ -367,6 +376,10 @@ export class ArtistsService {
             experienceYears: artist.experienceYears ? String(artist.experienceYears) : '',
             projectsCount: artist.projectsCount ? String(artist.projectsCount) : '',
             liveShowsCount: artist.liveShowsCount ? String(artist.liveShowsCount) : '',
+            totalFollowersLabel: artist.totalFollowersLabel || '',
+            budgetRange: artist.budgetRange || '',
+            phone: (artist as any).phone || '',
+            email: (artist as any).email || '',
             categories: Array.isArray(artist.categories) ? artist.categories : [],
             priceFrom: 0,
             priceTo: 0,
@@ -377,21 +390,30 @@ export class ArtistsService {
             facebook: social?.facebookUrl || '',
             x: social?.xUrl || '',
             spotify: social?.spotifyUrl || '',
+            socialInstagram: social?.instagramUrl || '',
+            socialYouTube: social?.youtubeUrl || '',
+            socialFacebook: social?.facebookUrl || '',
+            socialX: social?.xUrl || '',
+            socialSpotify: social?.spotifyUrl || '',
             website: '',
             imdbUrl: '',
-            fanbaseSpotify: social?.spotifyFollowersLabel ? Number(social.spotifyFollowersLabel.replace(/[^\d]/g, '')) : 0,
-            fanbaseYouTube: social?.youtubeSubscribersLabel ? Number(social.youtubeSubscribersLabel.replace(/[^\d]/g, '')) : 0,
-            fanbaseInstagram: social?.instagramFollowersLabel ? Number(social.instagramFollowersLabel.replace(/[^\d]/g, '')) : 0,
-            fanbaseFacebook: social?.facebookFollowersLabel ? Number(social.facebookFollowersLabel.replace(/[^\d]/g, '')) : 0,
+            fanbaseSpotify: social?.spotifyFollowersLabel ? Number(social.spotifyFollowersLabel.replace(/[^\d]/g, '')) : '',
+            fanbaseYouTube: social?.youtubeSubscribersLabel ? Number(social.youtubeSubscribersLabel.replace(/[^\d]/g, '')) : '',
+            fanbaseInstagram: social?.instagramFollowersLabel ? Number(social.instagramFollowersLabel.replace(/[^\d]/g, '')) : '',
+            fanbaseFacebook: social?.facebookFollowersLabel ? Number(social.facebookFollowersLabel.replace(/[^\d]/g, '')) : '',
             gallery,
             videos,
             clips,
+            songs,
+            film,
             campaigns,
             awards,
             faqs,
             metaTitle: social?.seoMetaTitle || '',
             metaDescription: social?.seoMetaDescription || '',
             keywords: social?.seoFocusKeyword || '',
+            focusKeyword: social?.seoFocusKeyword || '',
+            photoAltText: artist.name || '',
             ogImageUrl: social?.seoShareImageUrl || '',
             status: artist.status === 'live' ? 'published' : artist.status,
             completenessPercent: artist.completenessPercent,
@@ -407,8 +429,10 @@ export class ArtistsService {
         }
 
         const { completeness } = this.calculateCompleteness(body);
-        const status = body.status === 'published' ? 'published' : 'draft';
-        const publishedAt = status === 'published' ? new Date() : null;
+        const isPublishRequested = body.status === 'published' || body.status === 'live';
+        const isVerified = Boolean(body.isVerified);
+        const status = isPublishRequested ? (isVerified ? 'live' : 'pending') : 'draft';
+        const publishedAt = status === 'live' ? new Date() : null;
 
         const artistData = {
             slug,
@@ -441,47 +465,81 @@ export class ArtistsService {
         };
 
         const media = [
-            ...(body.gallery || []).map((g: any) => ({ type: 'gallery', url: g.src || g.url, title: g.caption || null })),
-            ...(body.videos || []).map((v: any) => ({ type: 'video', url: v.url, title: v.title || null })),
-            ...(body.clips || []).map((c: any) => ({ type: 'clip', url: c.url, title: c.title || null })),
+            ...(body.gallery || [])
+                .map((g: any) => ({
+                    type: 'gallery',
+                    url: typeof g === 'string' ? g : (g.src || g.url),
+                    title: typeof g === 'object' ? (g.caption || null) : null,
+                }))
+                .filter((m: any) => Boolean(m.url)),
+            ...(body.videos || [])
+                .filter((v: any) => Boolean(v.url))
+                .map((v: any) => ({ type: 'video', url: v.url, title: v.title || null })),
+            ...(body.clips || [])
+                .filter((c: any) => Boolean(c.url))
+                .map((c: any) => ({ type: 'clip', url: c.url, title: c.title || null })),
         ];
 
         const work = [
-            ...(body.campaigns || []).map((c: any) => ({
-                kind: 'campaign',
-                title: c.brandName || c.title,
-                category: c.category || null,
-                year: c.year || null,
-                description: c.description || null,
-                imageUrl: c.imageUrl || null,
-            })),
-            ...(body.awards || []).map((a: any) => ({
-                kind: 'award',
-                title: a.title,
-                category: a.category || null,
-                year: a.year || null,
-                description: a.description || null,
-            })),
-            ...(body.faqs || []).map((f: any) => ({
-                kind: 'faq',
-                title: f.question,
-                description: f.answer,
-            })),
+            ...(body.campaigns || [])
+                .filter((c: any) => Boolean(c.brandName || c.title))
+                .map((c: any) => ({
+                    kind: 'campaign',
+                    title: c.brandName || c.title,
+                    category: c.category || null,
+                    year: c.year || null,
+                    description: c.description || null,
+                    imageUrl: c.imageUrl || null,
+                })),
+            ...(body.awards || [])
+                .filter((a: any) => Boolean(a.title))
+                .map((a: any) => ({
+                    kind: 'award',
+                    title: a.title,
+                    category: a.category || null,
+                    year: a.year || null,
+                    description: a.description || null,
+                })),
+            ...(body.faqs || [])
+                .filter((f: any) => Boolean(f.question && f.answer))
+                .map((f: any) => ({
+                    kind: 'faq',
+                    title: f.question,
+                    description: f.answer,
+                })),
+            ...(body.songs || [])
+                .filter((s: any) => Boolean(s.title || s.t))
+                .map((s: any) => ({
+                    kind: 'song',
+                    title: s.title || s.t,
+                    category: s.duration || s.dur || null,
+                    year: s.plays || null,
+                    description: s.url || s.u || null,
+                })),
+            ...(body.film || [])
+                .filter((f: any) => Boolean(f.title || f.t))
+                .map((f: any) => ({
+                    kind: 'film',
+                    title: f.title || f.t,
+                    category: f.category || f.cat || null,
+                    year: f.year || null,
+                    description: f.description || f.d || null,
+                })),
         ];
 
         const social = {
-            instagramUrl: body.instagram || null,
-            youtubeUrl: body.youtube || null,
-            facebookUrl: body.facebook || null,
-            xUrl: body.x || null,
-            spotifyUrl: body.spotify || null,
+            instagramUrl: body.socialInstagram || body.instagram || null,
+            youtubeUrl: body.socialYouTube || body.youtube || null,
+            facebookUrl: body.socialFacebook || body.facebook || null,
+            xUrl: body.socialX || body.x || null,
+            spotifyUrl: body.socialSpotify || body.spotify || null,
             spotifyFollowersLabel: body.fanbaseSpotify ? `${body.fanbaseSpotify} Followers` : null,
             youtubeSubscribersLabel: body.fanbaseYouTube ? `${body.fanbaseYouTube} Subscribers` : null,
             instagramFollowersLabel: body.fanbaseInstagram ? `${body.fanbaseInstagram} Followers` : null,
             facebookFollowersLabel: body.fanbaseFacebook ? `${body.fanbaseFacebook} Followers` : null,
             seoMetaTitle: body.metaTitle || null,
             seoMetaDescription: body.metaDescription || null,
-            seoFocusKeyword: body.keywords || null,
+            seoFocusKeyword: body.focusKeyword || body.keywords || null,
             seoShareImageUrl: body.ogImageUrl || null,
         };
 
@@ -493,7 +551,7 @@ export class ArtistsService {
         });
 
         const response: any = { data: created };
-        if (status === 'published' && completeness < 70) {
+        if ((status === 'live' || (status as string) === 'published') && completeness < 70) {
             response.warning = `Profile is only ${completeness}% complete`;
         }
 
@@ -515,8 +573,10 @@ export class ArtistsService {
         }
 
         const { completeness } = this.calculateCompleteness(body);
-        const status = body.status === 'published' ? 'published' : 'draft';
-        const publishedAt = status === 'published' ? (existing.publishedAt || new Date()) : null;
+        const isPublishRequested = body.status === 'published' || body.status === 'live';
+        const isVerified = body.isVerified !== undefined ? Boolean(body.isVerified) : existing.isVerified;
+        const status = isPublishRequested ? (isVerified ? 'live' : 'pending') : 'draft';
+        const publishedAt = status === 'live' ? (existing.publishedAt || new Date()) : null;
 
         const artistData = {
             slug,
@@ -549,47 +609,81 @@ export class ArtistsService {
         };
 
         const media = [
-            ...(body.gallery || []).map((g: any) => ({ type: 'gallery', url: g.src || g.url, title: g.caption || null })),
-            ...(body.videos || []).map((v: any) => ({ type: 'video', url: v.url, title: v.title || null })),
-            ...(body.clips || []).map((c: any) => ({ type: 'clip', url: c.url, title: c.title || null })),
+            ...(body.gallery || [])
+                .map((g: any) => ({
+                    type: 'gallery',
+                    url: typeof g === 'string' ? g : (g.src || g.url),
+                    title: typeof g === 'object' ? (g.caption || null) : null,
+                }))
+                .filter((m: any) => Boolean(m.url)),
+            ...(body.videos || [])
+                .filter((v: any) => Boolean(v.url))
+                .map((v: any) => ({ type: 'video', url: v.url, title: v.title || null })),
+            ...(body.clips || [])
+                .filter((c: any) => Boolean(c.url))
+                .map((c: any) => ({ type: 'clip', url: c.url, title: c.title || null })),
         ];
 
         const work = [
-            ...(body.campaigns || []).map((c: any) => ({
-                kind: 'campaign',
-                title: c.brandName || c.title,
-                category: c.category || null,
-                year: c.year || null,
-                description: c.description || null,
-                imageUrl: c.imageUrl || null,
-            })),
-            ...(body.awards || []).map((a: any) => ({
-                kind: 'award',
-                title: a.title,
-                category: a.category || null,
-                year: a.year || null,
-                description: a.description || null,
-            })),
-            ...(body.faqs || []).map((f: any) => ({
-                kind: 'faq',
-                title: f.question,
-                description: f.answer,
-            })),
+            ...(body.campaigns || [])
+                .filter((c: any) => Boolean(c.brandName || c.title))
+                .map((c: any) => ({
+                    kind: 'campaign',
+                    title: c.brandName || c.title,
+                    category: c.category || null,
+                    year: c.year || null,
+                    description: c.description || null,
+                    imageUrl: c.imageUrl || null,
+                })),
+            ...(body.awards || [])
+                .filter((a: any) => Boolean(a.title))
+                .map((a: any) => ({
+                    kind: 'award',
+                    title: a.title,
+                    category: a.category || null,
+                    year: a.year || null,
+                    description: a.description || null,
+                })),
+            ...(body.faqs || [])
+                .filter((f: any) => Boolean(f.question && f.answer))
+                .map((f: any) => ({
+                    kind: 'faq',
+                    title: f.question,
+                    description: f.answer,
+                })),
+            ...(body.songs || [])
+                .filter((s: any) => Boolean(s.title || s.t))
+                .map((s: any) => ({
+                    kind: 'song',
+                    title: s.title || s.t,
+                    category: s.duration || s.dur || null,
+                    year: s.plays || null,
+                    description: s.url || s.u || null,
+                })),
+            ...(body.film || [])
+                .filter((f: any) => Boolean(f.title || f.t))
+                .map((f: any) => ({
+                    kind: 'film',
+                    title: f.title || f.t,
+                    category: f.category || f.cat || null,
+                    year: f.year || null,
+                    description: f.description || f.d || null,
+                })),
         ];
 
         const social = {
-            instagramUrl: body.instagram || null,
-            youtubeUrl: body.youtube || null,
-            facebookUrl: body.facebook || null,
-            xUrl: body.x || null,
-            spotifyUrl: body.spotify || null,
+            instagramUrl: body.socialInstagram || body.instagram || null,
+            youtubeUrl: body.socialYouTube || body.youtube || null,
+            facebookUrl: body.socialFacebook || body.facebook || null,
+            xUrl: body.socialX || body.x || null,
+            spotifyUrl: body.socialSpotify || body.spotify || null,
             spotifyFollowersLabel: body.fanbaseSpotify ? `${body.fanbaseSpotify} Followers` : null,
             youtubeSubscribersLabel: body.fanbaseYouTube ? `${body.fanbaseYouTube} Subscribers` : null,
             instagramFollowersLabel: body.fanbaseInstagram ? `${body.fanbaseInstagram} Followers` : null,
             facebookFollowersLabel: body.fanbaseFacebook ? `${body.fanbaseFacebook} Followers` : null,
             seoMetaTitle: body.metaTitle || null,
             seoMetaDescription: body.metaDescription || null,
-            seoFocusKeyword: body.keywords || null,
+            seoFocusKeyword: body.focusKeyword || body.keywords || null,
             seoShareImageUrl: body.ogImageUrl || null,
         };
 
@@ -601,7 +695,7 @@ export class ArtistsService {
         });
 
         const response: any = { data: updated };
-        if (status === 'published' && completeness < 70) {
+        if ((status === 'live' || (status as string) === 'published') && completeness < 70) {
             response.warning = `Profile is only ${completeness}% complete`;
         }
 

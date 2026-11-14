@@ -20,3 +20,4 @@ ENV PORT=3001
 ENV NODE_ENV=production
 
 CMD ["pnpm", "--filter", "@kalasquare/api", "start"]
+

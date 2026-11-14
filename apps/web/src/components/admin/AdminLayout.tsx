@@ -3,206 +3,428 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-    Users,
-    LayoutDashboard,
-    Home,
-    MessageSquare,
-    Building2,
-    Settings,
-    ExternalLink,
-    Menu,
-    X,
-    CheckCircle2,
-    LogOut,
-} from 'lucide-react';
 import { isLoggedIn, logout } from '@/lib/auth';
 
 interface AdminLayoutProps {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }
 
+const icSvg = (path: React.ReactNode, cls = 'ic') => (
+  <svg
+    className={cls}
+    viewBox="0 0 24 24"
+    width={cls === 'chev' ? 16 : 18}
+    height={cls === 'chev' ? 16 : 18}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    {path}
+  </svg>
+);
+
 export default function AdminLayout({ children }: AdminLayoutProps) {
-    const pathname = usePathname();
-    const router = useRouter();
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [toastMessage, setToastMessage] = useState<string | null>(null);
-    const [authChecked, setAuthChecked] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+  const [authChecked, setAuthChecked] = useState(false);
 
-    useEffect(() => {
-        if (pathname === '/admin/login') {
-            setAuthChecked(true);
-            return;
-        }
+  // Accordion states matching manager.html (home & artists open by default)
+  const [homeOpen, setHomeOpen] = useState(true);
+  const [artistsOpen, setArtistsOpen] = useState(true);
+  const [venuesOpen, setVenuesOpen] = useState(false);
+  const [waOpen, setWaOpen] = useState(false);
+  const [usersOpen, setUsersOpen] = useState(false);
 
-        if (!isLoggedIn()) {
-            router.push('/admin/login');
-        } else {
-            setAuthChecked(true);
-        }
-    }, [pathname, router]);
-
-    // If on login page, render full width without sidebar
+  useEffect(() => {
     if (pathname === '/admin/login') {
-        return <>{children}</>;
+      setAuthChecked(true);
+      return;
     }
-
-    if (!authChecked) {
-        return (
-            <div className="min-h-screen bg-[#f3f3f5] flex items-center justify-center">
-                <div className="flex items-center gap-2 text-sm text-[#6b6b76] font-medium">
-                    <svg className="animate-spin h-5 w-5 text-[#eb4e62]" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                    </svg>
-                    <span>Verifying session...</span>
-                </div>
-            </div>
-        );
+    // Enforce authentication on all protected admin routes
+    if (!isLoggedIn()) {
+      router.replace('/admin/login');
+    } else {
+      setAuthChecked(true);
     }
+  }, [pathname, router]);
 
-    const showToast = (msg: string) => {
-        setToastMessage(msg);
-        setTimeout(() => setToastMessage(null), 3000);
-    };
+  // Do NOT wrap login page with admin sidebar/header layout
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
 
-    const navItems = [
-        { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard, ready: false },
-        { label: 'Artists', href: '/admin/artists', icon: Users, ready: true },
-        { label: 'Home Page Manager', href: '/admin/home-page', icon: Home, ready: true },
-        { label: 'Enquiries', href: '/admin/enquiries', icon: MessageSquare, ready: true },
-        { label: 'Venues', href: '/admin/venues', icon: Building2, ready: false },
-        { label: 'Settings', href: '/admin/settings', icon: Settings, ready: false },
-    ];
+  const [hasEditParam, setHasEditParam] = useState(false);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setHasEditParam(window.location.search.includes('edit='));
+    }
+  }, [pathname]);
+
+  const isViewAllArtistsActive = pathname === '/admin/artists';
+  const isAddArtistActive = pathname === '/admin/artists/new' || pathname.includes('/edit');
+  const isArtistClassActive = pathname === '/admin/artists/class';
+  const isEdit = pathname.includes('/edit') || hasEditParam;
+
+  const handleSignOut = async () => {
+    await logout();
+    router.push('/admin/login');
+  };
+
+  if (!authChecked) {
     return (
-        <div className="min-h-screen flex flex-col md:flex-row bg-[#f3f3f5] text-[#1b1b1f]">
-            {/* Toast Notification */}
-            {toastMessage && (
-                <div className="fixed top-5 right-5 z-50 bg-[#1b1b1f] text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in border border-white/10">
-                    <CheckCircle2 className="h-4 w-4 text-[#eb4e62]" />
-                    <span>{toastMessage}</span>
-                </div>
-            )}
-
-            {/* Mobile Top Navigation Bar */}
-            <div className="md:hidden bg-white border-b border-[#e6e6ea] px-4 h-16 flex items-center justify-between sticky top-0 z-40">
-                <div className="flex items-center gap-2">
-                    <Link
-                        href="/admin"
-                        className="font-heading font-extrabold text-xl tracking-tight"
-                    >
-                        <span>Kala</span>
-                        <span className="text-[#eb4e62]">Square</span>
-                        <span className="ml-1.5 text-xs uppercase px-2 py-0.5 rounded bg-[#f6f6f7] text-[#6b6b76] font-semibold">
-                            Admin
-                        </span>
-                    </Link>
-                </div>
-
-                <button
-                    type="button"
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="p-2 rounded-lg text-[#1b1b1f] hover:bg-[#f6f6f7]"
-                    aria-label="Toggle navigation menu"
-                >
-                    {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-                </button>
-            </div>
-
-            {/* Left Sidebar (Desktop) / Mobile Drawer */}
-            <aside
-                className={`${
-                    mobileMenuOpen ? 'block' : 'hidden'
-                } md:block w-full md:w-64 bg-white border-r border-[#e6e6ea] shrink-0 md:sticky md:top-0 md:h-screen flex flex-col justify-between z-30`}
-            >
-                <div>
-                    {/* Logo Brand Header */}
-                    <div className="p-6 border-b border-[#e6e6ea] hidden md:flex items-center justify-between">
-                        <Link
-                            href="/admin"
-                            className="font-heading font-extrabold text-2xl tracking-tight"
-                        >
-                            <span>Kala</span>
-                            <span className="text-[#eb4e62]">Square</span>
-                            <span className="ml-2 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-[#fde6ea] text-[#eb4e62]">
-                                Admin
-                            </span>
-                        </Link>
-                    </div>
-
-                    {/* Navigation Links */}
-                    <nav className="p-3 sm:p-4 space-y-1">
-                        {navItems.map((item) => {
-                            const Icon = item.icon;
-                            const isActive =
-                                item.ready &&
-                                (pathname === item.href || pathname.startsWith(`${item.href}/`));
-
-                            if (!item.ready) {
-                                return (
-                                    <button
-                                        key={item.label}
-                                        type="button"
-                                        onClick={() =>
-                                            showToast(`${item.label} is coming in the next prompt`)
-                                        }
-                                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#6b6b76] hover:bg-[#f6f6f7] hover:text-[#1b1b1f] transition cursor-pointer text-left"
-                                    >
-                                        <Icon className="h-4 w-4" />
-                                        <span>{item.label}</span>
-                                    </button>
-                                );
-                            }
-
-                            return (
-                                <Link
-                                    key={item.label}
-                                    href={item.href}
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
-                                        isActive
-                                            ? 'bg-[#fde6ea] text-[#eb4e62]'
-                                             : 'text-[#6b6b76] hover:bg-[#f6f6f7] hover:text-[#1b1b1f]'
-                                    }`}
-                                >
-                                    <Icon className="h-4 w-4" />
-                                    <span>{item.label}</span>
-                                </Link>
-                            );
-                        })}
-                    </nav>
-                </div>
-
-                {/* Sidebar Footer Link to Public Website & Logout */}
-                <div className="p-4 border-t border-[#e6e6ea] space-y-2">
-                    <Link
-                        href="/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-between p-3 rounded-xl bg-[#f6f6f7] hover:bg-neutral-200/80 text-xs font-bold text-[#1b1b1f] transition"
-                    >
-                        <span>View Live Website</span>
-                        <ExternalLink className="h-3.5 w-3.5 text-[#6b6b76]" />
-                    </Link>
-
-                    <button
-                        type="button"
-                        onClick={() => logout()}
-                        className="w-full flex items-center justify-between p-3 rounded-xl bg-red-50 hover:bg-red-100/80 text-xs font-bold text-red-600 transition"
-                    >
-                        <span>Log Out</span>
-                        <LogOut className="h-3.5 w-3.5 text-red-500" />
-                    </button>
-                </div>
-            </aside>
-
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0">
-                <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1240px] w-full mx-auto">
-                    {children}
-                </main>
-            </div>
+      <div className="min-h-screen bg-[#f3f3f5] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-[#6b6b76]">
+          <svg className="animate-spin h-6 w-6 text-[#eb4e62]" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+          </svg>
+          <span className="text-xs font-semibold tracking-wide">Checking authorization...</span>
         </div>
+      </div>
     );
+  }
+
+  return (
+    <>
+      {/* 1. Demo Bar fixed on top (from manager.html line 570) */}
+      <div id="demoBar" role="navigation" aria-label="Demo pages">
+        <b>Kalasquare Live Demo</b>
+        <nav>
+          <Link href="/admin/login">Login</Link>
+          <Link href="/">Home</Link>
+          <Link href="/admin/artists" aria-current="page">Admin</Link>
+        </nav>
+        <span className="db-h">
+          Edit in Admin, then check the Home page.<br />
+          Send an enquiry on Home, then check Admin → Enquiries.
+        </span>
+        <button
+          type="button"
+          className="db-r"
+          id="db-reset"
+          onClick={() => {
+            if (typeof window !== 'undefined') {
+              localStorage.clear();
+              window.location.reload();
+            }
+          }}
+        >
+          Reset demo
+        </button>
+      </div>
+
+      {/* 2. Main Application Grid (app layout from manager.html line 624) */}
+      <div className="app" id="app">
+        {/* Left Sidebar */}
+        <aside className="side">
+          <div className="brand">
+            <Link href="/" aria-label="KalaSquare">
+              <img
+                className="logo"
+                src="/logo.png"
+                alt="KalaSquare"
+                width={157}
+                height={34}
+                style={{ display: 'block', height: '34px', width: 'auto', maxWidth: '100%' }}
+              />
+            </Link>
+          </div>
+
+          <div>
+            <nav className="nav" id="nav" aria-label="Home page sections">
+              {/* OVERVIEW SECTION */}
+              <p className="navl">OVERVIEW</p>
+              <button type="button" className="nv mod" title="Overview">
+                <span className="nm">
+                  {icSvg(
+                    <>
+                      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                      <rect x="14" y="3" width="7" height="5" rx="1.5" />
+                      <rect x="14" y="12" width="7" height="9" rx="1.5" />
+                      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                    </>
+                  )}
+                  Dashboard
+                </span>
+              </button>
+              <Link href="/" target="_blank" className="nv mod">
+                <span className="nm">
+                  {icSvg(
+                    <>
+                      <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </>
+                  )}
+                  Home page preview
+                </span>
+              </Link>
+
+              {/* MANAGE SECTION */}
+              <p className="navl" style={{ marginTop: '16px' }}>MANAGE</p>
+
+              {/* Home page Accordion */}
+              <button
+                type="button"
+                className="nv mod par"
+                aria-expanded={homeOpen}
+                onClick={() => setHomeOpen(!homeOpen)}
+              >
+                <span className="nm">
+                  {icSvg(<path d="M3 11l9-7 9 7M5 10v10h14V10" />)}
+                  Home page
+                </span>
+                {icSvg(<path d="M6 9l6 6 6-6" />, 'chev')}
+              </button>
+              {homeOpen && (
+                <div className="kids">
+                  <div className="nv kid"><span className="nm">Hero section</span><span className="ct-n">0/4</span></div>
+                  <div className="nv kid"><span className="nm">Platinum artists</span><span className="ct-n">5</span></div>
+                  <div className="nv kid"><span className="nm">Find talent by category</span><span className="ct-n">12</span></div>
+                  <div className="nv kid"><span className="nm">Stage &amp; Spotlights</span><span className="ct-n">3</span></div>
+                  <div className="nv kid"><span className="nm">Featured events</span><span className="ct-n">4</span></div>
+                  <div className="nv kid"><span className="nm">Rising artists</span><span className="ct-n">4</span></div>
+                  <div className="nv kid"><span className="nm">Venues</span><span className="ct-n">6</span></div>
+                  <div className="nv kid"><span className="nm">Photo size guide</span></div>
+                </div>
+              )}
+
+              {/* Artists Accordion (Interactive Section) */}
+              <button
+                type="button"
+                className="nv mod par"
+                aria-expanded={artistsOpen}
+                data-on="1"
+                onClick={() => setArtistsOpen(!artistsOpen)}
+              >
+                <span className="nm">
+                  {icSvg(
+                    <>
+                      <circle cx="12" cy="8" r="4" />
+                      <path d="M4 21c0-4 3.5-7 8-7s8 3 8 7" />
+                    </>
+                  )}
+                  Artists
+                </span>
+                {icSvg(<path d="M6 9l6 6 6-6" />, 'chev')}
+              </button>
+              {artistsOpen && (
+                <div className="kids">
+                  <Link
+                    href="/admin/artists"
+                    className="nv kid"
+                    aria-current={isViewAllArtistsActive ? 'page' : undefined}
+                  >
+                    <span className="nm">View all artists</span>
+                    <span className="ct-n">26</span>
+                  </Link>
+                  <Link
+                    href="/admin/artists/new"
+                    className="nv kid"
+                    aria-current={isAddArtistActive ? 'page' : undefined}
+                  >
+                    <span className="nm">{isEdit ? 'Edit artist' : 'Add artist'}</span>
+                  </Link>
+                  <Link
+                    href="/admin/artists/class"
+                    className="nv kid"
+                    aria-current={isArtistClassActive ? 'page' : undefined}
+                  >
+                    <span className="nm">Artist class</span>
+                  </Link>
+                </div>
+              )}
+
+              {/* Venues Accordion */}
+              <button
+                type="button"
+                className="nv mod par"
+                aria-expanded={venuesOpen}
+                onClick={() => setVenuesOpen(!venuesOpen)}
+              >
+                <span className="nm">
+                  {icSvg(<path d="M3 20h18M5 20V9l7-5 7 5v11M9 20v-6h6v6" />)}
+                  Venues
+                </span>
+                {icSvg(<path d="M6 9l6 6 6-6" />, 'chev')}
+              </button>
+              {venuesOpen && (
+                <div className="kids">
+                  <div className="nv kid"><span className="nm">View all venues</span><span className="ct-n">9</span></div>
+                  <div className="nv kid"><span className="nm">Add venue</span></div>
+                </div>
+              )}
+
+              {/* Additional MANAGE items */}
+              <div className="nv mod">
+                <span className="nm">
+                  {icSvg(
+                    <>
+                      <path d="M4 5h16v11H9l-5 4z" />
+                      <path d="M8 9h8M8 12h5" />
+                    </>
+                  )}
+                  Enquiries
+                </span>
+                <span className="ct-n">1</span>
+              </div>
+
+              <div className="nv mod">
+                <span className="nm">
+                  {icSvg(<path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z" />)}
+                  Membership
+                </span>
+              </div>
+
+              <div className="nv mod">
+                <span className="nm">
+                  {icSvg(<path d="M12 3l2.6 5.600 6.100.700-4.500 4.200 1.200 6L12 16.500 6.600 19.500l1.200-6L3.300 9.300l6.100-.700z" />)}
+                  Media · KS Spotlight
+                </span>
+              </div>
+
+              <div className="nv mod">
+                <span className="nm">
+                  {icSvg(
+                    <>
+                      <circle cx="6" cy="6" r="2" />
+                      <circle cx="6" cy="18" r="2" />
+                      <path d="M6 8v8M11 6h9M11 12h6M11 18h9" />
+                    </>
+                  )}
+                  Timeline
+                </span>
+                <span className="ct-n" style={{ background: '#fde6ea', color: '#d63a50' }}>New</span>
+              </div>
+
+              <div className="nv mod">
+                <span className="nm">
+                  {icSvg(
+                    <>
+                      <rect x="3" y="5" width="18" height="16" rx="2" />
+                      <path d="M3 10h18M8 3v4M16 3v4" />
+                    </>
+                  )}
+                  Events
+                </span>
+                <span className="soon">Soon</span>
+              </div>
+
+              {/* GROWTH SECTION */}
+              <p className="navl" style={{ marginTop: '16px' }}>GROWTH</p>
+              <div className="nv mod">
+                <span className="nm">
+                  {icSvg(
+                    <>
+                      <circle cx="11" cy="11" r="7" />
+                      <path d="M20 20l-4-4" />
+                    </>
+                  )}
+                  SEO manager
+                </span>
+              </div>
+
+              <button
+                type="button"
+                className="nv mod par"
+                aria-expanded={waOpen}
+                onClick={() => setWaOpen(!waOpen)}
+              >
+                <span className="nm">
+                  {icSvg(<path d="M4 5h16v11H9l-5 4z" />)}
+                  WhatsApp
+                </span>
+                {icSvg(<path d="M6 9l6 6 6-6" />, 'chev')}
+              </button>
+
+              <div className="nv mod">
+                <span className="nm">
+                  {icSvg(
+                    <>
+                      <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />
+                    </>
+                  )}
+                  Data export
+                </span>
+              </div>
+
+              {/* ADMIN SECTION */}
+              <p className="navl" style={{ marginTop: '16px' }}>ADMIN</p>
+              <button
+                type="button"
+                className="nv mod par"
+                aria-expanded={usersOpen}
+                onClick={() => setUsersOpen(!usersOpen)}
+              >
+                <span className="nm">
+                  {icSvg(
+                    <>
+                      <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
+                      <path d="M9 12l2 2 4-4" />
+                    </>
+                  )}
+                  Users &amp; roles
+                </span>
+                {icSvg(<path d="M6 9l6 6 6-6" />, 'chev')}
+              </button>
+
+              <div className="nv mod">
+                <span className="nm">
+                  {icSvg(<path d="M8 8l-4 4 4 4M16 8l4 4-4 4M14 5l-4 14" />)}
+                  Developer handoff
+                </span>
+              </div>
+            </nav>
+          </div>
+
+          {/* Bottom user footer section (.who from manager.html line 631) */}
+          <div className="who">
+            <span className="ava">A</span>
+            <span>
+              Admin<br />
+              <button type="button" onClick={handleSignOut} id="so">Sign out</button>
+            </span>
+          </div>
+        </aside>
+
+        {/* Main Content Area (.main from manager.html line 634) */}
+        <div className="main">
+          {/* Top Admin Header (.top from manager.html line 635) */}
+          <header className="top">
+            <div className="tl">
+              <h1>Kalasquare admin</h1>
+              <button
+                type="button"
+                className="pill sample"
+                id="btnSampleData"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('fillSampleData'));
+                }}
+              >
+                Sample data
+              </button>
+            </div>
+            <div className="tr">
+              <a
+                className="btn"
+                href="https://www.kalasquare.com/"
+                target="_blank"
+                rel="noopener"
+              >
+                View live site
+              </a>
+            </div>
+          </header>
+
+          {/* Children panel (.panel from manager.html) */}
+          <main id="panel" style={{ paddingTop: '20px' }}>
+            {children}
+          </main>
+        </div>
+      </div>
+    </>
+  );
 }

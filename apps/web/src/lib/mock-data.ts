@@ -8,6 +8,7 @@ import {
   FAQItem,
   SpotlightItem,
   ArtistProfile,
+  FanbasePlatform,
   Enquiry,
 } from './types';
 import { HomeConfig } from './validators/home-config';
@@ -18,8 +19,8 @@ export const mockArtists: Artist[] = [
     id: 'a1',
     name: 'Jai Vijay Sachan',
     slug: 'jai-vijay-sachan',
-    cat: 'Actor & Mimicry',
-    categories: ['Actor', 'Standup Comedy'],
+    cat: 'Actor',
+    categories: ['Actor'],
     city: 'Delhi',
     tier: 'platinum',
     badgeType: 'platinum',
@@ -35,8 +36,8 @@ export const mockArtists: Artist[] = [
     id: 'a2',
     name: 'Vijay Vikram Singh',
     slug: 'vijay-vikram-singh',
-    cat: 'Voice Artist & Actor',
-    categories: ['Actor', 'Voice-over'],
+    cat: 'Actor',
+    categories: ['Actor'],
     city: 'Mumbai',
     tier: 'platinum',
     badgeType: 'platinum',
@@ -52,8 +53,8 @@ export const mockArtists: Artist[] = [
     id: 'a3',
     name: 'Dinesh Bawra',
     slug: 'dinesh-bawra',
-    cat: 'Poet & Hasya Kavi',
-    categories: ['Poet', 'Standup Comedy'],
+    cat: 'Poets',
+    categories: ['Poets'],
     city: 'Delhi',
     tier: 'platinum',
     badgeType: 'platinum',
@@ -61,16 +62,104 @@ export const mockArtists: Artist[] = [
     rating: 4.8,
     reviewsCount: 29,
     priceLabel: 'From ₹50,000',
-    photoUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&auto=format&fit=crop&q=80',
+    photoUrl: '',
     tagline: 'Celebrated Hasya Kavi & Satirist · 500+ TV Shows',
     followers: '210K',
+  },
+  {
+    id: 'a4',
+    name: 'Dr. Mansi Dwivedi',
+    slug: 'dr-mansi-dwivedi',
+    cat: 'Poets',
+    categories: ['Poets'],
+    city: 'Lucknow',
+    tier: 'platinum',
+    badgeType: 'platinum',
+    isVerified: true,
+    rating: 4.9,
+    reviewsCount: 32,
+    priceLabel: 'From ₹50,000',
+    photoUrl: '',
+    tagline: 'Renowned Hindi Poetess & Stage Performer',
+    followers: '340K',
+  },
+  {
+    id: 'a5',
+    name: 'Ajay Hooda',
+    slug: 'ajay-hooda',
+    cat: 'Singer',
+    categories: ['Singer'],
+    city: 'Haryana',
+    tier: 'platinum',
+    badgeType: 'platinum',
+    isVerified: true,
+    rating: 4.9,
+    reviewsCount: 88,
+    priceLabel: 'From ₹1,50,000',
+    photoUrl: '',
+    tagline: 'Haryanvi Superhit Singer & Performer',
+    followers: '2.5M',
+  },
+
+  // New on KalaSquare
+  {
+    id: 'a6',
+    name: 'Kabir Anand',
+    slug: 'kabir-anand',
+    cat: 'Fitness',
+    categories: ['Fitness'],
+    city: 'Mumbai',
+    tier: 'platinum',
+    badgeType: 'platinum',
+    isVerified: true,
+    rating: 4.9,
+    reviewsCount: 42,
+    priceLabel: 'From ₹75,000',
+    photoUrl: '',
+    tagline: 'Celebrity Fitness Coach & Athlete',
+    followers: '520K',
+  },
+
+  {
+    id: 'a7',
+    name: 'Rohan Kapoor',
+    slug: 'rohan-kapoor',
+    cat: 'Influencer',
+    categories: ['Influencer'],
+    city: 'Delhi',
+    tier: 'platinum',
+    badgeType: 'platinum',
+    isVerified: true,
+    rating: 4.8,
+    reviewsCount: 45,
+    priceLabel: 'From ₹75,000',
+    photoUrl: '',
+    tagline: 'Digital Creator & Brand Ambassador',
+    followers: '1.2M',
+  },
+  {
+    id: 'a10',
+    name: 'Aarav Mehta',
+    slug: 'aarav-mehta',
+    cat: 'Standup Comedy',
+    categories: ['Standup Comedy'],
+    city: 'Delhi',
+    tier: 'rising',
+    badgeType: 'rising',
+    isVerified: true,
+    rating: 4.7,
+    reviewsCount: 14,
+    priceLabel: 'From ₹25,000',
+    photoUrl: '',
+    tagline: 'Observational humorist & comedy club headliner',
+    followers: '72K',
   },
   {
     id: 'a15',
     name: 'Sahil Badal',
     slug: 'sahil-badal',
-    cat: 'Singer & Lyricist',
-    categories: ['Singer', 'Musician'],
+    cat: 'Singer',
+    categories: ['Singer'],
     city: 'Haryana',
     tier: 'platinum',
     badgeType: 'platinum',
@@ -81,25 +170,6 @@ export const mockArtists: Artist[] = [
     photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80',
     tagline: 'Folk & Devotional Vocalist · 50+ Original Singles',
     followers: '150K',
-  },
-
-  // New on KalaSquare
-  {
-    id: 'a10',
-    name: 'Aarav Mehta',
-    slug: 'aarav-mehta',
-    cat: 'Standup Comedian',
-    categories: ['Standup Comedy'],
-    city: 'Delhi',
-    tier: 'rising',
-    badgeType: 'new',
-    isVerified: true,
-    rating: 4.7,
-    reviewsCount: 14,
-    priceLabel: 'From ₹25,000',
-    photoUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=600&auto=format&fit=crop&q=80',
-    tagline: 'Clean Corporate Comedy & College Shows',
-    followers: '72K',
   },
   {
     id: 'a11',
@@ -226,76 +296,76 @@ export const mockArtists: Artist[] = [
 
 export const mockCategories: Category[] = [
   {
-    slug: 'actor',
-    name: 'Actor',
-    count: 72,
-    iconSvg: '<rect x="3" y="9" width="18" height="11" rx="2"/><path d="M3 9l3-5h3L6 9M10 9l3-5h3l-3 5M17 9l3-5"/>',
-  },
-  {
     slug: 'singer',
-    name: 'Singer',
+    name: 'Singers',
     count: 128,
     iconSvg: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
   },
   {
-    slug: 'musician',
-    name: 'Musician',
-    count: 95,
-    iconSvg: '<path d="M9 18V6l10-2v12"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="16" r="2"/>',
+    slug: 'poets',
+    name: 'Poets',
+    count: 46,
+    iconSvg: '<path d="M12 6c-2-1.5-5-2-8-1.5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-13c-3-.5-6 0-8 1.5zM12 6v13"/>',
   },
   {
-    slug: 'band',
-    name: 'Band',
-    count: 52,
-    iconSvg: '<path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/>',
+    slug: 'actor',
+    name: 'Actors',
+    count: 73,
+    iconSvg: '<rect x="3" y="9" width="18" height="11" rx="2"/><path d="M3 9l3-5h3L6 9M10 9l3-5h3l-3 5M17 9l3-5"/>',
   },
   {
-    slug: 'dancer',
-    name: 'Dancer',
-    count: 97,
-    iconSvg: '<circle cx="12" cy="4.5" r="2"/><path d="M12 7v6M12 9l-4 3M12 9l4-2M12 13l-3 6M12 13l4 5"/>',
-  },
-  {
-    slug: 'comedian',
-    name: 'Comedian',
-    count: 54,
-    iconSvg: '<circle cx="12" cy="12" r="9"/><path d="M8 14c1 2 2.5 3 4 3s3-1 4-3M9 9.5h.01M15 9.5h.01"/>',
-  },
-  {
-    slug: 'emcee',
-    name: 'Emcee',
+    slug: 'anchors',
+    name: 'Anchors',
     count: 38,
     iconSvg: '<circle cx="12" cy="12" r="2"/><path d="M7.5 7.5a6 6 0 0 0 0 9M16.5 7.5a6 6 0 0 1 0 9M4.5 4.5a10 10 0 0 0 0 15M19.5 4.5a10 10 0 0 1 0 15"/>',
   },
   {
+    slug: 'influencer',
+    name: 'Influencers',
+    count: 214,
+    iconSvg: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
+  },
+  {
+    slug: 'writer',
+    name: 'Writers',
+    count: 31,
+    iconSvg: '<path d="M4 20l1-4L16 5l3 3L8 19zM14 7l3 3"/>',
+  },
+  {
+    slug: 'standup-comedy',
+    name: 'Standup comedy',
+    count: 54,
+    iconSvg: '<circle cx="12" cy="12" r="9"/><path d="M8 14c1 2 2.5 3 4 3s3-1 4-3M9 9.5h.01M15 9.5h.01"/>',
+  },
+  {
+    slug: 'food-vloggers',
+    name: 'Food vloggers',
+    count: 89,
+    iconSvg: '<path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 2-3 4-3 7h3v11"/>',
+  },
+  {
+    slug: 'dancer',
+    name: 'Dancers',
+    count: 97,
+    iconSvg: '<circle cx="12" cy="4.5" r="2"/><path d="M12 7v6M12 9l-4 3M12 9l4-2M12 13l-3 6M12 13l4 5"/>',
+  },
+  {
+    slug: 'fitness-health',
+    name: 'Fitness',
+    count: 63,
+    iconSvg: '<path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/>',
+  },
+  {
     slug: 'speaker',
-    name: 'Speaker',
+    name: 'Speakers',
     count: 27,
     iconSvg: '<path d="M4 10v4h3l7 4V6L7 10zM17 9a4 4 0 0 1 0 6"/>',
   },
   {
-    slug: 'magician',
-    name: 'Magician',
-    count: 18,
-    iconSvg: '<path d="M12 2l3 7h7l-5.5 4.5 2 7-6.5-4.5-6.5 4.5 2-7L3 9h7z"/>',
-  },
-  {
-    slug: 'dj',
-    name: 'DJ',
-    count: 44,
-    iconSvg: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v6"/>',
-  },
-  {
-    slug: 'photographer',
-    name: 'Photographer',
-    count: 65,
-    iconSvg: '<rect x="3" y="7" width="18" height="12" rx="3"/><circle cx="12" cy="13" r="3.5"/><path d="M8 7l1.5-2.5h5L16 7"/>',
-  },
-  {
-    slug: 'crew-company',
-    name: 'Crew / Company',
-    count: 33,
-    iconSvg: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M16 5.5a3 3 0 0 1 0 5.5M17 14.5c2.3.7 4 2.8 4 5.5"/>',
+    slug: 'gaming',
+    name: 'Gaming',
+    count: 41,
+    iconSvg: '<rect x="3" y="8" width="18" height="10" rx="5"/><path d="M8 11v4M6 13h4M15.5 12h.01M18 14h.01"/>',
   },
 ];
 
@@ -326,51 +396,51 @@ export const mockSpotlights: SpotlightItem[] = [
 export const mockEvents: EventItem[] = [
   {
     id: 'e1',
-    slug: 'the-kala-gala',
-    title: 'The Kala Gala 2026',
-    date: '30 Sep 2026',
-    city: 'Noida',
-    venueName: 'The Live Stage',
-    badge: 'Trending',
-    badgeColor: 'coral',
-    imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80',
-    description: 'An evening celebrating regional folk and contemporary fusion artists.',
-  },
-  {
-    id: 'e2',
-    slug: 'indias-next-voice',
-    title: "India's Next Voice",
-    date: '19 Apr 2026',
-    city: 'All India',
-    venueName: 'National Auditions',
-    badge: 'New',
-    badgeColor: 'green',
-    imageUrl: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=800&auto=format&fit=crop&q=80',
-    description: "National vocal talent hunt organized by KalaSquare.",
-  },
-  {
-    id: 'e3',
     slug: 'kala-utsav-2026',
     title: 'Kala Utsav 2026',
     date: '14 Nov 2026',
     city: 'Delhi',
-    venueName: 'Cultural Resources Centre',
-    badge: 'Filling Fast',
-    badgeColor: 'orange',
-    imageUrl: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=80',
-    description: 'A 3-day cultural extravaganza with theatre, dance, and music.',
+    venueName: 'Kala Utsav 2026',
+    badge: 'Trending',
+    badgeColor: 'coral',
+    imageUrl: '',
+    description: 'A cultural extravaganza with theatre, dance, and music.',
   },
   {
-    id: 'e7',
-    slug: 'ks-originals-live',
-    title: 'KS Originals Live Comedy',
-    date: 'Weekly Shows',
-    city: 'Delhi-NCR',
-    venueName: 'Comedy County',
+    id: 'e2',
+    slug: 'open-mic-night',
+    title: 'Open Mic Night',
+    date: '25 Oct 2026',
+    city: 'Noida',
+    venueName: 'Open Mic Night',
+    badge: 'New',
+    badgeColor: 'green',
+    imageUrl: '',
+    description: 'Weekly open mic platform for poets, comics and singers.',
+  },
+  {
+    id: 'e3',
+    slug: 'standup-stage',
+    title: 'Standup Stage',
+    date: 'Live comedy',
+    city: 'KalaSquare',
+    venueName: 'Standup Stage',
+    badge: 'Filling fast',
+    badgeColor: 'orange',
+    imageUrl: '',
+    description: 'Curated stand-up comedy specials live on stage.',
+  },
+  {
+    id: 'e4',
+    slug: 'poetry-square',
+    title: 'Poetry Square',
+    date: '2 Nov 2026',
+    city: 'Delhi',
+    venueName: 'Poetry Square',
     badge: 'KS Original',
     badgeColor: 'black',
-    imageUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=80',
-    description: 'Exclusive stand-up comedy specials produced by KalaSquare.',
+    imageUrl: '',
+    description: 'Exclusive poetry recitals produced by KalaSquare.',
   },
 ];
 
@@ -384,7 +454,7 @@ export const mockVenues: VenueItem[] = [
     category: 'Comedy Club & Stage',
     capacity: '200 Guests',
     priceLabel: 'From ₹25,000 / day',
-    imageUrl: 'https://images.unsplash.com/photo-1585699324551-f6c309eedeca?w=800&auto=format&fit=crop&q=80',
+    imageUrl: '',
   },
   {
     id: 'v2',
@@ -395,18 +465,29 @@ export const mockVenues: VenueItem[] = [
     category: 'Theatre & Performance Stage',
     capacity: '450 Guests',
     priceLabel: 'From ₹75,000 / day',
-    imageUrl: 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?w=800&auto=format&fit=crop&q=80',
+    imageUrl: '',
+  },
+  {
+    id: 'v3',
+    slug: 'studio-productions',
+    name: 'Studio & Productions',
+    city: 'South Delhi',
+    code: 'ST',
+    category: 'Production & Jam Studio',
+    capacity: '100 Guests',
+    priceLabel: 'From ₹20,000 / day',
+    imageUrl: '',
   },
   {
     id: 'v4',
     slug: 'stage-five',
-    name: 'Stage Five Studio',
+    name: 'Stage Five',
     city: 'Gurugram',
     code: 'SF',
     category: 'Acoustic Studio & Jam Room',
     capacity: '150 Guests',
     priceLabel: 'From ₹30,000 / day',
-    imageUrl: 'https://images.unsplash.com/photo-1514306191717-452ec28c7814?w=800&auto=format&fit=crop&q=80',
+    imageUrl: '',
   },
 ];
 
@@ -414,316 +495,375 @@ export const mockFAQs: FAQItem[] = [
   {
     question: 'What is KalaSquare?',
     answer:
-      'KalaSquare is a premier talent listing and artist booking marketplace in India. We connect event planners, corporate brands, festivals, and venue owners with vetted, top-tier performers across 12 creative categories.',
+      'KalaSquare is an artist marketplace and management platform. We onboard artists, find them paid collaborations with brands, shows and projects, and list entertainment venues.',
   },
   {
     question: 'How do I join as an artist?',
     answer:
-      'Artists can submit their portfolio and credentials through our onboarding process. Our curatorial committee reviews work samples, past performances, and references before publishing profiles to ensure highest client satisfaction.',
+      'Create your profile and get listed. A basic listing is free. You can upgrade to a Blue badge for Rs 999 a year.',
   },
   {
-    question: 'Are all booking opportunities paid?',
+    question: 'Are all opportunities paid?',
     answer:
-      'Yes. KalaSquare is strictly a professional, paid marketplace. All corporate gigs, private events, festival sets, and brand partnerships listed or negotiated via our platform are paid contracts.',
+      'Yes. KalaSquare is a paid, premium platform, and the brand jobs, collaborations and shows listed here are paid opportunities.',
   },
   {
-    question: 'What are the Platinum and Verified badges?',
+    question: 'What are the Golden and Crown badges?',
     answer:
-      'The Verified blue badge indicates verified identities, documentation, and performance credentials. The Platinum golden badge represents top-tier artists with verified track records, extensive fanbase, and national acclaim.',
+      "Golden and Crown badges go to competition winners. They can't be bought.",
+  },
+  {
+    question: "What is India's Next Voice?",
+    answer:
+      "India's Next Voice is KalaSquare's singing competition. You can register for it from the Events section.",
+  },
+  {
+    question: 'Can I list my venue?',
+    answer:
+      'Yes. Entertainment venues of all kinds can be listed. Venue listing is a paid service.',
   },
 ];
 
 export const mockArtistProfiles: ArtistProfile[] = [
-  // 1. Platinum Singer: Sahil Badal
+  // 1. Platinum Singer: Sahil Badal (from Kalasquare_Home_Page_Manager_2.html line 1898-1901)
   {
-    id: 'p1',
+    id: 'a15',
     slug: 'sahil-badal',
     name: 'Sahil Badal',
-    tagline: 'Playback Singer · Sufi Fusion Vocalist · Live Performer',
-    bio: 'Sahil Badal is one of India\'s most versatile live and playback vocalists, renowned for electrifying arena shows and soulful Sufi fusion renditions. With over 18 years of professional performance history spanning corporate galas, premier festivals, and cross-border music projects, Sahil has captivated millions of listeners worldwide. His signature vocal texture bridges traditional Indian classical roots with modern pop and rock acoustics, delivering memorable live experiences that keep audiences on their feet.',
+    tagline: 'Singer · Lyricist · Devotional and folk',
+    bio: 'Sahil Badal is a singer and lyricist from Haryana, known for devotional and folk numbers. This is a sample profile written for the demo. Replace it from Admin → Artists → Edit.',
     photoUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80',
-    city: 'Delhi',
-    state: 'Delhi-NCR',
-    phone: '+91 98765 43210',
-    email: 'bookings@sahilbadal.com',
-    categories: ['Singer', 'Musician'],
-    specializations: ['Bollywood Live', 'Sufi Fusion', 'Acoustic Unplugged', 'College Fests', 'Private Galas'],
+    city: 'Haryana',
+    state: 'Haryana',
+    phone: '',
+    email: '',
+    categories: ['Singer'],
+    specializations: ['Singer', 'Lyrics Writer'],
     artistClass: 'platinum',
     isVerified: true,
-    rating: 4.9,
-    reviewsCount: 38,
-    priceLabel: 'From ₹50,000',
-    physicalStats: {
-      height: "5'10\"",
-      weight: '68 kg',
-      waist: '32 in',
-      chest: '40 in',
-      hairType: 'Straight',
-      hairLength: 'Short',
-      languages: ['Hindi', 'English', 'Punjabi'],
-    },
+    rating: 0,
+    reviewsCount: 0,
+    priceLabel: '₹50K–₹1L',
     quickStats: {
-      experienceYears: '18 Years',
+      experienceYears: '18+',
       projectsCount: '50+',
       liveShowsCount: '150+',
-      totalFollowersLabel: '50k',
     },
     fanbase: [
-      { key: 'fbSp', name: 'Spotify', label: 'Followers', color: '#1DB954', count: '31.9M', numValue: 31900000 },
-      { key: 'fbYt', name: 'YouTube', label: 'Subscribers', color: '#FF0000', count: '7.9M', numValue: 7900000 },
-      { key: 'fbIg', name: 'Instagram', label: 'Followers', color: '#C13584', count: '19.0M', numValue: 19000000 },
-      { key: 'fbFb', name: 'Facebook', label: 'Followers', color: '#1877F2', count: '30.9M', numValue: 30900000 },
-      { key: 'fbDz', name: 'Deezer', label: 'Fans', color: '#A238FF', count: '108.7K', numValue: 108700 },
-      { key: 'fbSc', name: 'SoundCloud', label: 'Followers', color: '#FF5500', count: '77.6K', numValue: 77600 },
-      { key: 'fbTt', name: 'TikTok', label: 'Followers', color: '#161616', count: '7.0M', numValue: 7000000 },
+      { key: 'fbSp', name: 'Spotify', label: 'Followers', color: '#1DB954', count: '18.4K', numValue: 18400 },
+      { key: 'fbYt', name: 'YouTube', label: 'Subscribers', color: '#FF0000', count: '9.2K', numValue: 9200 },
+      { key: 'fbIg', name: 'Instagram', label: 'Followers', color: '#C13584', count: '14.8K', numValue: 14800 },
+      { key: 'fbFb', name: 'Facebook', label: 'Followers', color: '#1877F2', count: '5.1K', numValue: 5100 },
+      { key: 'fbDz', name: 'Deezer', label: 'Fans', color: '#A238FF', count: '640', numValue: 640 },
+      { key: 'fbSc', name: 'SoundCloud', label: 'Followers', color: '#FF5500', count: '1.2K', numValue: 1200 },
+      { key: 'fbTt', name: 'TikTok', label: 'Followers', color: '#161616', count: '2.3K', numValue: 2300 },
     ],
-    gallery: [
-      { id: 'g1', src: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1200&auto=format&fit=crop&q=80', title: 'Live Arena Tour' },
-      { id: 'g2', src: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&auto=format&fit=crop&q=80', title: 'Studio Recording Session' },
-      { id: 'g3', src: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1200&auto=format&fit=crop&q=80', title: 'Concert Stage Lights' },
-      { id: 'g4', src: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&auto=format&fit=crop&q=80', title: 'Festival Finale' },
-      { id: 'g5', src: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=1200&auto=format&fit=crop&q=80', title: 'Acoustic Guitar Unplugged' },
-      { id: 'g6', src: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200&auto=format&fit=crop&q=80', title: 'Crowd Interaction Moment' },
-      { id: 'g7', src: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=1200&auto=format&fit=crop&q=80', title: 'Cultural Gala Delhi' },
-      { id: 'g8', src: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=1200&auto=format&fit=crop&q=80', title: 'Sunset Open Air Show' },
-      { id: 'g9', src: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=1200&auto=format&fit=crop&q=80', title: 'Award Show Performance' },
-      { id: 'g10', src: 'https://images.unsplash.com/photo-1520523839898-507125cd53c1?w=1200&auto=format&fit=crop&q=80', title: 'Band Soundcheck' },
-      { id: 'g11', src: 'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=1200&auto=format&fit=crop&q=80', title: 'Press Meet & Greeting' },
-      { id: 'g12', src: 'https://images.unsplash.com/photo-1483412033650-1015ddeb83d1?w=1200&auto=format&fit=crop&q=80', title: 'Encore Performance' },
-    ],
+    gallery: [],
     videos: [
-      { id: 'v1', title: 'Sufi Night Live at Siri Fort Auditorium', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeId: 'dQw4w9WgXcQ', views: '2.4M views' },
-      { id: 'v2', title: 'Acoustic Medley - Bollywood Classics', url: 'https://www.youtube.com/watch?v=9bZkp7q19f0', youtubeId: '9bZkp7q19f0', views: '1.1M views' },
-      { id: 'v3', title: 'Behind the Scenes: Delhi Arena Tour 2026', url: 'https://www.youtube.com/watch?v=kJQP7kiw5Fk', youtubeId: 'kJQP7kiw5Fk', views: '780K views' },
+      { id: 'v1', title: 'Live performance', url: '', youtubeId: '' },
     ],
-    clips: [
-      { id: 'c1', title: 'Vocal warmups before stadium show', url: 'https://youtube.com/shorts/sample1' },
-      { id: 'c2', title: 'Crowd singing along in chorus', url: 'https://youtube.com/shorts/sample2' },
-      { id: 'c3', title: 'Spontaneous harmonization backstage', url: 'https://youtube.com/shorts/sample3' },
-      { id: 'c4', title: 'Acoustic riff rehearsal snippet', url: 'https://youtube.com/shorts/sample4' },
-    ],
+    clips: [],
     topSongs: [
-      { id: 's1', title: 'Raanjhan Yaar (Sufi Pop)', plays: '14,250,000 plays', duration: '3:45', url: 'https://open.spotify.com' },
-      { id: 's2', title: 'Dil Ki Sada (Acoustic Version)', plays: '9,810,000 plays', duration: '4:12', url: 'https://open.spotify.com' },
-      { id: 's3', title: 'O Re Piya (Reprise Live)', plays: '7,430,000 plays', duration: '5:02', url: 'https://open.spotify.com' },
-      { id: 's4', title: 'Jogan Tere Ishq Mein', plays: '5,120,000 plays', duration: '3:20', url: 'https://open.spotify.com' },
-      { id: 's5', title: 'Mast Malang', plays: '3,890,000 plays', duration: '4:30', url: 'https://open.spotify.com' },
+      { id: 's1', title: 'Kedarnath', duration: '3:20', plays: '10k', url: 'https://open.spotify.com/' },
+      { id: 's2', title: 'Lal Ghagra', duration: '3:05', plays: '8k', url: 'https://open.spotify.com/' },
+      { id: 's3', title: 'Wo Mera Bhola Hain', duration: '4:10', plays: '6k', url: 'https://open.spotify.com/' },
     ],
-    campaigns: [
-      { id: 'cp1', brandName: 'Red Bull Music SoundClash', category: 'Live Music Property', year: '2025', description: 'Headline live fusion artist for the North India edition of Red Bull SoundClash.' },
-      { id: 'cp2', brandName: 'Coke Studio Bharat', category: 'Studio Collaboration', year: '2024', description: 'Featured vocal collaborator on track 4 blending Rajasthani folk lyrics with contemporary soul.' },
-      { id: 'cp3', brandName: 'OnePlus Nord Launch Tour', category: 'Campus Tour', year: '2024', description: 'Headline music performer across 6 college fest concert stages in Delhi-NCR.' },
-    ],
-    awards: [
-      { id: 'aw1', title: 'Best Live Performer (Folk & Fusion)', category: 'GiMA Global Indian Music Academy', year: '2025', description: 'Awarded for exceptional stage mastery and live energy during the 2024–2025 national tour.' },
-      { id: 'aw2', title: 'Indie Vocalist of the Year', category: 'Radio Mirchi Music Awards', year: '2024', description: 'Recognized for chart-topping independent single "Raanjhan Yaar".' },
-      { id: 'aw3', title: 'Youth Icon in Cultural Music', category: 'Delhi State Cultural Council', year: '2023', description: 'Honored for promoting classical Sufi literature among university students.' },
-    ],
+    campaigns: [],
+    awards: [],
     faqs: [
-      { question: 'What is Sahil Badal\'s standard set duration for live bookings?', answer: 'Sahil typically performs a 90 to 120-minute live concert set with his full 6-piece band. Unplugged or acoustic corporate sets can also be tailored from 45 to 60 minutes upon request.' },
-      { question: 'Does Sahil travel with his own sound engineer and tech rider?', answer: 'Yes, all outstation and arena concerts include his dedicated front-of-house sound engineer and stage manager. A detailed technical rider (console, monitor, microphones) is provided upon contract confirmation.' },
-      { question: 'Can special song requests or custom anthems be accommodated?', answer: 'Yes, with at least 10 days advance notice, Sahil and the band can prepare up to 2 customized song requests or bespoke corporate brand anthems for private galas.' },
-      { question: 'What are the travel and logistics requirements?', answer: 'For shows outside Delhi-NCR, domestic flights for 7 band members/crew, local premium hotel accommodation, and airport transfers are required.' },
+      { question: 'How far in advance should I book?', answer: 'We recommend booking 3 to 4 weeks ahead for weekends and festive dates. Last-minute dates are possible on request.' },
+      { question: 'What is included in the fee?', answer: 'The fee covers the performance or session. Travel, stay and special technical needs are discussed in the enquiry.' },
+      { question: 'Can the artist travel outside the home city?', answer: 'Yes. Share your city and event type and the KalaSquare team will confirm availability and travel cost.' },
     ],
-    reviews: [
-      { id: 'r1', authorName: 'Vikram Singhania', date: 'October 2026', rating: 5, comment: 'Sahil and his band turned our corporate annual summit into an unforgettable stadium-like concert! The energy from the first song to the encore was simply out of this world.' },
-      { id: 'r2', authorName: 'Meenakshi Sundaram', date: 'August 2026', rating: 5, comment: 'We booked Sahil for our daughter\'s wedding sangeet in Udaipur. The Sufi fusion set moved every single guest. Truly a world-class vocalist.' },
-      { id: 'r3', authorName: 'Amanpreet Singh', date: 'July 2026', rating: 5, comment: 'Professional, punctual, and extraordinarily talented. Audio mixing and live presence were pristine. Worth every single rupee!' },
-    ],
+    reviews: [],
     social: {
-      instagram: 'https://instagram.com/sahilbadalmusic',
-      youtube: 'https://youtube.com/@sahilbadallive',
-      facebook: 'https://facebook.com/sahilbadalofficial',
-      spotify: 'https://open.spotify.com/artist/sahilbadal',
-      x: 'https://x.com/sahilbadal',
+      spotify: 'https://open.spotify.com/',
     },
   },
 
-  // 2. Actor with IMDb: Vijay Vikram Singh (slug: test-artist)
+  // 2. Actor with IMDb: Vijay Vikram Singh (from Kalasquare_Home_Page_Manager_2.html line 1891-1897)
   {
-    id: 'p2',
-    slug: 'test-artist',
+    id: 'a2',
+    slug: 'vijay-vikram-singh',
     name: 'Vijay Vikram Singh',
-    tagline: 'Iconic Voice of Bigg Boss · Film Actor · Keynote Speaker',
-    bio: 'Vijay Vikram Singh is a celebrated Indian voice artist, television personality, and film actor. Widely recognized as the iconic authoritative voice behind the television reality phenomenon Bigg Boss, he has brought narrative gravitas to major national advertising campaigns, documentaries, and Bollywood feature films. With a magnetic on-screen presence in acclaimed series such as The Family Man, Mirzapur, and Special OPS, Vijay continues to inspire as a dynamic motivational speaker and theatre practitioner.',
+    tagline: "Narrator's Voice of Bigg Boss · Speaker | Actor · Voice & Communication Trainer, Story Teller",
+    bio: "Vijay Vikram Singh is a voice artist, speaker and actor, best known as the narrator's voice of Bigg Boss. He trains people in voice and communication, and tells stories on stage, in podcasts and on TEDx platforms.\n\nWith more than twenty years in front of the mic and the camera, he brings a rare mix of warmth, authority and humour to every project, from brand films and documentaries to live shows and corporate events.\n\nThis is a sample profile written for the demo. Replace it from Admin → Artists → Edit.",
     photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&auto=format&fit=crop&q=80',
     city: 'Mumbai',
     state: 'Maharashtra',
-    phone: '+91 99887 76655',
-    email: 'contact@vijayvikram.com',
-    categories: ['Actor', 'Voice-over'],
-    specializations: ['Method Acting', 'Hindi & English Narration', 'Film Dubbing', 'Keynote Speeches'],
+    phone: '',
+    email: '',
+    categories: ['Actor'],
+    specializations: ['Actor', 'Voice-over artist', 'Narrator'],
     artistClass: 'platinum',
     isVerified: true,
-    rating: 5.0,
-    reviewsCount: 64,
-    priceLabel: 'From ₹1,00,000',
+    rating: 0,
+    reviewsCount: 0,
+    priceLabel: '₹1L+',
     physicalStats: {
-      height: "5'11\"",
-      weight: '74 kg',
-      waist: '34 in',
-      chest: '42 in',
-      hairType: 'Wavy',
-      hairLength: 'Medium',
-      languages: ['Hindi', 'English', 'Urdu'],
-    },
-    quickStats: {
-      experienceYears: '14 Years',
-      projectsCount: '80+',
-      liveShowsCount: '40+',
-      totalFollowersLabel: '420K',
-    },
-    fanbase: [
-      { key: 'fbIg', name: 'Instagram', label: 'Followers', color: '#C13584', count: '2.4M', numValue: 2400000 },
-      { key: 'fbYt', name: 'YouTube', label: 'Subscribers', color: '#FF0000', count: '850K', numValue: 850000 },
-      { key: 'fbFb', name: 'Facebook', label: 'Followers', color: '#1877F2', count: '1.2M', numValue: 1200000 },
-    ],
-    gallery: [
-      { id: 'g1', src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=1200&auto=format&fit=crop&q=80', title: 'Portrait Shoot' },
-      { id: 'g2', src: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=1200&auto=format&fit=crop&q=80', title: 'Studio Microphone Recording' },
-      { id: 'g3', src: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=1200&auto=format&fit=crop&q=80', title: 'Keynote Address at Mumbai Conclave' },
-      { id: 'g4', src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&auto=format&fit=crop&q=80', title: 'On Set Web Series Shoot' },
-    ],
-    videos: [
-      { id: 'v1', title: 'Voice Acting Masterclass & The Bigg Boss Journey', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeId: 'dQw4w9WgXcQ', views: '1.8M views' },
-      { id: 'v2', title: 'TEDx Talk: The Power of Finding Your Voice', url: 'https://www.youtube.com/watch?v=9bZkp7q19f0', youtubeId: '9bZkp7q19f0', views: '950K views' },
-      { id: 'v3', title: 'Acting Reel 2026: Dramatic & Character Roles', url: 'https://www.youtube.com/watch?v=kJQP7kiw5Fk', youtubeId: 'kJQP7kiw5Fk', views: '620K views' },
-    ],
-    clips: [
-      { id: 'c1', title: 'Famous line delivery in Bigg Boss voice', url: 'https://youtube.com/shorts/sample1' },
-      { id: 'c2', title: 'Behind the mic voice modulation tip', url: 'https://youtube.com/shorts/sample2' },
-      { id: 'c3', title: 'Audition script reading excerpt', url: 'https://youtube.com/shorts/sample3' },
-      { id: 'c4', title: 'Stage hosting highlights reel', url: 'https://youtube.com/shorts/sample4' },
-    ],
-    campaigns: [
-      { id: 'cp1', brandName: 'Tata Tea Jaago Re', category: 'TV Commercial Narration', year: '2025', description: 'Lead narrative voice for the nationwide social awareness broadcast campaign.' },
-      { id: 'cp2', brandName: 'Amazon Prime Video Originals', category: 'Promotional Campaign', year: '2024', description: 'Official trailer narrative voice for multiple blockbuster thriller launches.' },
-      { id: 'cp3', brandName: 'ICICI Bank Wealth Management', category: 'Corporate Video', year: '2023', description: 'Executive narrator for the corporate documentary and investor briefing series.' },
-    ],
-    awards: [
-      { id: 'aw1', title: 'Excellence in Voice-Over Arts', category: 'India Voice Art Awards', year: '2024', description: 'Honored for exceptional contribution to national broadcast entertainment.' },
-      { id: 'aw2', title: 'Best Supporting Actor in a Drama Series', category: 'OTT Critics Awards', year: '2023', description: 'Nominated and awarded for intense performance in leading streaming original.' },
-    ],
-    imdb: {
-      rating: '8.4 / 10',
-      imdbUrl: 'https://www.imdb.com/name/nm10852943/',
-      knownFor: ['The Family Man', 'Bigg Boss (Voice of Narrator)', 'Mirzapur', 'Special OPS'],
-      credits: [
-        { id: 'im1', title: 'The Family Man', year: '2021', role: 'Agent Talpade / Guest', type: 'Web Series', isKnownFor: true, imdbUrl: 'https://www.imdb.com' },
-        { id: 'im2', title: 'Bigg Boss', year: '2010–2026', role: 'Narrator / Voice of Bigg Boss', type: 'Television Series', isKnownFor: true, imdbUrl: 'https://www.imdb.com' },
-        { id: 'im3', title: 'Mirzapur', year: '2020', role: 'DIG Officer', type: 'Web Series', isKnownFor: true, imdbUrl: 'https://www.imdb.com' },
-        { id: 'im4', title: 'Special OPS', year: '2020', role: 'Intelligence Officer', type: 'Web Series', isKnownFor: false, imdbUrl: 'https://www.imdb.com' },
-      ],
-    },
-    faqs: [
-      { question: 'What events does Vijay Vikram Singh host or keynote?', answer: 'Vijay regularly headlines corporate leadership conclaves, annual awards nights, panel discussions, and motivational university summits.' },
-      { question: 'Is Vijay available for commercial voiceovers and dubbing?', answer: 'Yes, he works out of top Mumbai audio recording studios and has an equipped broadcast home studio for international voiceover assignments.' },
-    ],
-    reviews: [
-      { id: 'r1', authorName: 'Ritesh Deshmukh (Corporate Planner)', date: 'November 2026', rating: 5, comment: 'Vijay was the keynote anchor for our Global Tech Summit. The moment he took the mic, the audience went completely silent and listened intently. True authority and charisma.' },
-      { id: 'r2', authorName: 'Pooja Bhattacharya', date: 'September 2026', rating: 5, comment: 'A thorough gentleman and consummate professional. His narration added unmatched prestige to our brand film.' },
-      { id: 'r3', authorName: 'Karan Mehra', date: 'July 2026', rating: 5, comment: 'Hearing that legendary voice in person was surreal. Highly recommended for any high-stakes event.' },
-    ],
-    social: {
-      instagram: 'https://instagram.com/vijayvikramsingh',
-      youtube: 'https://youtube.com/@vijayvikramvoice',
-      facebook: 'https://facebook.com/vijayvikramactor',
-      imdb: 'https://www.imdb.com/name/nm10852943/',
-      x: 'https://x.com/vijayvikram',
-    },
-  },
-
-  // 3. Rising Dancer: Aarav Sharma (slug: aarav-sharma)
-  {
-    id: 'p3',
-    slug: 'aarav-sharma',
-    name: 'Aarav Sharma',
-    tagline: 'Contemporary & Urban Choreographer · Reality Show Finalist',
-    bio: 'Aarav Sharma is a trailblazing contemporary dancer and stage choreographer pushing the boundaries of movement design in India. Having trained extensively in Kathak, lyrical hip-hop, and floorwork, Aarav has choreographed high-energy musical theatrical productions, music videos, and viral social dance concepts. His performance style combines intense athleticism with emotional storytelling, leaving audiences spellbound across international dance showcases.',
-    photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80',
-    city: 'Delhi',
-    state: 'Delhi-NCR',
-    phone: '+91 97654 32109',
-    email: 'aarav.dance@gmail.com',
-    categories: ['Dancer', 'Choreographer'],
-    specializations: ['Contemporary Fusion', 'Urban Hip Hop', 'Music Video Choreography', 'Flashmobs'],
-    artistClass: 'rising',
-    isVerified: true,
-    rating: 4.8,
-    reviewsCount: 19,
-    priceLabel: 'From ₹35,000',
-    physicalStats: {
-      height: "5'9\"",
-      weight: '62 kg',
-      waist: '29 in',
-      chest: '38 in',
-      hairType: 'Curly',
-      hairLength: 'Medium',
+      height: "5' 10",
       languages: ['Hindi', 'English'],
     },
     quickStats: {
-      experienceYears: '6 Years',
-      projectsCount: '35+',
-      liveShowsCount: '90+',
-      totalFollowersLabel: '280K',
+      experienceYears: '20+',
+      projectsCount: '200+',
+      liveShowsCount: '100+',
+      totalFollowersLabel: '190k',
     },
     fanbase: [
-      { key: 'fbIg', name: 'Instagram', label: 'Followers', color: '#C13584', count: '1.8M', numValue: 1800000 },
-      { key: 'fbYt', name: 'YouTube', label: 'Subscribers', color: '#FF0000', count: '620K', numValue: 620000 },
-      { key: 'fbTt', name: 'TikTok', label: 'Followers', color: '#161616', count: '2.1M', numValue: 2100000 },
+      { key: 'fbIg', name: 'Instagram', label: 'Followers', color: '#C13584', count: '120.0K', numValue: 120000 },
+      { key: 'fbYt', name: 'YouTube', label: 'Subscribers', color: '#FF0000', count: '42.0K', numValue: 42000 },
+      { key: 'fbFb', name: 'Facebook', label: 'Followers', color: '#1877F2', count: '28.0K', numValue: 28000 },
     ],
-    gallery: [
-      { id: 'g1', src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&auto=format&fit=crop&q=80', title: 'Studio Rehearsal Jump' },
-      { id: 'g2', src: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=1200&auto=format&fit=crop&q=80', title: 'Contemporary Floor Sequence' },
-      { id: 'g3', src: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200&auto=format&fit=crop&q=80', title: 'Stage Performance Lighting' },
-      { id: 'g4', src: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=1200&auto=format&fit=crop&q=80', title: 'Outdoor Silhouette Movement' },
-    ],
+    gallery: [],
     videos: [
-      { id: 'v1', title: 'Contemporary Fusion Solo - "Shiva Tandava"', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeId: 'dQw4w9WgXcQ', views: '1.2M views' },
-      { id: 'v2', title: 'Urban Dance Choreography Showcase 2026', url: 'https://www.youtube.com/watch?v=9bZkp7q19f0', youtubeId: '9bZkp7q19f0', views: '640K views' },
-      { id: 'v3', title: 'Dance India Dance Finale Audition Act', url: 'https://www.youtube.com/watch?v=kJQP7kiw5Fk', youtubeId: 'kJQP7kiw5Fk', views: '410K views' },
+      { id: 'v1', title: 'Podcast', url: '', youtubeId: '' },
+      { id: 'v2', title: 'Self growth', url: '', youtubeId: '' },
+      { id: 'v3', title: 'Poetry', url: '', youtubeId: '' },
+      { id: 'v4', title: 'Manifesting', url: '', youtubeId: '' },
+      { id: 'v5', title: 'TEDx talk', url: '', youtubeId: '' },
+      { id: 'v6', title: 'Podcast', url: '', youtubeId: '' },
     ],
     clips: [
-      { id: 'c1', title: 'Viral hook step challenge reel', url: 'https://youtube.com/shorts/sample1' },
-      { id: 'c2', title: '30-second fluid floor transition', url: 'https://youtube.com/shorts/sample2' },
-      { id: 'c3', title: 'Street dance battle highlight', url: 'https://youtube.com/shorts/sample3' },
-      { id: 'c4', title: 'Slow-motion aerial spin practice', url: 'https://youtube.com/shorts/sample4' },
+      { id: 'c1', title: 'Behind the mic', url: '' },
+      { id: 'c2', title: 'Studio day', url: '' },
+      { id: 'c3', title: 'Stage moments', url: '' },
+      { id: 'c4', title: 'Voice tips', url: '' },
     ],
-    campaigns: [
-      { id: 'cp1', brandName: 'Nike India - Move To Zero', category: 'Athlete Campaign', year: '2025', description: 'Featured performer in digital movement films showcasing dynamic apparel mobility.' },
-      { id: 'cp2', brandName: 'Sunburn Campus Anthem', category: 'Music Video', year: '2024', description: 'Lead choreographic dancer and troupe leader for the official electronic festival promo.' },
+    campaigns: [],
+    awards: [],
+    imdb: {
+      imdbUrl: 'https://www.imdb.com/',
+      knownFor: ['Bigg Boss'],
+      credits: [
+        { id: 'im1', title: 'Bigg Boss', role: 'Narrator (voice)', type: 'Reality TV', isKnownFor: true, year: '' },
+      ],
+    },
+    faqs: [
+      { question: 'How far in advance should I book?', answer: 'We recommend booking 3 to 4 weeks ahead for weekends and festive dates. Last-minute dates are possible on request.' },
+      { question: 'What is included in the fee?', answer: 'The fee covers the performance or session. Travel, stay and special technical needs are discussed in the enquiry.' },
+      { question: 'Can the artist travel outside the home city?', answer: 'Yes. Share your city and event type and the KalaSquare team will confirm availability and travel cost.' },
     ],
-    awards: [
-      { id: 'aw1', title: 'Best Solo Choreographer', category: 'National Contemporary Dance Forum', year: '2024', description: 'First prize for groundbreaking work on Indian mythological themes.' },
-      { id: 'aw2', title: 'Rising Star of Movement Arts', category: 'Delhi Youth Festival', year: '2023', description: 'Honored among top emerging performing artists under 25.' },
-    ],
-    reviews: [
-      { id: 'r1', authorName: 'Kritika Roy', date: 'October 2026', rating: 5, comment: 'Aarav choreographed our college fest opening act. He is exceptionally disciplined, creative, and made even beginners look like pros!' },
-      { id: 'r2', authorName: 'Devansh Chopra', date: 'July 2026', rating: 4, comment: 'Incredible stage presence and athletic execution. His solo at our corporate awards was the talk of the evening.' },
-      { id: 'r3', authorName: 'Sanjay Rawat', date: 'May 2026', rating: 5, comment: 'A true artist of the modern generation. Seamless communication and top tier choreography.' },
-    ],
+    reviews: [],
     social: {
-      instagram: 'https://instagram.com/aaravsharmadance',
-      youtube: 'https://youtube.com/@aaravdance',
-      x: 'https://x.com/aaravdance',
+      instagram: 'https://instagram.com/',
+      youtube: 'https://youtube.com/',
+      facebook: 'https://facebook.com/',
     },
   },
 ];
 
+export function mapRecordToArtistProfile(record: any): ArtistProfile {
+  const categories = Array.isArray(record.categories) && record.categories.length > 0
+    ? record.categories
+    : [record.category || record.cat || 'Artist'];
+  const isSinger = categories.includes('Singer');
+  const isActor = categories.includes('Actor');
+
+  const fb: FanbasePlatform[] = [];
+  const addFb = (key: any, name: string, label: string, color: string, val: any) => {
+    if (!val) return;
+    const s = String(val).trim();
+    let num = 0;
+    if (s.toLowerCase().endsWith('m')) num = parseFloat(s) * 1e6;
+    else if (s.toLowerCase().endsWith('k')) num = parseFloat(s) * 1e3;
+    else num = parseFloat(s.replace(/[^\d.]/g, '')) || 0;
+    if (num > 0) fb.push({ key, name, label, color, count: s, numValue: num });
+  };
+  addFb('fbSp', 'Spotify', 'Followers', '#1DB954', record.fanbaseSpotify);
+  addFb('fbYt', 'YouTube', 'Subscribers', '#FF0000', record.fanbaseYouTube);
+  addFb('fbIg', 'Instagram', 'Followers', '#C13584', record.fanbaseInstagram);
+  addFb('fbFb', 'Facebook', 'Followers', '#1877F2', record.fanbaseFacebook);
+  addFb('fbDz', 'Deezer', 'Fans', '#A238FF', record.fanbaseDeezer);
+  addFb('fbSc', 'SoundCloud', 'Followers', '#FF5500', record.fanbaseSoundCloud);
+  addFb('fbTt', 'TikTok', 'Followers', '#161616', record.fanbaseTikTok);
+
+  const hasStats = Boolean(record.experienceYears || record.projectsCount || record.liveShowsCount || record.totalFollowersLabel);
+  const quickStats = hasStats ? {
+    experienceYears: record.experienceYears ? `${record.experienceYears}` : undefined,
+    projectsCount: record.projectsCount ? `${record.projectsCount}` : undefined,
+    liveShowsCount: record.liveShowsCount ? `${record.liveShowsCount}` : undefined,
+    totalFollowersLabel: record.totalFollowersLabel || undefined,
+  } : undefined;
+
+  const hasPhys = Boolean(record.height || record.weight || record.waist || record.chest || record.hairType || record.hairLength || (record.languages && record.languages.length > 0));
+  const physicalStats = hasPhys ? {
+    height: record.height || undefined,
+    weight: record.weight || undefined,
+    waist: record.waist || undefined,
+    chest: record.chest || undefined,
+    hairType: record.hairType || undefined,
+    hairLength: record.hairLength || undefined,
+    languages: Array.isArray(record.languages) ? record.languages : (typeof record.languages === 'string' && record.languages.trim() ? record.languages.split(',').map((x: string) => x.trim()) : undefined),
+  } : undefined;
+
+  const gallery = (record.gallery || []).map((g: any, i: number) => ({
+    id: `g${i}`,
+    src: typeof g === 'string' ? g : (g.src || ''),
+    title: typeof g === 'object' ? g.caption : undefined,
+  })).filter((g: any) => Boolean(g.src));
+
+  const videos = (record.videos || []).map((v: any, i: number) => ({
+    id: `v${i}`,
+    title: v.title || '',
+    url: v.url || '',
+    youtubeId: v.url ? (/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/.exec(v.url)?.[1] || '') : '',
+  })).filter((v: any) => Boolean(v.title || v.url));
+
+  const clips = (record.clips || []).map((c: any, i: number) => ({
+    id: `c${i}`,
+    title: c.title || '',
+    url: c.url || '',
+  })).filter((c: any) => Boolean(c.title || c.url));
+
+  const songs = (record.songs || []).map((s: any, i: number) => ({
+    id: `s${i}`,
+    title: s.title || s.t || '',
+    plays: s.plays || '',
+    duration: s.duration || s.dur || '',
+    url: s.url || s.u || '',
+  })).filter((s: any) => Boolean(s.title));
+
+  const campaigns = (record.campaigns || []).map((cp: any, i: number) => ({
+    id: `cp${i}`,
+    brandName: cp.brandName || '',
+    category: cp.category || '',
+    year: cp.year || '',
+    description: cp.description || '',
+    imageUrl: cp.imageUrl || undefined,
+  })).filter((cp: any) => Boolean(cp.brandName));
+
+  const awards = (record.awards || []).map((aw: any, i: number) => ({
+    id: `aw${i}`,
+    title: aw.title || '',
+    category: aw.category || '',
+    year: aw.year || '',
+    description: aw.description || '',
+  })).filter((aw: any) => Boolean(aw.title));
+
+  const faqs = (record.faqs || []).map((fq: any) => ({
+    question: fq.question || '',
+    answer: fq.answer || '',
+  })).filter((fq: any) => Boolean(fq.question && fq.answer));
+
+  const specializations = Array.isArray(record.specializations)
+    ? record.specializations
+    : (typeof record.specializations === 'string' && record.specializations.trim() ? record.specializations.split(',').map((x: string) => x.trim()) : []);
+
+  const soc = {
+    instagram: record.socialInstagram || record.ig,
+    youtube: record.socialYouTube || record.yt,
+    facebook: record.socialFacebook || record.fb,
+    x: record.socialX || record.x,
+    spotify: record.socialSpotify || record.spotify,
+    imdb: record.imdbUrl || record.imdb,
+  };
+
+  return {
+    id: record.id || `art-${Date.now()}`,
+    slug: record.slug,
+    name: record.name,
+    tagline: record.tagline || '',
+    bio: record.bio || '',
+    photoUrl: record.photoUrl || record.profilePhotoUrl || '',
+    city: record.city || 'Delhi',
+    state: record.state || 'India',
+    phone: record.phone || '',
+    email: record.email || '',
+    categories,
+    specializations,
+    artistClass: record.artistClass || record.tier || 'standard',
+    isVerified: Boolean(record.isVerified || record.docs),
+    rating: record.rating || 0,
+    reviewsCount: record.reviewsCount || (record.reviews ? record.reviews.length : 0),
+    priceLabel: record.budgetRange || record.priceLabel || '',
+    physicalStats,
+    quickStats: quickStats as any,
+    fanbase: fb.length > 0 ? fb : undefined as any,
+    gallery: gallery.length > 0 ? gallery : undefined as any,
+    videos: videos.length > 0 ? videos : undefined as any,
+    clips: clips.length > 0 ? clips : undefined as any,
+    topSongs: songs.length > 0 ? songs : undefined,
+    campaigns: campaigns.length > 0 ? campaigns : undefined as any,
+    awards: awards.length > 0 ? awards : undefined as any,
+    imdb: (isActor && (record.imdbKnown || (record.film && record.film.length > 0) || record.imdbUrl || record.imdb)) ? {
+      imdbUrl: record.imdbUrl || record.imdb || 'https://www.imdb.com/',
+      knownFor: record.imdbKnown ? [record.imdbKnown] : (Array.isArray(record.knownFor) ? record.knownFor : []),
+      credits: (record.film || []).map((f: any, i: number) => ({
+        id: `im${i}`,
+        title: f.title || f.t || record.imdbKnown || 'Film',
+        role: f.role || f.d || '',
+        type: f.type || f.category || f.cat || 'Film',
+        isKnownFor: Boolean(f.isKnownFor) || (record.imdbKnown && (f.title || f.t) === record.imdbKnown),
+        year: f.year || '',
+      })),
+    } : undefined,
+    faqs: faqs.length > 0 ? faqs : undefined,
+    reviews: record.reviews || [],
+    social: soc,
+    metaTitle: record.metaTitle,
+    metaDescription: record.metaDescription,
+  };
+}
+
 export function getArtistProfileBySlug(slug: string): ArtistProfile | undefined {
   const normalized = slug.toLowerCase().trim();
-  // Direct match
-  const profile = mockArtistProfiles.find((p) => p.slug === normalized);
+
+  // 1. Check local storage if in browser
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('kalasquare_admin_artists');
+      if (raw) {
+        const list: any[] = JSON.parse(raw);
+        const found = list.find((a) => a.slug === normalized || a.id === normalized);
+        if (found) {
+          return mapRecordToArtistProfile(found);
+        }
+      }
+    } catch {}
+  }
+
+  // 2. Direct match from explicit profiles
+  const profile = mockArtistProfiles.find((p) => p.slug === normalized || p.id === normalized);
   if (profile) return profile;
 
-  // Aliases for user convenience and testing
-  if (normalized === 'vijay-vikram-singh') {
-    return mockArtistProfiles.find((p) => p.slug === 'test-artist');
-  }
-  if (normalized === 'sana-qureshi') {
-    return mockArtistProfiles.find((p) => p.slug === 'aarav-sharma');
-  }
-  return undefined;
+  // 3. Fallback from mockArtists
+  const base = mockArtists.find((a) => a.slug === normalized || a.id === normalized);
+  if (!base) return undefined;
+
+  const categories = base.categories && base.categories.length > 0 ? base.categories : [base.cat];
+
+  return {
+    id: base.id,
+    slug: base.slug,
+    name: base.name,
+    tagline: base.tagline || '',
+    bio: '',
+    photoUrl: base.photoUrl || '',
+    city: base.city,
+    state: base.state || 'India',
+    phone: '',
+    email: '',
+    categories,
+    specializations: [],
+    artistClass: base.tier as any,
+    isVerified: base.isVerified,
+    rating: 0,
+    reviewsCount: 0,
+    priceLabel: base.priceLabel || '',
+    quickStats: base.followers ? { totalFollowersLabel: base.followers } : undefined as any,
+    fanbase: undefined as any,
+    gallery: undefined as any,
+    videos: undefined as any,
+    clips: undefined as any,
+    topSongs: undefined,
+    campaigns: undefined as any,
+    awards: undefined as any,
+    imdb: undefined,
+    faqs: undefined,
+    reviews: [],
+    social: {},
+  };
 }
 
 // -------------------------------------------------------------

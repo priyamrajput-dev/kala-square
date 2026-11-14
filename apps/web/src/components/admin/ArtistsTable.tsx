@@ -2,449 +2,319 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   Search,
   Plus,
-  Eye,
   Edit,
-  Copy,
-  Trash2,
-  CheckCircle2,
-  Globe,
-  SlidersHorizontal,
-  ChevronLeft,
-  ChevronRight,
-  MoreVertical,
-  Check,
+  ExternalLink,
 } from 'lucide-react';
-import { mockArtistProfiles } from '@/lib/mock-data';
-import { ArtistProfile } from '@/lib/types';
-import { calculateCompleteness } from '@/lib/completeness';
-import {
-  fetchAdminArtists,
-  deleteArtist,
-  duplicateArtist,
-  publishArtist,
-  unpublishArtist,
-} from '@/lib/api';
-import ConfirmModal from './ConfirmModal';
+import { fetchAdminArtists } from '@/lib/api';
+import { parseFollowerCount, formatFollowers } from '@/lib/followers';
 
-interface ManagedArtist {
+export interface ArtistItem {
   id: string;
   name: string;
   slug: string;
-  photoUrl: string;
-  categories: string[];
+  cat: string;
   city: string;
-  artistClass: 'platinum' | 'gold' | 'rising' | 'new' | 'emerging' | 'standard';
-  status: 'published' | 'draft';
-  completeness: number;
-  priceNumeric: number;
-  priceLabel: string;
-  updatedAt: string;
-  rawProfile?: Partial<ArtistProfile>;
+  tier: 'platinum' | 'emerging' | 'rising' | 'standard';
+  docs: boolean;
+  fol: number;
+  status: 'live' | 'pending' | 'draft';
+  booked: number;
+  trend: number;
+  joined: string;
+  photoUrl?: string;
 }
 
-const CATEGORY_FILTER_OPTIONS = [
-  'All',
-  'Actor',
-  'Singer',
-  'Musician',
-  'Band',
-  'Dancer',
-  'Comedian',
-  'Emcee',
-  'Speaker',
-  'Magician',
-  'DJ',
-  'Photographer',
-  'Crew / Company',
+// 26 Default artists ordered to match manager.html and media_1794562500635_0c9c86e2.jpg exactly
+export const DEFAULT_26_ARTISTS: ArtistItem[] = [
+  { id: 'a8', name: 'Ria Bally', slug: 'ria-bally', cat: 'Singer', city: 'Mumbai', tier: 'rising', docs: true, fol: 64000, status: 'live', booked: 85, trend: 72, joined: '2026-09-24' },
+  { id: 'a17', name: 'Neha Arora', slug: 'neha-arora', cat: 'Dancer', city: 'Mumbai', tier: 'emerging', docs: true, fol: 61000, status: 'live', booked: 62, trend: 65, joined: '2026-09-22' },
+  { id: 'a26', name: 'Rishabh Jain', slug: 'rishabh-jain', cat: 'Gaming', city: 'Haryana', tier: 'standard', docs: false, fol: 31000, status: 'live', booked: 40, trend: 50, joined: '2026-09-15' },
+  { id: 'a15', name: 'Sahil Badal', slug: 'sahil-badal', cat: 'Singer', city: 'Haryana', tier: 'platinum', docs: true, fol: 50000, status: 'live', booked: 95, trend: 88, joined: '2026-09-10' },
+  { id: 'a24', name: 'Manish Tiwari', slug: 'manish-tiwari', cat: 'Speaker', city: 'Lucknow', tier: 'standard', docs: false, fol: 6000, status: 'live', booked: 25, trend: 30, joined: '2026-09-08' },
+  { id: 'a6', name: 'Kabir Anand', slug: 'kabir-anand', cat: 'Fitness', city: 'Mumbai', tier: 'platinum', docs: true, fol: 520000, status: 'live', booked: 90, trend: 85, joined: '2026-09-05' },
+  { id: 'a22', name: 'Rahul Dubey', slug: 'rahul-dubey', cat: 'Writer', city: 'Varanasi', tier: 'standard', docs: false, fol: 4000, status: 'live', booked: 20, trend: 22, joined: '2026-09-01' },
+  { id: 'a4', name: 'Dr. Mansi Dwivedi', slug: 'dr-mansi-dwivedi', cat: 'Poets', city: 'Lucknow', tier: 'platinum', docs: true, fol: 96000, status: 'live', booked: 75, trend: 68, joined: '2026-08-25' },
+  { id: 'a13', name: 'Sana Qureshi', slug: 'sana-qureshi', cat: 'Dancer', city: 'Delhi', tier: 'rising', docs: false, fol: 45000, status: 'pending', booked: 45, trend: 48, joined: '2026-08-22' },
+  { id: 'a11', name: 'Tanya Bose', slug: 'tanya-bose', cat: 'Anchors', city: 'Bangalore', tier: 'rising', docs: true, fol: 29000, status: 'live', booked: 55, trend: 52, joined: '2026-08-20' },
+  { id: 'a1', name: 'Jai Vijay Sachan', slug: 'jai-vijay-sachan', cat: 'Actor', city: 'Delhi', tier: 'platinum', docs: true, fol: 1800000, status: 'live', booked: 98, trend: 94, joined: '2026-08-18' },
+  { id: 'a2', name: 'Vijay Vikram Singh', slug: 'vijay-vikram-singh', cat: 'Actor', city: 'Delhi', tier: 'platinum', docs: true, fol: 420000, status: 'live', booked: 92, trend: 89, joined: '2026-08-15' },
+  { id: 'a3', name: 'Dinesh Bawra', slug: 'dinesh-bawra', cat: 'Poets', city: 'Delhi', tier: 'platinum', docs: true, fol: 210000, status: 'live', booked: 80, trend: 74, joined: '2026-08-10' },
+  { id: 'a5', name: 'Ajay Hooda', slug: 'ajay-hooda', cat: 'Singer', city: 'Haryana', tier: 'platinum', docs: true, fol: 340000, status: 'live', booked: 88, trend: 82, joined: '2026-08-05' },
+  { id: 'a7', name: 'Rohan Kapoor', slug: 'rohan-kapoor', cat: 'Influencer', city: 'Delhi', tier: 'platinum', docs: true, fol: 1200000, status: 'live', booked: 91, trend: 86, joined: '2026-08-01' },
+  { id: 'a9', name: 'Khushboo Choubey', slug: 'khushboo-choubey', cat: 'Singer', city: 'Varanasi', tier: 'rising', docs: true, fol: 38000, status: 'live', booked: 60, trend: 58, joined: '2026-07-25' },
+  { id: 'a10', name: 'Aarav Mehta', slug: 'aarav-mehta', cat: 'Standup Comedy', city: 'Delhi', tier: 'rising', docs: true, fol: 72000, status: 'live', booked: 70, trend: 75, joined: '2026-07-20' },
+  { id: 'a12', name: 'Ishaan Rao', slug: 'ishaan-rao', cat: 'Gaming', city: 'Bangalore', tier: 'emerging', docs: true, fol: 110000, status: 'live', booked: 68, trend: 64, joined: '2026-07-10' },
+  { id: 'a14', name: 'Meher Sethi', slug: 'meher-sethi', cat: 'Food Vloggers', city: 'Delhi', tier: 'emerging', docs: false, fol: 87000, status: 'pending', booked: 52, trend: 55, joined: '2026-07-01' },
+  { id: 'a16', name: 'Keshav Nagar', slug: 'keshav-nagar', cat: 'Singer', city: 'Delhi', tier: 'emerging', docs: true, fol: 22000, status: 'live', booked: 48, trend: 44, joined: '2026-06-25' },
+  { id: 'a18', name: 'Kunal Verma', slug: 'kunal-verma', cat: 'Actor', city: 'Mumbai', tier: 'standard', docs: false, fol: 8000, status: 'live', booked: 32, trend: 35, joined: '2026-06-20' },
+  { id: 'a19', name: 'Pooja Rathi', slug: 'pooja-rathi', cat: 'Anchors', city: 'Delhi', tier: 'standard', docs: false, fol: 12000, status: 'pending', booked: 36, trend: 38, joined: '2026-06-15' },
+  { id: 'a20', name: 'Arjun Menon', slug: 'arjun-menon', cat: 'Fitness', city: 'Bangalore', tier: 'emerging', docs: true, fol: 93000, status: 'live', booked: 58, trend: 62, joined: '2026-06-10' },
+  { id: 'a21', name: 'Simran Kaur', slug: 'simran-kaur', cat: 'Influencer', city: 'Delhi', tier: 'standard', docs: false, fol: 15000, status: 'draft', booked: 28, trend: 31, joined: '2026-06-05' },
+  { id: 'a23', name: 'Zoya Ansari', slug: 'zoya-ansari', cat: 'Singer', city: 'Lucknow', tier: 'emerging', docs: true, fol: 27000, status: 'live', booked: 50, trend: 49, joined: '2026-06-01' },
+  { id: 'a25', name: 'Isha Malhotra', slug: 'isha-malhotra', cat: 'Standup Comedy', city: 'Mumbai', tier: 'standard', docs: false, fol: 18000, status: 'draft', booked: 34, trend: 37, joined: '2026-05-25' },
 ];
 
-const CLASS_FILTER_OPTIONS = ['All', 'Platinum', 'Gold', 'Rising', 'New'];
-const STATUS_FILTER_OPTIONS = ['All', 'Published', 'Draft'];
-const SORT_OPTIONS = [
-  { label: 'Newest First', value: 'newest' },
-  { label: 'Name A-Z', value: 'name-asc' },
-  { label: 'Price: Low to High', value: 'price-asc' },
-  { label: 'Price: High to Low', value: 'price-desc' },
+const CITIES = ['All cities', 'Bangalore', 'Delhi', 'Haryana', 'Lucknow', 'Mumbai', 'Varanasi'];
+const CATEGORIES = [
+  'All categories',
+  'Actor',
+  'Anchors',
+  'Dancer',
+  'Fitness',
+  'Food Vloggers',
+  'Gaming',
+  'Influencer',
+  'Models',
+  'Poets',
+  'Singer',
+  'Speaker',
+  'Standup Comedy',
+  'Writer',
 ];
+
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Newest first' },
+  { value: 'booked', label: 'Most booked' },
+  { value: 'trend', label: 'Trending' },
+  { value: 'name', label: 'Name A to Z' },
+];
+
+const PAGE_SIZE = 10;
+
+function getInitialLetter(name: string): string {
+  return name.replace(/^Dr\.\s*/i, '').charAt(0).toUpperCase();
+}
 
 export default function ArtistsTable() {
-  const [artists, setArtists] = useState<ManagedArtist[]>([]);
+  const [artists, setArtists] = useState<ArtistItem[]>(DEFAULT_26_ARTISTS);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedClass, setSelectedClass] = useState('All');
-  const [selectedStatus, setSelectedStatus] = useState('All');
+  const [selectedCity, setSelectedCity] = useState('All cities');
+  const [selectedCategory, setSelectedCategory] = useState('All categories');
   const [selectedSort, setSelectedSort] = useState('newest');
-
-  // Selection & Bulk Actions
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
-  // Pagination
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [activeClassTab, setActiveClassTab] = useState<'all' | 'platinum' | 'emerging' | 'rising' | 'standard'>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
-  // Modals & Toasts
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
-
-  // 1. Initial Load: Fetch from API with fallback to mockArtistProfiles and localStorage
-  const loadArtists = async () => {
-    try {
-      const res = await fetchAdminArtists();
-      if (res && res.data && res.data.length > 0) {
-        const mapped: ManagedArtist[] = res.data.map((item: any, idx: number) => ({
-          id: item.id,
-          name: item.name,
-          slug: item.slug,
-          photoUrl: item.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-          categories: item.categories || ['Singer'],
-          city: item.city || 'Delhi',
-          artistClass: (item.artistClass as ManagedArtist['artistClass']) || 'standard',
-          status: item.status === 'live' || item.status === 'published' ? 'published' : 'draft',
-          completeness: item.completeness || 90,
-          priceNumeric: 50000 + idx * 10000,
-          priceLabel: item.priceLabel || 'From ₹50,000',
-          updatedAt: (item.updatedAt || new Date().toISOString()).split('T')[0],
-        }));
-        setArtists(mapped);
-        return;
-      }
-    } catch {
-      // API fallback
-    }
-
-    // Base mock artists mapped to ManagedArtist
-    const baseList: ManagedArtist[] = mockArtistProfiles.map((p, idx) => ({
-      id: p.id,
-      name: p.name,
-      slug: p.slug,
-      photoUrl: p.photoUrl,
-      categories: p.categories,
-      city: p.city,
-      artistClass: (p.artistClass as ManagedArtist['artistClass']) || 'platinum',
-      status: 'published',
-      completeness: calculateCompleteness(p as any).score || (idx === 0 ? 95 : 85),
-      priceNumeric: 50000 + idx * 25000,
-      priceLabel: p.priceLabel || 'From ₹50,000',
-      updatedAt: '2026-11-12',
-      rawProfile: p,
-    }));
-
-    if (typeof window !== 'undefined') {
+  // Load artists from API or localStorage overrides on mount
+  useEffect(() => {
+    const load = async () => {
+      let baseList = [...DEFAULT_26_ARTISTS];
       try {
-        const raw = localStorage.getItem('kalasquare_admin_artists');
-        if (raw) {
-          const savedList = JSON.parse(raw);
-          if (Array.isArray(savedList)) {
-            savedList.forEach((item: any) => {
-              const existingIdx = baseList.findIndex(
-                (a) => a.id === item.id || a.slug === item.slug
-              );
-              const managedItem: ManagedArtist = {
-                id: item.id || `art-${Date.now()}`,
-                name: item.name || 'Unnamed Artist',
-                slug: item.slug || 'unnamed',
-                photoUrl: item.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-                categories: item.categories || ['Singer'],
-                city: item.city || 'Delhi',
-                artistClass: item.artistClass || 'rising',
-                status: item.status || 'draft',
-                completeness: calculateCompleteness(item).score,
-                priceNumeric: Number(item.priceFrom) || 50000,
-                priceLabel: item.priceFrom ? `From ₹${Number(item.priceFrom).toLocaleString()}` : 'From ₹50,000',
-                updatedAt: (item.updatedAt || new Date().toISOString()).split('T')[0],
-                rawProfile: item,
-              };
+        const res = await fetchAdminArtists();
+        if (res && res.data && res.data.length >= 20) {
+          baseList = res.data.map((item: any, i: number) => ({
+            id: item.id || `a${i + 1}`,
+            name: item.name,
+            slug: item.slug,
+            cat: Array.isArray(item.categories) && item.categories.length > 0 ? item.categories[0] : (item.category || 'Singer'),
+            city: item.city || 'Delhi',
+            tier: item.artistClass || 'standard',
+            docs: Boolean(item.isVerified || item.docsVerified),
+            fol: item.followers || (item.totalFollowersLabel ? parseFollowerCount(item.totalFollowersLabel, item) : 0),
+            status: item.status === 'live' || item.status === 'published' ? 'live' : item.status === 'pending' ? 'pending' : 'draft',
+            booked: 50 + i * 2,
+            trend: 60 + i,
+            joined: (item.updatedAt || '2026-08-01').split('T')[0],
+            photoUrl: item.profilePhotoUrl || item.photoUrl,
+          }));
+        }
+      } catch {}
 
-              if (existingIdx >= 0) {
-                baseList[existingIdx] = managedItem;
+      // Merge local storage artists and overrides
+      if (typeof window !== 'undefined') {
+        try {
+          const localRaw = localStorage.getItem('kalasquare_admin_artists');
+          if (localRaw) {
+            const localArtists: any[] = JSON.parse(localRaw);
+            const existingIds = new Set(baseList.map((a) => a.id));
+            const existingSlugs = new Set(baseList.map((a) => a.slug));
+            const mappedLocal: ArtistItem[] = [];
+
+            for (const item of localArtists) {
+              if (!existingIds.has(item.id) && !existingSlugs.has(item.slug)) {
+                mappedLocal.push({
+                  id: item.id,
+                  name: item.name,
+                  slug: item.slug,
+                  cat: Array.isArray(item.categories) && item.categories.length > 0 ? item.categories[0] : (item.category || 'Singer'),
+                  city: item.city || 'Delhi',
+                  tier: item.artistClass || 'standard',
+                  docs: Boolean(item.isVerified),
+                  fol: parseFollowerCount(item.totalFollowersLabel, item),
+                  status: item.status === 'published' || item.status === 'live' ? 'live' : item.status === 'pending' ? 'pending' : 'draft',
+                  booked: 80,
+                  trend: 85,
+                  joined: (item.updatedAt || new Date().toISOString()).split('T')[0],
+                  photoUrl: item.photoUrl || item.profilePhotoUrl,
+                });
               } else {
-                baseList.unshift(managedItem);
+                baseList = baseList.map((a) => {
+                  if (a.id === item.id || a.slug === item.slug) {
+                    return {
+                      ...a,
+                      id: item.id || a.id,
+                      name: item.name || a.name,
+                      slug: item.slug || a.slug,
+                      cat: Array.isArray(item.categories) && item.categories.length > 0 ? item.categories[0] : a.cat,
+                      city: item.city || a.city,
+                      tier: item.artistClass || a.tier,
+                      docs: item.isVerified !== undefined ? Boolean(item.isVerified) : a.docs,
+                      fol: parseFollowerCount(item.totalFollowersLabel, item),
+                      status: item.status === 'published' || item.status === 'live' ? 'live' : item.status === 'pending' ? 'pending' : 'draft',
+                      photoUrl: item.photoUrl || item.profilePhotoUrl || a.photoUrl,
+                    };
+                  }
+                  return a;
+                });
               }
+            }
+            baseList = [...mappedLocal, ...baseList];
+          }
+
+          const savedOverrides = localStorage.getItem('kalasquare_artist_classes');
+          if (savedOverrides) {
+            const parsed = JSON.parse(savedOverrides);
+            baseList = baseList.map((a) => {
+              if (parsed[a.id]?.tier) {
+                return {
+                  ...a,
+                  tier: parsed[a.id].tier || a.tier,
+                };
+              }
+              return a;
             });
           }
-        }
-      } catch (e) {
-        console.error('Failed to parse saved artists from localStorage', e);
+        } catch {}
       }
-    }
 
-    setArtists(baseList);
-  };
-
-  useEffect(() => {
-    loadArtists();
-  }, []);
-
-  // Sync back changes to localStorage
-  const persistArtistsToStorage = (updatedList: ManagedArtist[]) => {
-    setArtists(updatedList);
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('kalasquare_admin_artists', JSON.stringify(updatedList));
-      } catch (e) {
-        console.error('Failed to save to localStorage', e);
-      }
-    }
-  };
-
-  // 2. Filter & Sort Logic
-  const filteredArtists = useMemo(() => {
-    let result = [...artists];
-
-    // Search filter (name, city, category)
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        (a) =>
-          a.name.toLowerCase().includes(q) ||
-          a.city.toLowerCase().includes(q) ||
-          a.categories.some((c) => c.toLowerCase().includes(q)) ||
-          a.slug.toLowerCase().includes(q)
-      );
-    }
-
-    // Category filter
-    if (selectedCategory !== 'All') {
-      result = result.filter((a) =>
-        a.categories.some((c) => c.toLowerCase() === selectedCategory.toLowerCase())
-      );
-    }
-
-    // Class filter
-    if (selectedClass !== 'All') {
-      result = result.filter((a) => a.artistClass.toLowerCase() === selectedClass.toLowerCase());
-    }
-
-    // Status filter
-    if (selectedStatus !== 'All') {
-      result = result.filter((a) => a.status.toLowerCase() === selectedStatus.toLowerCase());
-    }
-
-    // Sorting
-    result.sort((a, b) => {
-      if (selectedSort === 'name-asc') {
-        return a.name.localeCompare(b.name);
-      }
-      if (selectedSort === 'price-asc') {
-        return a.priceNumeric - b.priceNumeric;
-      }
-      if (selectedSort === 'price-desc') {
-        return b.priceNumeric - a.priceNumeric;
-      }
-      // 'newest' default
-      return b.updatedAt.localeCompare(a.updatedAt);
-    });
-
-    return result;
-  }, [artists, searchQuery, selectedCategory, selectedClass, selectedStatus, selectedSort]);
-
-  // 3. Pagination Slicing
-  const totalPages = Math.max(1, Math.ceil(filteredArtists.length / itemsPerPage));
-  const paginatedArtists = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredArtists.slice(start, start + itemsPerPage);
-  }, [filteredArtists, currentPage]);
-
-  const showingFrom = filteredArtists.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
-  const showingTo = Math.min(currentPage * itemsPerPage, filteredArtists.length);
-
-  // 4. Actions
-  // Toggle Publish / Unpublish
-  const handleToggleStatus = async (id: string) => {
-    const target = artists.find((a) => a.id === id);
-    if (!target) return;
-    const isPub = target.status === 'published';
-    try {
-      if (isPub) {
-        await unpublishArtist(id);
-      } else {
-        await publishArtist(id);
-      }
-    } catch {
-      // Fallback
-    }
-
-    const nextStatus = isPub ? 'draft' : 'published';
-    const updated = artists.map((a) => {
-      if (a.id === id) {
-        return { ...a, status: nextStatus as 'published' | 'draft' };
-      }
-      return a;
-    });
-    persistArtistsToStorage(updated);
-    showToast(`Artist "${target.name}" is now ${nextStatus === 'published' ? 'Published' : 'Draft'}`);
-  };
-
-  // Duplicate Artist
-  const handleDuplicate = async (artist: ManagedArtist) => {
-    try {
-      const res = await duplicateArtist(artist.id);
-      if (res) {
-        showToast(`Created duplicate: "${artist.name} (Copy)"`);
-        await loadArtists();
-        return;
-      }
-    } catch {
-      // Fallback
-    }
-
-    const copySlug = `${artist.slug}-copy-${Math.floor(Math.random() * 900 + 100)}`;
-    const copyId = `art-${Date.now()}`;
-    const copyName = `${artist.name} (Copy)`;
-
-    const duplicated: ManagedArtist = {
-      ...artist,
-      id: copyId,
-      name: copyName,
-      slug: copySlug,
-      status: 'draft',
-      updatedAt: new Date().toISOString().split('T')[0],
+      setArtists(baseList);
     };
 
-    const nextList = [duplicated, ...artists];
-    persistArtistsToStorage(nextList);
-    showToast(`Created duplicate: "${copyName}"`);
-  };
+    load();
+  }, []);
 
-  // Delete Single Artist
-  const handleDeleteSingle = async () => {
-    if (!deleteTargetId) return;
-    const target = artists.find((a) => a.id === deleteTargetId);
-    try {
-      await deleteArtist(deleteTargetId);
-    } catch {
-      // Fallback
-    }
-    const updated = artists.filter((a) => a.id !== deleteTargetId);
-    persistArtistsToStorage(updated);
-    setSelectedIds((prev) => prev.filter((id) => id !== deleteTargetId));
-    setDeleteTargetId(null);
-    showToast(`Artist "${target?.name || ''}" removed successfully.`);
-  };
+  // Filter and sort artists
+  const filteredArtists = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
 
-  // Bulk Actions
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedIds(paginatedArtists.map((a) => a.id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
+    return artists.filter((a) => {
+      // 1. Search Query
+      if (q && !(a.name.toLowerCase().includes(q) || a.cat.toLowerCase().includes(q) || a.city.toLowerCase().includes(q))) {
+        return false;
+      }
+      // 2. City
+      if (selectedCity !== 'All cities' && a.city.toLowerCase() !== selectedCity.toLowerCase()) {
+        return false;
+      }
+      // 3. Category
+      if (selectedCategory !== 'All categories' && a.cat.toLowerCase() !== selectedCategory.toLowerCase()) {
+        return false;
+      }
+      // 4. Verified Only
+      if (verifiedOnly && !a.docs) {
+        return false;
+      }
+      // 5. Class Tab
+      if (activeClassTab !== 'all' && a.tier !== activeClassTab) {
+        return false;
+      }
+      return true;
+    }).sort((a, b) => {
+      if (selectedSort === 'newest') {
+        return b.joined.localeCompare(a.joined);
+      }
+      if (selectedSort === 'booked') {
+        return b.booked - a.booked;
+      }
+      if (selectedSort === 'trend') {
+        return b.trend - a.trend;
+      }
+      if (selectedSort === 'name') {
+        return a.name.localeCompare(b.name);
+      }
+      return 0;
+    });
+  }, [artists, searchQuery, selectedCity, selectedCategory, verifiedOnly, activeClassTab, selectedSort]);
 
-  const handleToggleSelectOne = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCity, selectedCategory, verifiedOnly, activeClassTab, selectedSort]);
 
-  const handleBulkPublish = () => {
-    const updated = artists.map((a) =>
-      selectedIds.includes(a.id) ? { ...a, status: 'published' as const } : a
-    );
-    persistArtistsToStorage(updated);
-    showToast(`Published ${selectedIds.length} selected artists.`);
-    setSelectedIds([]);
-  };
+  // Tab counts
+  const countAll = artists.length;
+  const countPlatinum = artists.filter((a) => a.tier === 'platinum').length;
+  const countEmerging = artists.filter((a) => a.tier === 'emerging').length;
+  const countRising = artists.filter((a) => a.tier === 'rising').length;
+  const countStandard = artists.filter((a) => a.tier === 'standard').length;
 
-  const handleBulkUnpublish = () => {
-    const updated = artists.map((a) =>
-      selectedIds.includes(a.id) ? { ...a, status: 'draft' as const } : a
-    );
-    persistArtistsToStorage(updated);
-    showToast(`Unpublished ${selectedIds.length} selected artists.`);
-    setSelectedIds([]);
-  };
-
-  const handleBulkDelete = () => {
-    const updated = artists.filter((a) => !selectedIds.includes(a.id));
-    persistArtistsToStorage(updated);
-    showToast(`Deleted ${selectedIds.length} artists.`);
-    setSelectedIds([]);
-    setIsBulkDeleteModalOpen(false);
-  };
-
-  const isAllPageSelected =
-    paginatedArtists.length > 0 &&
-    paginatedArtists.every((a) => selectedIds.includes(a.id));
+  // Pagination calculation
+  const totalItems = filteredArtists.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+  const currentPageSafe = Math.min(currentPage, totalPages);
+  const startIndex = (currentPageSafe - 1) * PAGE_SIZE;
+  const endIndex = Math.min(startIndex + PAGE_SIZE, totalItems);
+  const paginatedArtists = filteredArtists.slice(startIndex, endIndex);
 
   return (
-    <div className="space-y-6">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed top-5 right-5 z-50 bg-[#1b1b1f] text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in border border-white/10">
-          <CheckCircle2 className="h-4 w-4 text-[#eb4e62]" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
-      {/* Top Header Bar */}
-      <div className="bg-white rounded-2xl p-6 border border-[#e6e6ea] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-              All Artists
-            </h1>
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#fde6ea] text-[#eb4e62]">
-              {artists.length} Total
-            </span>
-          </div>
-          <p className="text-xs sm:text-sm text-[#6b6b76] mt-1">
-            Search, filter, update tier status, and manage artist profiles across KalaSquare.
-          </p>
-        </div>
-
-        <Link
-          href="/admin/artists/new"
-          className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-[#eb4e62] hover:bg-[#d63a50] text-white font-bold text-xs shadow-md transition self-start sm:self-auto shrink-0"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add Artist</span>
-        </Link>
+    <div className="space-y-6 pb-12 font-sans text-[#1b1b1f]">
+      {/* 1. Page Header matching manager.html */}
+      <div>
+        <h1 className="font-heading font-black text-[28px] text-[#1b1b1f] tracking-tight leading-tight">
+          View all artists
+        </h1>
+        <p className="text-[13.5px] text-[#6b6b76] mt-0.5">
+          Every artist on the platform. Filter by city or category, sort the list and open a profile to edit it.
+        </p>
       </div>
 
-      {/* Search and Filters Bar */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#e6e6ea] shadow-xs space-y-4">
-        {/* Search Input */}
-        <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b6b76]" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            placeholder="Search by name, city, category, or slug..."
-            className="w-full h-11 pl-10 pr-4 rounded-xl bg-[#f6f6f7] border border-[#e6e6ea] text-sm text-[#1b1b1f] placeholder:text-[#6b6b76] focus:bg-white focus:border-[#eb4e62] focus:outline-hidden transition"
-          />
+      {/* 2. Main Card Container with exact styles from manager.html */}
+      <div className="bg-white rounded-2xl border border-[#e6e6ea] shadow-[0_1px_2px_rgba(27,27,31,.04),0_14px_30px_-20px_rgba(27,27,31,.28)] p-6 sm:p-7 space-y-5">
+        {/* Card Header with "+ Add artist" button */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="font-heading font-extrabold text-[18px] text-[#1b1b1f]">
+              Artists
+            </h2>
+            <p className="text-[13px] text-[#6b6b76] mt-0.5">
+              Same filters as the Top Creators page on the website.
+            </p>
+          </div>
+          <Link
+            href="/admin/artists/new"
+            className="inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl bg-[#d63a50] hover:bg-[#c23048] text-white font-bold text-[12.5px] shadow-xs transition cursor-pointer self-start sm:self-auto"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add artist</span>
+          </Link>
         </div>
 
-        {/* Dropdowns Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {/* Category Dropdown */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-bold text-[#6b6b76] uppercase tracking-wider block">
-              Category
-            </label>
+        {/* Filters Row matching manager.html .fl */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-end gap-3.5 pt-1">
+          {/* Search Box */}
+          <div className="relative flex-1 min-w-[240px]">
+            <Search className="w-4 h-4 text-[#6b6b76] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search name, category or city"
+              className="w-full h-10 pl-9 pr-4 rounded-xl border border-[#e6e6ea] bg-[#f6f6f7] text-[13px] font-medium text-[#1b1b1f] outline-none focus:border-[#eb4e62] focus:bg-white transition"
+            />
+          </div>
+
+          {/* City Dropdown */}
+          <div className="w-full lg:w-44 space-y-1">
+            <label className="block text-[13px] font-semibold text-[#1b1b1f]">City</label>
             <select
-              value={selectedCategory}
-              onChange={(e) => {
-                setSelectedCategory(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs font-semibold text-[#1b1b1f] focus:border-[#eb4e62] focus:outline-hidden"
+              value={selectedCity}
+              onChange={(e) => setSelectedCity(e.target.value)}
+              className="w-full h-10 px-3 rounded-xl border border-[#e6e6ea] bg-[#f6f6f7] text-[13px] font-medium text-[#1b1b1f] outline-none focus:border-[#eb4e62] focus:bg-white cursor-pointer"
             >
-              {CATEGORY_FILTER_OPTIONS.map((c) => (
+              {CITIES.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>
@@ -452,545 +322,288 @@ export default function ArtistsTable() {
             </select>
           </div>
 
-          {/* Class Dropdown */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-bold text-[#6b6b76] uppercase tracking-wider block">
-              Artist Class
-            </label>
+          {/* Category Dropdown */}
+          <div className="w-full lg:w-48 space-y-1">
+            <label className="block text-[13px] font-semibold text-[#1b1b1f]">Category</label>
             <select
-              value={selectedClass}
-              onChange={(e) => {
-                setSelectedClass(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs font-semibold text-[#1b1b1f] focus:border-[#eb4e62] focus:outline-hidden"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full h-10 px-3 rounded-xl border border-[#e6e6ea] bg-[#f6f6f7] text-[13px] font-medium text-[#1b1b1f] outline-none focus:border-[#eb4e62] focus:bg-white cursor-pointer"
             >
-              {CLASS_FILTER_OPTIONS.map((cl) => (
-                <option key={cl} value={cl}>
-                  {cl}
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Status Dropdown */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-bold text-[#6b6b76] uppercase tracking-wider block">
-              Status
-            </label>
-            <select
-              value={selectedStatus}
-              onChange={(e) => {
-                setSelectedStatus(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs font-semibold text-[#1b1b1f] focus:border-[#eb4e62] focus:outline-hidden"
-            >
-              {STATUS_FILTER_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Sort Dropdown */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-bold text-[#6b6b76] uppercase tracking-wider block">
-              Sort By
-            </label>
+          {/* Sort By Dropdown */}
+          <div className="w-full lg:w-44 space-y-1">
+            <label className="block text-[13px] font-semibold text-[#1b1b1f]">Sort by</label>
             <select
               value={selectedSort}
               onChange={(e) => setSelectedSort(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg bg-white border border-[#e6e6ea] text-xs font-semibold text-[#1b1b1f] focus:border-[#eb4e62] focus:outline-hidden"
+              className="w-full h-10 px-3 rounded-xl border border-[#e6e6ea] bg-[#f6f6f7] text-[13px] font-medium text-[#1b1b1f] outline-none focus:border-[#eb4e62] focus:bg-white cursor-pointer"
             >
-              {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
+              {SORT_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
                 </option>
               ))}
             </select>
           </div>
-        </div>
-      </div>
 
-      {/* Floating Bulk Actions Bar when items selected */}
-      {selectedIds.length > 0 && (
-        <div className="bg-[#1b1b1f] text-white p-3.5 px-5 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in border border-white/10">
-          <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-[#eb4e62] text-xs font-bold flex items-center justify-center">
-              {selectedIds.length}
-            </span>
-            <span className="text-xs font-semibold">artists selected</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleBulkPublish}
-              className="px-3 py-1.5 rounded-lg bg-[#1a8a57] hover:bg-[#157348] text-xs font-bold text-white transition"
-            >
-              Publish Selected
-            </button>
-            <button
-              type="button"
-              onClick={handleBulkUnpublish}
-              className="px-3 py-1.5 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-xs font-bold text-white transition"
-            >
-              Unpublish Selected
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsBulkDeleteModalOpen(true)}
-              className="px-3 py-1.5 rounded-lg bg-[#eb4e62] hover:bg-[#d63a50] text-xs font-bold text-white transition"
-            >
-              Delete Selected
-            </button>
+          {/* Verified Only Checkbox */}
+          <div className="flex items-center pb-2.5 lg:pl-1">
+            <label className="flex items-center gap-2 cursor-pointer select-none text-[13px] font-semibold text-[#1b1b1f]">
+              <input
+                type="checkbox"
+                checked={verifiedOnly}
+                onChange={(e) => setVerifiedOnly(e.target.checked)}
+                className="w-4 h-4 rounded border-[#e6e6ea] text-[#eb4e62] focus:ring-[#eb4e62] cursor-pointer"
+              />
+              <span>Verified only</span>
+            </label>
           </div>
         </div>
-      )}
 
-      {/* Artists Table View (Desktop) & Cards View (Mobile) */}
-      <div className="bg-white rounded-2xl border border-[#e6e6ea] shadow-xs overflow-hidden">
-        {filteredArtists.length === 0 ? (
-          /* Empty State */
-          <div className="p-12 text-center space-y-4 max-w-md mx-auto">
-            <div className="w-12 h-12 rounded-full bg-[#fde6ea] text-[#eb4e62] flex items-center justify-center mx-auto">
-              <Search className="h-6 w-6" />
-            </div>
-            <h3 className="font-heading font-extrabold text-lg text-[#1b1b1f]">
-              No artists found
-            </h3>
-            <p className="text-xs text-[#6b6b76] leading-relaxed">
-              No artist profiles match your current search query or active filter combination.
-            </p>
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('All');
-                  setSelectedClass('All');
-                  setSelectedStatus('All');
-                }}
-                className="h-9 px-4 rounded-xl border border-[#e6e6ea] hover:bg-[#f6f6f7] text-xs font-bold text-[#1b1b1f] transition"
-              >
-                Clear Filters
-              </button>
-              <Link
-                href="/admin/artists/new"
-                className="h-9 px-4 rounded-xl bg-[#eb4e62] hover:bg-[#d63a50] text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Add Artist</span>
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-[#e6e6ea] bg-[#f9f9fb] text-[11px] font-bold text-[#6b6b76] uppercase tracking-wider">
-                    <th className="p-4 pl-5 w-10">
-                      <input
-                        type="checkbox"
-                        checked={isAllPageSelected}
-                        onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="w-4 h-4 rounded text-[#eb4e62] focus:ring-[#eb4e62] cursor-pointer"
-                        aria-label="Select all on this page"
-                      />
-                    </th>
-                    <th className="p-4">Artist</th>
-                    <th className="p-4">Categories</th>
-                    <th className="p-4">City</th>
-                    <th className="p-4">Class</th>
-                    <th className="p-4">Status</th>
-                    <th className="p-4">Completeness</th>
-                    <th className="p-4">Updated</th>
-                    <th className="p-4 pr-5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#e6e6ea] text-xs font-medium text-[#1b1b1f]">
-                  {paginatedArtists.map((artist) => {
-                    const isSelected = selectedIds.includes(artist.id);
+        {/* Class Filter Tabs (.ctabs in manager.html) */}
+        <div className="flex items-center gap-2 overflow-x-auto pt-2 pb-1">
+          <button
+            type="button"
+            onClick={() => setActiveClassTab('all')}
+            className={`px-3.5 py-1.5 rounded-full text-[13px] font-semibold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              activeClassTab === 'all'
+                ? 'bg-[#fde6ea] text-[#d63a50] border-transparent font-bold'
+                : 'bg-white border border-[#e6e6ea] text-[#6b6b76] hover:bg-[#f6f6f7]'
+            }`}
+          >
+            <span>All</span>
+            <span className="text-[11.5px] opacity-85">{countAll}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveClassTab('platinum')}
+            className={`px-3.5 py-1.5 rounded-full text-[13px] font-semibold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              activeClassTab === 'platinum'
+                ? 'bg-[#fde6ea] text-[#d63a50] border-transparent font-bold'
+                : 'bg-white border border-[#e6e6ea] text-[#6b6b76] hover:bg-[#f6f6f7]'
+            }`}
+          >
+            <span>Platinum</span>
+            <span className="text-[11.5px] opacity-85">{countPlatinum}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveClassTab('emerging')}
+            className={`px-3.5 py-1.5 rounded-full text-[13px] font-semibold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              activeClassTab === 'emerging'
+                ? 'bg-[#fde6ea] text-[#d63a50] border-transparent font-bold'
+                : 'bg-white border border-[#e6e6ea] text-[#6b6b76] hover:bg-[#f6f6f7]'
+            }`}
+          >
+            <span>Emerging</span>
+            <span className="text-[11.5px] opacity-85">{countEmerging}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveClassTab('rising')}
+            className={`px-3.5 py-1.5 rounded-full text-[13px] font-semibold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              activeClassTab === 'rising'
+                ? 'bg-[#fde6ea] text-[#d63a50] border-transparent font-bold'
+                : 'bg-white border border-[#e6e6ea] text-[#6b6b76] hover:bg-[#f6f6f7]'
+            }`}
+          >
+            <span>Rising</span>
+            <span className="text-[11.5px] opacity-85">{countRising}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveClassTab('standard')}
+            className={`px-3.5 py-1.5 rounded-full text-[13px] font-semibold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              activeClassTab === 'standard'
+                ? 'bg-[#fde6ea] text-[#d63a50] border-transparent font-bold'
+                : 'bg-white border border-[#e6e6ea] text-[#6b6b76] hover:bg-[#f6f6f7]'
+            }`}
+          >
+            <span>Standard</span>
+            <span className="text-[11.5px] opacity-85">{countStandard}</span>
+          </button>
+        </div>
 
-                    return (
-                      <tr
-                        key={artist.id}
-                        className={`hover:bg-[#f9f9fb] transition ${
-                          isSelected ? 'bg-[#fde6ea]/30' : ''
-                        }`}
-                      >
-                        {/* Checkbox */}
-                        <td className="p-4 pl-5">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => handleToggleSelectOne(artist.id)}
-                            className="w-4 h-4 rounded text-[#eb4e62] focus:ring-[#eb4e62] cursor-pointer"
-                            aria-label={`Select ${artist.name}`}
-                          />
-                        </td>
-
-                        {/* Photo + Name + Slug */}
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="relative w-10 h-10 rounded-full overflow-hidden bg-neutral-100 shrink-0 border border-[#e6e6ea]">
-                              <Image
-                                src={artist.photoUrl}
-                                alt={artist.name}
-                                fill
-                                className="object-cover"
-                                sizes="40px"
-                              />
-                            </div>
-                            <div className="min-w-0 max-w-[200px]">
-                              <span className="font-heading font-bold text-sm text-[#1b1b1f] block truncate hover:text-[#eb4e62] transition">
-                                {artist.name}
-                              </span>
-                              <span className="text-[11px] font-mono text-[#6b6b76] block truncate">
-                                /{artist.slug}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Category Pills */}
-                        <td className="p-4">
-                          <div className="flex flex-wrap gap-1 max-w-[160px]">
-                            {artist.categories.slice(0, 2).map((cat) => (
-                              <span
-                                key={cat}
-                                className="px-2 py-0.5 rounded-md bg-[#fde6ea] text-[#eb4e62] text-[11px] font-semibold truncate"
-                              >
-                                {cat}
-                              </span>
-                            ))}
-                            {artist.categories.length > 2 && (
-                              <span className="text-[10px] text-[#6b6b76] font-bold">
-                                +{artist.categories.length - 2}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* City */}
-                        <td className="p-4 text-[#6b6b76] whitespace-nowrap">
-                          {artist.city}
-                        </td>
-
-                        {/* Class Badge */}
-                        <td className="p-4">
-                          {artist.artistClass === 'platinum' ? (
-                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#fbefc7] text-[#8a6508] border border-[#8a6508]/20">
-                              Platinum
-                            </span>
-                          ) : artist.artistClass === 'rising' ? (
-                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#1b1b1f] text-white">
-                              Rising
-                            </span>
-                          ) : artist.artistClass === 'new' ? (
-                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#fde6ea] text-[#eb4e62] border border-[#eb4e62]/20">
-                              New
-                            </span>
-                          ) : (
-                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#f6f6f7] text-[#6b6b76]">
-                              {artist.artistClass}
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Status Badge */}
-                        <td className="p-4">
-                          {artist.status === 'published' ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#e1f5ea] text-[#1a8a57]">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#1a8a57]" />
-                              Published
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#f6f6f7] text-[#6b6b76]">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#6b6b76]" />
-                              Draft
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Completeness Bar */}
-                        <td className="p-4 min-w-[120px]">
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 h-2 rounded-full bg-[#e6e6ea] overflow-hidden">
-                              <div
-                                className="h-full bg-[#eb4e62] rounded-full"
-                                style={{ width: `${artist.completeness}%` }}
-                              />
-                            </div>
-                            <span className="text-[11px] font-bold text-[#6b6b76]">
-                              {artist.completeness}%
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Updated Date */}
-                        <td className="p-4 text-[#6b6b76] text-[11px] whitespace-nowrap">
-                          {artist.updatedAt}
-                        </td>
-
-                        {/* Row Actions */}
-                        <td className="p-4 pr-5 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1.5">
-                            {/* View Live Profile */}
-                            <Link
-                              href={`/top-creators/${artist.slug}`}
-                              target="_blank"
-                              className="p-1.5 rounded-lg border border-[#e6e6ea] hover:border-[#eb4e62] text-[#6b6b76] hover:text-[#eb4e62] transition"
-                              title="View Public Profile"
-                            >
-                              <Eye className="h-3.5 w-3.5" />
-                            </Link>
-
-                            {/* Edit */}
-                            <Link
-                              href={`/admin/artists/${artist.slug}/edit`}
-                              className="p-1.5 rounded-lg border border-[#e6e6ea] hover:border-[#eb4e62] text-[#6b6b76] hover:text-[#eb4e62] transition"
-                              title="Edit Artist"
-                            >
-                              <Edit className="h-3.5 w-3.5" />
-                            </Link>
-
-                            {/* Duplicate */}
-                            <button
-                              type="button"
-                              onClick={() => handleDuplicate(artist)}
-                              className="p-1.5 rounded-lg border border-[#e6e6ea] hover:border-[#1b1b1f] text-[#6b6b76] hover:text-[#1b1b1f] transition"
-                              title="Duplicate Profile"
-                            >
-                              <Copy className="h-3.5 w-3.5" />
-                            </button>
-
-                            {/* Toggle Publish/Unpublish */}
-                            <button
-                              type="button"
-                              onClick={() => handleToggleStatus(artist.id)}
-                              className={`p-1.5 rounded-lg border transition ${
-                                artist.status === 'published'
-                                  ? 'border-[#1a8a57]/40 bg-[#e1f5ea] text-[#1a8a57]'
-                                  : 'border-[#e6e6ea] text-[#6b6b76] hover:text-[#1b1b1f]'
-                              }`}
-                              title={
-                                artist.status === 'published'
-                                  ? 'Unpublish (Make Draft)'
-                                  : 'Publish Live'
-                              }
-                            >
-                              <Globe className="h-3.5 w-3.5" />
-                            </button>
-
-                            {/* Delete */}
-                            <button
-                              type="button"
-                              onClick={() => setDeleteTargetId(artist.id)}
-                              className="p-1.5 rounded-lg border border-[#e6e6ea] hover:border-[#eb4e62] hover:bg-[#fde6ea] text-[#6b6b76] hover:text-[#eb4e62] transition"
-                              title="Delete Profile"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards View */}
-            <div className="md:hidden divide-y divide-[#e6e6ea]">
-              {paginatedArtists.map((artist) => {
-                const isSelected = selectedIds.includes(artist.id);
-
-                return (
-                  <div
-                    key={artist.id}
-                    className={`p-4 space-y-3 ${isSelected ? 'bg-[#fde6ea]/30' : ''}`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
+        {/* 3. Artists Table matching manager.html */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-[13px] border-collapse">
+            <thead className="border-b border-[#e6e6ea] text-[#6b6b76] font-bold text-[12px]">
+              <tr>
+                <th className="py-2.5 pr-3 font-bold text-[#6b6b76]">Artist</th>
+                <th className="py-2.5 pr-3 font-bold text-[#6b6b76]">Category</th>
+                <th className="py-2.5 pr-3 font-bold text-[#6b6b76]">City</th>
+                <th className="py-2.5 pr-3 font-bold text-[#6b6b76]">Class</th>
+                <th className="py-2.5 pr-3 font-bold text-[#6b6b76]">Badge</th>
+                <th className="py-2.5 pr-3 font-bold text-[#6b6b76]">Followers</th>
+                <th className="py-2.5 pr-3 font-bold text-[#6b6b76]">Status</th>
+                <th className="py-2.5 text-right font-bold text-[#6b6b76]"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#e6e6ea]">
+              {paginatedArtists.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-[#6b6b76]">
+                    <b className="block text-[15px] font-heading font-bold text-[#1b1b1f] mb-1">No artists match</b>
+                    <span>Change the city, category or search query.</span>
+                  </td>
+                </tr>
+              ) : (
+                paginatedArtists.map((a) => (
+                  <tr key={a.id} className="hover:bg-[#fafafc] transition">
+                    {/* Artist letter avatar & Name */}
+                    <td className="py-3 pr-3">
                       <div className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => handleToggleSelectOne(artist.id)}
-                          className="w-4 h-4 rounded text-[#eb4e62] focus:ring-[#eb4e62]"
-                        />
-                        <div className="relative w-12 h-12 rounded-full overflow-hidden bg-neutral-100 shrink-0 border border-[#e6e6ea]">
-                          <Image
-                            src={artist.photoUrl}
-                            alt={artist.name}
-                            fill
-                            className="object-cover"
-                            sizes="48px"
-                          />
+                        <div className="w-[36px] h-[36px] rounded-full bg-gradient-to-br from-[#f58a9a] to-[#eb4e62] text-white font-heading font-extrabold text-[15px] flex items-center justify-center shrink-0 shadow-xs">
+                          {getInitialLetter(a.name)}
                         </div>
-                        <div>
-                          <h4 className="font-heading font-bold text-sm text-[#1b1b1f]">
-                            {artist.name}
-                          </h4>
-                          <span className="text-[11px] font-mono text-[#6b6b76] block">
-                            /{artist.slug}
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-bold text-[13.5px] text-[#1b1b1f] leading-snug">
+                            {a.name}
+                          </span>
+                          <span className="text-[12px] text-[#6b6b76]">
+                            /top-creators/{a.slug}
                           </span>
                         </div>
                       </div>
+                    </td>
 
-                      {artist.status === 'published' ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#e1f5ea] text-[#1a8a57]">
-                          Published
+                    {/* Category */}
+                    <td className="py-3 pr-3 text-[13px] text-[#1b1b1f]">
+                      {a.cat}
+                    </td>
+
+                    {/* City */}
+                    <td className="py-3 pr-3 text-[13px] text-[#1b1b1f]">
+                      {a.city}
+                    </td>
+
+                    {/* Class Tag (.tg in manager.html) */}
+                    <td className="py-3 pr-3">
+                      {a.tier === 'rising' ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#e1f5ea] text-[#1a8a57]">
+                          Rising
+                        </span>
+                      ) : a.tier === 'emerging' ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#e1effd] text-[#1469c4]">
+                          Emerging
+                        </span>
+                      ) : a.tier === 'platinum' ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#fbefc7] text-[#8a6508]">
+                          Platinum
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f6f6f7] text-[#6b6b76]">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#f6f6f7] text-[#6b6b76]">
+                          Standard
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Badge */}
+                    <td className="py-3 pr-3">
+                      {a.tier === 'platinum' ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#fbefc7] text-[#8a6508]">
+                          Golden badge
+                        </span>
+                      ) : a.docs ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#e1effd] text-[#1469c4]">
+                          ✓ Blue tick
+                        </span>
+                      ) : (
+                        <span className="text-[12px] text-[#6b6b76] font-normal">
+                          No badge
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Followers */}
+                    <td className="py-3 pr-3 font-semibold text-[13px] text-[#1b1b1f] tabular-nums">
+                      {formatFollowers(a.fol)}
+                    </td>
+
+                    {/* Status (.statTag in manager.html) */}
+                    <td className="py-3 pr-3">
+                      {a.status === 'live' ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#e1f5ea] text-[#1a8a57]">
+                          Live
+                        </span>
+                      ) : a.status === 'pending' ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#fff1cf] text-[#8f5a00]">
+                          Pending review
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#f6f6f7] text-[#6b6b76]">
                           Draft
                         </span>
                       )}
-                    </div>
+                    </td>
 
-                    <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                      {artist.categories.map((c) => (
-                        <span
-                          key={c}
-                          className="px-2 py-0.5 rounded bg-[#fde6ea] text-[#eb4e62] text-[10px] font-semibold"
-                        >
-                          {c}
-                        </span>
-                      ))}
-                      <span className="text-neutral-300">·</span>
-                      <span className="text-[#6b6b76] text-xs">{artist.city}</span>
-                      <span className="text-neutral-300">·</span>
-                      <span className="text-[#8a6508] font-bold text-xs capitalize">
-                        {artist.artistClass}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-2 border-t border-[#f6f6f7]">
-                      <div className="flex items-center gap-2">
-                        <div className="w-14 h-1.5 rounded-full bg-[#e6e6ea] overflow-hidden">
-                          <div
-                            className="h-full bg-[#eb4e62]"
-                            style={{ width: `${artist.completeness}%` }}
-                          />
-                        </div>
-                        <span className="text-[11px] font-bold text-[#6b6b76]">
-                          {artist.completeness}%
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
+                    {/* Actions: Edit + View on site */}
+                    <td className="py-3 text-right">
+                      <div className="inline-flex items-center justify-end gap-1.5">
                         <Link
-                          href={`/top-creators/${artist.slug}`}
+                          href={`/admin/artists/new?edit=${a.id}`}
+                          className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-[#e6e6ea] bg-white hover:border-[#eb4e62] hover:text-[#eb4e62] text-[12px] font-semibold text-[#1b1b1f] transition shadow-2xs"
+                        >
+                          <Edit className="w-3 h-3 text-[#6b6b76]" />
+                          <span>Edit</span>
+                        </Link>
+                        <Link
+                          href={`/top-creators/${a.slug}`}
                           target="_blank"
-                          className="p-1.5 rounded-lg border border-[#e6e6ea] text-[#6b6b76]"
+                          rel="noopener noreferrer"
+                          className="w-8 h-8 rounded-lg border border-[#e6e6ea] bg-white hover:border-[#eb4e62] hover:text-[#eb4e62] text-[#6b6b76] inline-flex items-center justify-center transition shadow-2xs"
+                          title={`View ${a.name} on the site`}
                         >
-                          <Eye className="h-3.5 w-3.5" />
+                          <ExternalLink className="w-3.5 h-3.5" />
                         </Link>
-                        <Link
-                          href={`/admin/artists/${artist.slug}/edit`}
-                          className="p-1.5 rounded-lg border border-[#e6e6ea] text-[#eb4e62]"
-                        >
-                          <Edit className="h-3.5 w-3.5" />
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => handleDuplicate(artist)}
-                          className="p-1.5 rounded-lg border border-[#e6e6ea] text-[#6b6b76]"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeleteTargetId(artist.id)}
-                          className="p-1.5 rounded-lg border border-[#e6e6ea] text-[#eb4e62]"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
                       </div>
-                    </div>
-                  </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* 4. Page Change Option / Pagination (.pager in manager.html and media_1794562500635_0c9c86e2.jpg) */}
+        <div className="flex items-center justify-between pt-4 border-t border-[#e6e6ea] text-[13px] text-[#6b6b76]">
+          <span className="font-medium">
+            Showing {totalItems === 0 ? 0 : startIndex + 1}–{endIndex} of {totalItems}
+          </span>
+
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1.5">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
+                const isActive = p === currentPageSafe;
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setCurrentPage(p)}
+                    className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition cursor-pointer ${
+                      isActive
+                        ? 'bg-[#d63a50] text-white shadow-xs'
+                        : 'bg-white hover:bg-[#f6f6f7] text-[#1b1b1f] border border-[#e6e6ea]'
+                    }`}
+                    aria-label={`Go to page ${p}`}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    {p}
+                  </button>
                 );
               })}
             </div>
-
-            {/* Pagination Row */}
-            <div className="p-4 sm:p-5 border-t border-[#e6e6ea] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-[#6b6b76]">
-              <div>
-                Showing <span className="text-[#1b1b1f] font-bold">{showingFrom}</span> to{' '}
-                <span className="text-[#1b1b1f] font-bold">{showingTo}</span> of{' '}
-                <span className="text-[#1b1b1f] font-bold">{filteredArtists.length}</span> artists
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  disabled={currentPage <= 1}
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  className="h-8 px-3 rounded-lg border border-[#e6e6ea] hover:bg-[#f6f6f7] disabled:opacity-40 disabled:cursor-not-allowed text-[#1b1b1f] flex items-center gap-1"
-                >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                  <span>Prev</span>
-                </button>
-
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
-                  <button
-                    key={pg}
-                    type="button"
-                    onClick={() => setCurrentPage(pg)}
-                    className={`w-8 h-8 rounded-lg text-xs font-bold transition ${
-                      currentPage === pg
-                        ? 'bg-[#eb4e62] text-white'
-                        : 'border border-[#e6e6ea] hover:bg-[#f6f6f7] text-[#1b1b1f]'
-                    }`}
-                  >
-                    {pg}
-                  </button>
-                ))}
-
-                <button
-                  type="button"
-                  disabled={currentPage >= totalPages}
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  className="h-8 px-3 rounded-lg border border-[#e6e6ea] hover:bg-[#f6f6f7] disabled:opacity-40 disabled:cursor-not-allowed text-[#1b1b1f] flex items-center gap-1"
-                >
-                  <span>Next</span>
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
-
-      {/* Delete Single Artist Confirmation Modal */}
-      <ConfirmModal
-        isOpen={Boolean(deleteTargetId)}
-        title="Delete Artist Profile?"
-        description="Are you sure you want to delete this artist profile? This action will remove the artist from listings and return a 404 on their public page."
-        confirmLabel="Delete Artist"
-        cancelLabel="Cancel"
-        variant="danger"
-        onConfirm={handleDeleteSingle}
-        onCancel={() => setDeleteTargetId(null)}
-      />
-
-      {/* Bulk Delete Confirmation Modal */}
-      <ConfirmModal
-        isOpen={isBulkDeleteModalOpen}
-        title={`Delete ${selectedIds.length} Selected Artists?`}
-        description={`This will permanently remove ${selectedIds.length} artist profiles from the platform. This action cannot be undone.`}
-        confirmLabel={`Delete ${selectedIds.length} Artists`}
-        cancelLabel="Cancel"
-        variant="danger"
-        onConfirm={handleBulkDelete}
-        onCancel={() => setIsBulkDeleteModalOpen(false)}
-      />
     </div>
   );
 }
-

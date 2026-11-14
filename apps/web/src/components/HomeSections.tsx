@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import DemoBar from './DemoBar';
 import Header from './Header';
 import Hero from './Hero';
 import ArtistCard from './ArtistCard';
@@ -11,444 +11,480 @@ import EventCard from './EventCard';
 import VenueCard from './VenueCard';
 import FAQSection from './FAQSection';
 import Footer from './Footer';
+import KalaMitraWidget from './KalaMitraWidget';
 import {
   mockArtists,
   mockCategories,
   mockEvents,
   mockVenues,
-  mockFAQs,
-  mockSpotlights,
-  mockHomeConfig,
 } from '@/lib/mock-data';
-import { HomeConfig, homeConfigSchema } from '@/lib/validators/home-config';
 
 interface HomeSectionsProps {
   initialData?: any;
 }
 
 export default function HomeSections({ initialData }: HomeSectionsProps) {
-  const [config, setConfig] = useState<HomeConfig>(initialData?.config || mockHomeConfig);
+  // References for horizontal scrolling rails
+  const platinumRailRef = useRef<HTMLDivElement>(null);
+  const newRailRef = useRef<HTMLDivElement>(null);
+  const eventsRailRef = useRef<HTMLDivElement>(null);
+  const risingRailRef = useRef<HTMLDivElement>(null);
+  const venuesRailRef = useRef<HTMLDivElement>(null);
 
-  // Client-side hydration: sync if initialData changes or fallback to localStorage
-  useEffect(() => {
-    if (initialData?.config) {
-      setConfig(initialData.config);
-      return;
+  const scrollRail = (ref: React.RefObject<HTMLDivElement | null>, direction: 'left' | 'right') => {
+    if (ref.current) {
+      const scrollAmount = 300;
+      ref.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
     }
-    if (typeof window !== 'undefined') {
-      try {
-        const raw = localStorage.getItem('kalasquare_home_config');
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          const validated = homeConfigSchema.safeParse(parsed);
-          if (validated.success) {
-            setConfig(validated.data);
-          }
-        }
-      } catch (e) {
-        console.error('Failed to parse home config from localStorage', e);
-      }
-    }
-  }, [initialData]);
-
-  // Filter Platinum Artists based on API data or config
-  const platinumArtists = (
-    initialData?.platinumArtists && initialData.platinumArtists.length > 0
-      ? initialData.platinumArtists
-      : config.platinum.artistIds.length > 0
-      ? config.platinum.artistIds
-          .map((id: string) => mockArtists.find((a) => a.id === id || a.slug === id))
-          .filter(Boolean)
-      : mockArtists.filter((a) => a.tier === 'platinum').slice(0, 4)
-  ) as typeof mockArtists;
-
-  // Filter New Artists based on API data or config
-  const newArtists = (
-    initialData?.newArtists && initialData.newArtists.length > 0
-      ? initialData.newArtists
-      : config.newTalent.artistIds.length > 0
-      ? config.newTalent.artistIds
-          .map((id: string) => mockArtists.find((a) => a.id === id || a.slug === id))
-          .filter(Boolean)
-      : mockArtists.filter((a) => a.badgeType === 'new').slice(0, 4)
-  ) as typeof mockArtists;
-
-  // Filter Rising Artists based on API data or config
-  const risingArtists = (
-    initialData?.risingArtists && initialData.risingArtists.length > 0
-      ? initialData.risingArtists
-      : config.rising.artistIds.length > 0
-      ? config.rising.artistIds
-          .map((id: string) => mockArtists.find((a) => a.id === id || a.slug === id))
-          .filter(Boolean)
-      : mockArtists.filter((a) => a.badgeType === 'rising').slice(0, 4)
-  ) as typeof mockArtists;
-
-  // Filter Venues based on API data or config
-  const selectedVenues = (
-    initialData?.venues && initialData.venues.length > 0
-      ? initialData.venues
-      : config.venues.venueIds.length > 0
-      ? config.venues.venueIds
-          .map((id: string) => mockVenues.find((v) => v.id === id))
-          .filter(Boolean)
-      : mockVenues.slice(0, 3)
-  ) as typeof mockVenues;
-
-  // Filter Categories based on config
-  const visibleCategories = mockCategories
-    .filter((cat) => {
-      const cfgItem = config.categories.items.find((item) => item.slug === cat.slug);
-      return cfgItem ? cfgItem.isVisible : true;
-    })
-    .map((cat) => {
-      const cfgItem = config.categories.items.find((item) => item.slug === cat.slug);
-      return cfgItem ? { ...cat, count: cfgItem.count } : cat;
-    });
-
-  // Spotlights from config
-  const mainSpotlight = {
-    id: 's1',
-    title: config.spotlights.featuredArticle.title || mockSpotlights[0].title,
-    subtitle: config.spotlights.featuredArticle.description || mockSpotlights[0].subtitle,
-    imageUrl: config.spotlights.featuredArticle.imageUrl || mockSpotlights[0].imageUrl,
-    link: config.spotlights.featuredArticle.link || mockSpotlights[0].link,
   };
 
-  const sideSpotlights = config.spotlights.smallArticles.map((art, idx) => ({
-    id: `s-small-${idx}`,
-    title: art.title,
-    subtitle: art.tag,
-    imageUrl: art.imageUrl || mockSpotlights[idx + 1]?.imageUrl || mockSpotlights[0].imageUrl,
-    link: art.link || mockSpotlights[idx + 1]?.link || '#',
-  }));
+  // Listen for local admin artists
+  const [extraArtists, setExtraArtists] = useState<any[]>([]);
 
-  // FAQ list from config
-  const displayFaqs = config.faq.items.length > 0 ? config.faq.items : mockFAQs;
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('kalasquare_admin_artists');
+        if (raw) {
+          const list: any[] = JSON.parse(raw);
+          setExtraArtists(list.filter((a) => a.status === 'published' || a.status === 'live'));
+        }
+      } catch {}
+    }
+  }, []);
+
+  const localPlatinum = useMemo(() => {
+    return extraArtists
+      .filter((a) => a.artistClass === 'platinum')
+      .map((a) => ({
+        id: a.id,
+        name: a.name,
+        slug: a.slug,
+        cat: Array.isArray(a.categories) && a.categories.length > 0 ? a.categories[0] : (a.category || 'Artist'),
+        city: a.city || 'Delhi',
+        photoUrl: a.photoUrl || a.profilePhotoUrl || '',
+        tier: 'platinum' as const,
+      }));
+  }, [extraArtists]);
+
+  const localRising = useMemo(() => {
+    return extraArtists
+      .filter((a) => a.artistClass === 'rising')
+      .map((a) => ({
+        id: a.id,
+        name: a.name,
+        slug: a.slug,
+        cat: Array.isArray(a.categories) && a.categories.length > 0 ? a.categories[0] : (a.category || 'Artist'),
+        city: a.city || 'Delhi',
+        photoUrl: a.photoUrl || a.profilePhotoUrl || '',
+        tier: 'rising' as const,
+      }));
+  }, [extraArtists]);
+
+  const localNew = useMemo(() => {
+    return extraArtists
+      .slice(0, 3)
+      .map((a) => ({
+        id: a.id,
+        name: a.name,
+        slug: a.slug,
+        cat: Array.isArray(a.categories) && a.categories.length > 0 ? a.categories[0] : (a.category || 'Artist'),
+        city: a.city || 'Delhi',
+        photoUrl: a.photoUrl || a.profilePhotoUrl || '',
+        tier: a.artistClass || 'standard',
+      }));
+  }, [extraArtists]);
+
+  const dedupeArtists = (list: any[]) => {
+    const seen = new Set<string>();
+    return list.filter((item) => {
+      if (!item) return false;
+      const key = item.id || item.slug;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+
+  const platinumArtists = useMemo(() => {
+    const existingSlugs = new Set(localPlatinum.map((a) => a.slug));
+    const base = (initialData?.platinumArtists && initialData.platinumArtists.length > 0
+      ? initialData.platinumArtists
+      : mockArtists.slice(0, 5)).filter((a: any) => !existingSlugs.has(a.slug));
+    return dedupeArtists([...localPlatinum, ...base]);
+  }, [localPlatinum, initialData]);
+
+  const newArtists = useMemo(() => {
+    const existingSlugs = new Set(localNew.map((a) => a.slug));
+    const base = (initialData?.newArtists && initialData.newArtists.length > 0
+      ? initialData.newArtists
+      : [mockArtists.find((a) => a.slug === 'priyam') || mockArtists[5]]).filter((a: any) => !existingSlugs.has(a.slug));
+    return dedupeArtists([...localNew, ...base]);
+  }, [localNew, initialData]);
+
+  const risingArtists = useMemo(() => {
+    const existingSlugs = new Set(localRising.map((a) => a.slug));
+    const base = (initialData?.risingArtists && initialData.risingArtists.length > 0
+      ? initialData.risingArtists
+      : mockArtists.filter((a) => ['ria-bally', 'khushboo-choubey', 'aarav-mehta', 'tanya-bose'].includes(a.slug))).filter((a: any) => !existingSlugs.has(a.slug));
+    return dedupeArtists([...localRising, ...base]);
+  }, [localRising, initialData]);
+
+  const eventsList =
+    initialData?.events && initialData.events.length > 0 ? initialData.events : mockEvents.slice(0, 4);
+
+  const venuesList =
+    initialData?.venues && initialData.venues.length > 0 ? initialData.venues : mockVenues.slice(0, 4);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f3f3f5]">
-      {/* 1. Header (Sticky) */}
+    <div className="min-h-screen flex flex-col bg-[#ffffff] text-[#1b1b1f]">
+      {/* 1. Top Kalasquare Live Demo Bar */}
+      <DemoBar currentPage="home" />
+
+      {/* Global Public Header */}
       <Header />
 
       <main className="flex-1">
-        {/* 2. Hero Section */}
-        {config.hero.isVisible && <Hero heroConfig={config.hero} />}
+        {/* 4. Hero Section */}
+        <Hero />
 
-        {/* 3. Platinum Artists Section */}
-        {config.platinum.isVisible && (
-          <section className="py-14 sm:py-18 bg-white border-b border-[#e6e6ea]" id="platinum">
-            <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-                <div>
-                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                    {config.platinum.title}
-                  </h2>
-                  <p className="text-sm text-[#6b6b76] mt-1">
-                    {config.platinum.subtitle}
-                  </p>
-                </div>
-                <Link
-                  href="/top-creators?tier=platinum"
-                  className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
-                >
-                  <span>{config.platinum.viewAllText}</span>
-                  <span>&rarr;</span>
-                </Link>
+        {/* 5. Platinum Artists Section */}
+        <section id="artists" className="py-12 sm:py-16 bg-white border-b border-[#e6e6ea]">
+          <div className="max-w-[1180px] mx-auto px-4 sm:px-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
+                  Platinum artists
+                </h2>
+                <p className="text-[14px] text-[#6b6b76] mt-1">
+                  India&apos;s finest artists, ready to book.
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {platinumArtists.map((artist) => (
-                  <ArtistCard key={artist.id} artist={artist} badgeType="platinum" />
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* 4. New on KalaSquare Section */}
-        {config.newTalent.isVisible && (
-          <section className="py-14 sm:py-18 bg-[#f3f3f5] border-b border-[#e6e6ea]" id="new-artists">
-            <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-                <div>
-                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                    {config.newTalent.title}
-                  </h2>
-                  <p className="text-sm text-[#6b6b76] mt-1">
-                    {config.newTalent.subtitle}
-                  </p>
-                </div>
-                <Link
-                  href="/top-creators?sort=newest"
-                  className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
-                >
-                  <span>{config.newTalent.viewAllText}</span>
-                  <span>&rarr;</span>
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {newArtists.map((artist) => (
-                  <ArtistCard key={artist.id} artist={artist} badgeType="new" />
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* 5. Find Talent By Category Section */}
-        {config.categories.isVisible && (
-          <section className="py-14 sm:py-18 bg-white border-b border-[#e6e6ea]" id="talent">
-            <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-                <div>
-                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                    {config.categories.title}
-                  </h2>
-                  <p className="text-sm text-[#6b6b76] mt-1">
-                    {config.categories.subtitle}
-                  </p>
-                </div>
+              <div className="flex items-center gap-3">
                 <Link
                   href="/top-creators"
-                  className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
+                  className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition mr-1"
                 >
-                  <span>All Categories</span>
-                  <span>&rarr;</span>
+                  See all
                 </Link>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5">
-                {visibleCategories.map((category) => (
-                  <CategoryCard key={category.slug} category={category} />
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* 6. Stage & Spotlights Section */}
-        {config.spotlights.isVisible && (
-          <section className="py-14 sm:py-18 bg-[#f3f3f5] border-b border-[#e6e6ea]" id="spotlight">
-            <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-                <div>
-                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                    {config.spotlights.title}
-                  </h2>
-                  <p className="text-sm text-[#6b6b76] mt-1">
-                    {config.spotlights.subtitle}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <div className="lg:col-span-8 bg-white rounded-2xl overflow-hidden border border-[#e6e6ea] shadow-xs flex flex-col justify-between group">
-                  <div className="relative w-full h-[260px] sm:h-[340px] overflow-hidden bg-neutral-200">
-                    <Image
-                      src={mainSpotlight.imageUrl}
-                      alt={mainSpotlight.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition duration-500"
-                      sizes="(max-width: 1024px) 100vw, 66vw"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#eb4e62] text-white shadow-xs">
-                        Featured Event
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-6 sm:p-8 space-y-3">
-                    <h3 className="font-heading font-extrabold text-xl sm:text-2xl text-[#1b1b1f] group-hover:text-[#eb4e62] transition">
-                      {mainSpotlight.title}
-                    </h3>
-                    <p className="text-sm text-[#6b6b76] leading-relaxed">
-                      {mainSpotlight.subtitle}
-                    </p>
-                    <div className="pt-2">
-                      <Link
-                        href={mainSpotlight.link || '#'}
-                        className="text-xs font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
-                      >
-                        <span>Learn More &amp; Register</span>
-                        <span>&rarr;</span>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="lg:col-span-4 flex flex-col gap-6">
-                  {sideSpotlights.map((side) => (
-                    <div
-                      key={side.id}
-                      className="bg-white rounded-2xl overflow-hidden border border-[#e6e6ea] shadow-xs flex flex-col group flex-1"
-                    >
-                      <div className="relative w-full h-[150px] overflow-hidden bg-neutral-200">
-                        <Image
-                          src={side.imageUrl}
-                          alt={side.title}
-                          fill
-                          className="object-cover group-hover:scale-105 transition duration-500"
-                          sizes="(max-width: 1024px) 100vw, 33vw"
-                        />
-                        <div className="absolute top-3 left-3">
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-black/70 text-white backdrop-blur-xs">
-                            {side.subtitle}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="p-5 flex-1 flex flex-col justify-between">
-                        <h4 className="font-heading font-bold text-sm text-[#1b1b1f] group-hover:text-[#eb4e62] transition">
-                          {side.title}
-                        </h4>
-                        <Link
-                          href={side.link || '#'}
-                          className="text-xs font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1 mt-3"
-                        >
-                          <span>Explore Details</span>
-                          <span>&rarr;</span>
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => scrollRail(platinumRailRef, 'left')}
+                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white flex items-center justify-center transition cursor-pointer text-base"
+                  aria-label="Previous"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollRail(platinumRailRef, 'right')}
+                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white flex items-center justify-center transition cursor-pointer text-base"
+                  aria-label="Next"
+                >
+                  ›
+                </button>
               </div>
             </div>
-          </section>
-        )}
 
-        {/* 7. Featured Events Section */}
-        {config.events.isVisible && (
-          <section className="py-14 sm:py-18 bg-white border-b border-[#e6e6ea]" id="events">
-            <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-                <div>
-                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                    {config.events.title}
-                  </h2>
-                  <p className="text-sm text-[#6b6b76] mt-1">
-                    {config.events.subtitle}
-                  </p>
-                </div>
-                <Link
+            {/* Horizontal Rail */}
+            <div
+              ref={platinumRailRef}
+              className="flex gap-4.5 overflow-x-auto scroll-smooth no-scrollbar py-2"
+            >
+              {platinumArtists.map((artist: any) => (
+                <ArtistCard key={artist.id} artist={artist} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 6. New on KalaSquare Section */}
+        <section id="new" className="py-10 sm:py-14 bg-white border-b border-[#e6e6ea]">
+          <div className="max-w-[1180px] mx-auto px-4 sm:px-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
+                  New on KalaSquare
+                </h2>
+                <p className="text-[14px] text-[#6b6b76] mt-1">
+                  Artists who just joined.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => scrollRail(newRailRef, 'left')}
+                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white flex items-center justify-center transition cursor-pointer text-base"
+                  aria-label="Previous"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollRail(newRailRef, 'right')}
+                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white flex items-center justify-center transition cursor-pointer text-base"
+                  aria-label="Next"
+                >
+                  ›
+                </button>
+              </div>
+            </div>
+
+            {/* Horizontal Rail */}
+            <div
+              ref={newRailRef}
+              className="flex gap-4.5 overflow-x-auto scroll-smooth no-scrollbar py-2"
+            >
+              {newArtists.map((artist: any) => (
+                <ArtistCard key={artist.id} artist={artist} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 7. Find Talent By Category Section (12 categories) */}
+        <section id="talent" className="py-12 sm:py-16 bg-[#f6f6f7] border-b border-[#e6e6ea] relative">
+          <div className="max-w-[1180px] mx-auto px-4 sm:px-6">
+            {/* Top Right Edit in Admin pill */}
+            <div className="flex justify-end mb-2">
+              <Link
+                href="/admin/home-page"
+                className="bg-[#17171c] hover:bg-black text-white text-[12px] font-bold px-3 py-1 rounded-full transition shadow-xs"
+              >
+                Edit in Admin
+              </Link>
+            </div>
+
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
+                  Find talent by category
+                </h2>
+                <p className="text-[14px] text-[#6b6b76] mt-1">
+                  Pick the kind of performer you need.
+                </p>
+              </div>
+
+              <Link
+                href="/top-creators"
+                className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition"
+              >
+                View all
+              </Link>
+            </div>
+
+            {/* 12 Category Cards: 2 rows of 6 */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-4 gap-y-6">
+              {mockCategories.map((category) => (
+                <CategoryCard key={category.slug} category={category} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 8. Stage & Spotlights Section */}
+        <section id="events" className="py-12 sm:py-16 bg-white border-b border-[#e6e6ea] relative">
+          <div className="max-w-[1180px] mx-auto px-4 sm:px-6">
+            {/* Top Right Edit in Admin pill */}
+            <div className="flex justify-end mb-3">
+              <Link
+                href="/admin/home-page"
+                className="bg-[#17171c] hover:bg-black text-white text-[12px] font-bold px-3 py-1 rounded-full transition shadow-xs"
+              >
+                Edit in Admin
+              </Link>
+            </div>
+
+            {/* Spotlight Banner Card */}
+            <div
+              className="relative rounded-[24px] overflow-hidden p-8 sm:p-12 text-white shadow-md flex flex-col justify-center min-h-[220px] sm:min-h-[260px]"
+              style={{
+                backgroundImage: 'linear-gradient(150deg, #ee6579 0%, #eb4e62 50%, #b62c44 100%)',
+              }}
+            >
+              <span className="text-[13px] font-medium text-white/90 block mb-1">
+                Now on KalaSquare
+              </span>
+              <h2 className="font-heading font-extrabold text-3xl sm:text-5xl tracking-tight leading-tight mb-2">
+                India&apos;s Next Voice
+              </h2>
+              <p className="text-sm sm:text-base text-white/90 mb-5">
+                Tap to see details and book your spot.
+              </p>
+              <div>
+                <a
                   href="#events"
-                  className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
+                  className="inline-flex items-center justify-center h-10 px-6 rounded-[10px] bg-white text-[#1b1b1f] hover:bg-neutral-100 font-heading font-bold text-xs shadow-xs transition"
                 >
-                  <span>All Events</span>
-                  <span>&rarr;</span>
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {mockEvents.slice(0, 4).map((event, idx) => {
-                  const cfgBadge = config.events.items[idx]?.badge;
-                  const item = cfgBadge && cfgBadge !== 'none' ? { ...event, badge: cfgBadge } : event;
-                  return <EventCard key={item.id} event={item} />;
-                })}
+                  View event
+                </a>
               </div>
             </div>
-          </section>
-        )}
 
-        {/* 8. Rising Artists Section */}
-        {config.rising.isVisible && (
-          <section className="py-14 sm:py-18 bg-[#f3f3f5] border-b border-[#e6e6ea]" id="rising">
-            <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-                <div>
-                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                    {config.rising.title}
-                  </h2>
-                  <p className="text-sm text-[#6b6b76] mt-1">
-                    {config.rising.subtitle}
-                  </p>
-                </div>
+            {/* Carousel Dots */}
+            <div className="flex items-center justify-center gap-2 mt-4 mb-12">
+              <span className="w-5 h-1.5 rounded-full bg-[#eb4e62]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-neutral-300" />
+              <span className="w-1.5 h-1.5 rounded-full bg-neutral-300" />
+            </div>
+
+            {/* 9. Featured events & shows */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
+                  Featured events &amp; shows
+                </h2>
+                <p className="text-[14px] text-[#6b6b76] mt-1">
+                  Live on KalaSquare.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
                 <Link
-                  href="/top-creators?tier=rising"
-                  className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
+                  href="/admin/home-page"
+                  className="bg-[#17171c] hover:bg-black text-white text-[12px] font-bold px-3 py-1 rounded-full transition shadow-xs mr-2"
                 >
-                  <span>{config.rising.viewAllText}</span>
-                  <span>&rarr;</span>
+                  Edit in Admin
                 </Link>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {risingArtists.map((artist) => (
-                  <ArtistCard key={artist.id} artist={artist} badgeType="rising" />
-                ))}
+                <button
+                  type="button"
+                  onClick={() => scrollRail(eventsRailRef, 'left')}
+                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white flex items-center justify-center transition cursor-pointer text-base"
+                  aria-label="Previous"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollRail(eventsRailRef, 'right')}
+                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white flex items-center justify-center transition cursor-pointer text-base"
+                  aria-label="Next"
+                >
+                  ›
+                </button>
               </div>
             </div>
-          </section>
-        )}
 
-        {/* 9. Venues Section */}
-        {config.venues.isVisible && (
-          <section className="py-14 sm:py-18 bg-white border-b border-[#e6e6ea]" id="venues">
-            <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-                <div>
-                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                    {config.venues.title}
-                  </h2>
-                  <p className="text-sm text-[#6b6b76] mt-1">
-                    {config.venues.subtitle}
-                  </p>
-                </div>
+            {/* Horizontal Rail for Events */}
+            <div
+              ref={eventsRailRef}
+              className="flex gap-4.5 overflow-x-auto scroll-smooth no-scrollbar py-2"
+            >
+              {eventsList.map((event: any, i: number) => (
+                <EventCard key={event.id} event={event} index={i} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 10. Rising artists Section */}
+        <section id="rising" className="py-12 sm:py-16 bg-[#f6f6f7] border-b border-[#e6e6ea] relative">
+          <div className="max-w-[1180px] mx-auto px-4 sm:px-6">
+            {/* Top Right Edit in Admin pill */}
+            <div className="flex justify-end mb-2">
+              <Link
+                href="/admin/home-page"
+                className="bg-[#17171c] hover:bg-black text-white text-[12px] font-bold px-3 py-1 rounded-full transition shadow-xs"
+              >
+                Edit in Admin
+              </Link>
+            </div>
+
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
+                  Rising artists
+                </h2>
+                <p className="text-[14px] text-[#6b6b76] mt-1">
+                  Emerging talent to watch.
+                </p>
+              </div>
+
+              <Link
+                href="/top-creators"
+                className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition"
+              >
+                See all
+              </Link>
+            </div>
+
+            {/* Horizontal Rail for Rising Artists */}
+            <div
+              ref={risingRailRef}
+              className="flex gap-4.5 overflow-x-auto scroll-smooth no-scrollbar py-2"
+            >
+              {risingArtists.map((artist: any) => (
+                <ArtistCard key={artist.id} artist={artist} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 11. Venues Section */}
+        <section id="venues" className="py-12 sm:py-16 bg-white border-b border-[#e6e6ea] relative">
+          <div className="max-w-[1180px] mx-auto px-4 sm:px-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
+                  Venues
+                </h2>
+                <p className="text-[14px] text-[#6b6b76] mt-1">
+                  Stages and studios for your next event.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
                 <Link
                   href="#venues"
-                  className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition inline-flex items-center gap-1"
+                  className="text-sm font-bold text-[#eb4e62] hover:text-[#d63a50] transition mr-1"
                 >
-                  <span>All Venues</span>
-                  <span>&rarr;</span>
+                  All venues
                 </Link>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {selectedVenues.map((venue) => (
-                  <VenueCard key={venue.id} venue={venue} />
-                ))}
+                <button
+                  type="button"
+                  onClick={() => scrollRail(venuesRailRef, 'left')}
+                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white flex items-center justify-center transition cursor-pointer text-base"
+                  aria-label="Previous"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollRail(venuesRailRef, 'right')}
+                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white flex items-center justify-center transition cursor-pointer text-base"
+                  aria-label="Next"
+                >
+                  ›
+                </button>
               </div>
             </div>
-          </section>
-        )}
 
-        {/* 10. FAQ Section */}
-        {config.faq.isVisible && (
-          <FAQSection
-            faqs={displayFaqs}
-            title={config.faq.title}
-            buttonText={config.faq.buttonText}
-          />
-        )}
+            {/* Horizontal Rail for Venues */}
+            <div
+              ref={venuesRailRef}
+              className="flex gap-4.5 overflow-x-auto scroll-smooth no-scrollbar py-2"
+            >
+              {venuesList.map((venue: any) => (
+                <VenueCard key={venue.id} venue={venue} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 12. Questions, answered. (FAQ Section) */}
+        <FAQSection />
       </main>
 
-      {/* 11. Footer */}
-      {config.footer.isVisible && <Footer footerConfig={config.footer} />}
+      {/* 13. Footer */}
+      <Footer />
 
-      {/* 12. Enquiry CTA - Sticky Bottom on Mobile Only */}
-      {config.enquiryCta.isVisible && (
-        <div
-          className={`${
-            config.enquiryCta.mobileOnly ? 'md:hidden' : ''
-          } sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#e6e6ea] p-3 shadow-lg flex items-center justify-between gap-4`}
-        >
-          <div className="min-w-0">
-            <p className="font-bold text-xs text-[#1b1b1f] truncate">
-              {config.enquiryCta.title}
-            </p>
-            <p className="text-[11px] text-[#6b6b76] truncate">
-              {config.enquiryCta.subtext || 'Get instant quotes & curated talent'}
-            </p>
-          </div>
-          <a
-            href="#talent"
-            className="shrink-0 h-10 px-5 rounded-[10px] bg-[#eb4e62] text-white text-xs font-bold flex items-center justify-center shadow-sm"
-          >
-            {config.enquiryCta.buttonText}
-          </a>
-        </div>
-      )}
+      {/* 14. Floating Kala Mitra AI Guide Mascot Widget */}
+      <KalaMitraWidget />
     </div>
   );
 }

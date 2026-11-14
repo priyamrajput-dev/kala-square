@@ -68,7 +68,18 @@ export class ArtistsRepository {
 
     async findBySlug(slug: string) {
         const db = getDb();
-        const artistRows = await db.select().from(artists).where(eq(artists.slug, slug)).limit(1);
+        const decodedSlug = decodeURIComponent(slug).trim().toLowerCase();
+        const artistRows = await db
+            .select()
+            .from(artists)
+            .where(
+                or(
+                    eq(artists.slug, slug),
+                    eq(artists.slug, decodedSlug),
+                    ilike(artists.slug, decodedSlug)
+                )
+            )
+            .limit(1);
         if (artistRows.length === 0) return null;
 
         const artist = artistRows[0];

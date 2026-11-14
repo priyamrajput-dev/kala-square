@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Star, MessageSquarePlus, Check } from 'lucide-react';
 import { ReviewItem } from '@/lib/types';
 
 interface ReviewsSectionProps {
@@ -11,114 +10,224 @@ interface ReviewsSectionProps {
 }
 
 export default function ReviewsSection({ rating, reviewsCount, reviews }: ReviewsSectionProps) {
-    const [showToast, setShowToast] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [starRating, setStarRating] = useState(5);
+    const [name, setName] = useState('');
+    const [comment, setComment] = useState('');
+    const [submittedToast, setSubmittedToast] = useState(false);
+    const [localReviews, setLocalReviews] = useState<ReviewItem[]>(reviews || []);
 
-    const handleWriteReview = () => {
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3500);
+    const totalCount = localReviews.length > 0 ? localReviews.length : (reviewsCount || 0);
+    const avgScore = localReviews.length > 0
+        ? localReviews.reduce((sum, r) => sum + r.rating, 0) / localReviews.length
+        : (totalCount > 0 ? rating : 0);
+    const ratingVal = avgScore > 0 ? avgScore.toFixed(1) : '0.0';
+
+    const renderStars = (score: number) => {
+        return (
+            <span className="pp-stars" aria-label={`${score.toFixed(1)} out of 5`}>
+                {[1, 2, 3, 4, 5].map((i) => {
+                    const on = i <= Math.round(score);
+                    return (
+                        <svg
+                            key={i}
+                            viewBox="0 0 24 24"
+                            width="18"
+                            height="18"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M12 3l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 16.9 6.6 19.8l1.1-6.1L3.2 9.4l6.1-.8z"
+                                fill={on ? '#f5a300' : 'none'}
+                                stroke={on ? '#f5a300' : '#d0d0d8'}
+                                strokeWidth="1.6"
+                                strokeLinejoin="round"
+                            />
+                        </svg>
+                    );
+                })}
+            </span>
+        );
+    };
+
+    const handleFormSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!name.trim()) return;
+
+        const newReview: ReviewItem = {
+            id: `rev-${Date.now()}`,
+            authorName: name.trim(),
+            date: 'Just now',
+            rating: starRating,
+            comment: comment.trim() || 'Great artist and performance!',
+        };
+
+        setLocalReviews([newReview, ...localReviews]);
+        setIsModalOpen(false);
+        setName('');
+        setComment('');
+        setSubmittedToast(true);
+        setTimeout(() => setSubmittedToast(false), 4000);
     };
 
     return (
-        <section
-            className="scroll-mt-36 bg-white rounded-[20px] p-6 sm:p-8 border border-[#e6e6ea] shadow-xs space-y-6"
-            id="pp-reviews"
-        >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                        Client reviews &amp; ratings
-                    </h2>
-                    <p className="text-sm text-[#6b6b76] mt-1">
-                        Verified feedback from past event organizers, planners, and hosts.
-                    </p>
-                </div>
-
-                <button
-                    type="button"
-                    onClick={handleWriteReview}
-                    className="inline-flex items-center gap-2 h-10 px-5 rounded-[10px] bg-[#eb4e62] hover:bg-[#d63a50] text-white font-bold text-xs shadow-sm transition self-start sm:self-auto cursor-pointer"
-                >
-                    <MessageSquarePlus className="h-4 w-4" />
-                    <span>Write a Review</span>
-                </button>
+        <section className="pp-s rv in" id="pp-reviews">
+            <div className="pp-sh">
+                <h2>Reviews</h2>
             </div>
 
-            {showToast && (
-                <div className="p-3.5 rounded-xl bg-[#fff4d6] border border-[#fde199] text-xs font-semibold text-[#8a5a00] flex items-center gap-2 animate-fade-in">
-                    <Check className="h-4 w-4 text-[#8a5a00] shrink-0" />
-                    <span>Public review submission workflow is coming in the next prompt!</span>
+            {submittedToast && (
+                <div
+                    style={{
+                        marginBottom: 16,
+                        padding: '12px 16px',
+                        background: '#e4f7ea',
+                        color: '#14803c',
+                        borderRadius: 14,
+                        fontWeight: 600,
+                        fontSize: 14,
+                    }}
+                >
+                    Thank you! Your review has been submitted successfully.
                 </div>
             )}
 
-            {/* Summary Score Card */}
-            <div className="p-5 rounded-2xl bg-[#f6f6f7] border border-[#e6e6ea]/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="font-heading font-black text-4xl sm:text-5xl text-[#1b1b1f]">
-                        {rating.toFixed(1)}
-                    </div>
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-1 text-[#eb4e62]">
-                            {[...Array(5)].map((_, i) => (
-                                <Star
-                                    key={i}
-                                    className={`h-4 w-4 ${
-                                        i < Math.floor(rating)
-                                            ? 'fill-current text-[#eb4e62]'
-                                            : 'text-neutral-300'
-                                    }`}
-                                />
-                            ))}
-                        </div>
-                        <p className="text-xs text-[#6b6b76] font-medium">
-                            Based on {reviewsCount} verified event reviews
-                        </p>
-                    </div>
+            <div className="pp-rs">
+                {/* Left: Overall Rating Box */}
+                <div className="pp-sum">
+                    <b>{ratingVal}</b>
+                    {renderStars(avgScore)}
+                    <small>
+                        {totalCount} review{totalCount === 1 ? '' : 's'}
+                    </small>
                 </div>
 
-                <p className="text-xs text-[#6b6b76] max-w-sm italic">
-                    Reviews and ratings are written by visitors on the website and are not entered
-                    in Admin.
-                </p>
+                {/* Right: Reviews List + Rate Callout */}
+                <div className="pp-rcol">
+                    {localReviews.length > 0 ? (
+                        <ul className="pp-rv">
+                            {localReviews.map((x) => (
+                                <li key={x.id}>
+                                    <div className="pp-rh">
+                                        <span className="pp-av">
+                                            {x.authorName.charAt(0).toUpperCase()}
+                                        </span>
+                                        <div>
+                                            <b>{x.authorName}</b>
+                                            <small>{x.date}</small>
+                                        </div>
+                                        {renderStars(x.rating)}
+                                    </div>
+                                    {x.comment && <p>{x.comment}</p>}
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <div className="pp-em">
+                            {renderStars(0)}
+                            <b>No reviews yet</b>
+                            <span>Be the first to share your experience.</span>
+                        </div>
+                    )}
+
+                    {/* Rate this artist banner */}
+                    <div className="pp-rc">
+                        <div>
+                            <h3>Rate this artist</h3>
+                            <p>Tell others what you think about this artist</p>
+                        </div>
+                        <button
+                            type="button"
+                            className="btn fill"
+                            onClick={() => setIsModalOpen(true)}
+                        >
+                            Write a review
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            {/* Reviews List */}
-            <div className="space-y-4 pt-2">
-                {reviews.map((rev) => (
-                    <div
-                        key={rev.id}
-                        className="p-5 rounded-2xl bg-white border border-[#e6e6ea] space-y-3 shadow-xs"
+            {/* Write a Review Modal */}
+            {isModalOpen && (
+                <div
+                    className="pp-mo"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Write a review"
+                    onClick={() => setIsModalOpen(false)}
+                >
+                    <form
+                        className="pp-mc"
+                        onClick={(e) => e.stopPropagation()}
+                        onSubmit={handleFormSubmit}
                     >
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-[#fde6ea] text-[#eb4e62] font-heading font-bold text-sm flex items-center justify-center">
-                                    {rev.authorName.charAt(0).toUpperCase()}
-                                </div>
-                                <div>
-                                    <h4 className="font-heading font-bold text-sm text-[#1b1b1f]">
-                                        {rev.authorName}
-                                    </h4>
-                                    <span className="text-xs text-[#6b6b76]">{rev.date}</span>
-                                </div>
-                            </div>
+                        <button
+                            type="button"
+                            className="mx"
+                            onClick={() => setIsModalOpen(false)}
+                            aria-label="Close"
+                        >
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
 
-                            <div className="flex items-center gap-0.5 text-[#eb4e62]">
-                                {[...Array(5)].map((_, i) => (
-                                    <Star
-                                        key={i}
-                                        className={`h-3.5 w-3.5 ${
-                                            i < rev.rating
-                                                ? 'fill-current text-[#eb4e62]'
-                                                : 'text-neutral-300'
-                                        }`}
-                                    />
-                                ))}
-                            </div>
+                        <h3>Write a review</h3>
+
+                        <div className="pp-pick" role="radiogroup" aria-label="Your rating">
+                            {[1, 2, 3, 4, 5].map((n) => (
+                                <button
+                                    key={n}
+                                    type="button"
+                                    className={n <= starRating ? 'on' : ''}
+                                    onClick={() => setStarRating(n)}
+                                    aria-label={`${n} star${n > 1 ? 's' : ''}`}
+                                >
+                                    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                    </svg>
+                                </button>
+                            ))}
                         </div>
 
-                        <p className="text-sm text-[#6b6b76] leading-relaxed">{rev.comment}</p>
-                    </div>
-                ))}
-            </div>
+                        <label>
+                            Full name
+                            <input
+                                name="name"
+                                placeholder="Enter full name"
+                                required
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                        </label>
+
+                        <label>
+                            We&apos;d love to hear more from you (optional)
+                            <textarea
+                                name="text"
+                                rows={4}
+                                placeholder="Enter your message"
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                            />
+                        </label>
+
+                        <div className="mb">
+                            <button
+                                type="button"
+                                className="btn line"
+                                onClick={() => setIsModalOpen(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button className="btn fill" type="submit">
+                                Submit review
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
         </section>
     );
 }

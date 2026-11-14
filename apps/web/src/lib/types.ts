@@ -32,7 +32,7 @@ export interface EventItem {
   city: string;
   venueName?: string;
   category?: string;
-  badge: 'Trending' | 'New' | 'Filling Fast' | 'KS Original' | 'none';
+  badge: 'Trending' | 'New' | 'Filling Fast' | 'Filling fast' | 'KS Original' | 'none';
   badgeColor?: 'coral' | 'green' | 'orange' | 'black';
   imageUrl: string;
   description?: string;
@@ -206,6 +206,8 @@ export interface ArtistProfile {
   faqs?: FAQItem[];
   reviews: ReviewItem[];
   social: SocialLinks;
+  metaTitle?: string;
+  metaDescription?: string;
 }
 
 // -------------------------------------------------------------

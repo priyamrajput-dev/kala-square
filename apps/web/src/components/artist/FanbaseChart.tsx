@@ -1,134 +1,176 @@
+'use client';
+
 import React from 'react';
 import { FanbasePlatform } from '@/lib/types';
 
 interface FanbaseChartProps {
-    fanbase: FanbasePlatform[];
+    fanbase?: FanbasePlatform[];
 }
 
 export default function FanbaseChart({ fanbase }: FanbaseChartProps) {
-    const activePlatforms = fanbase.filter((p) => p.numValue > 0);
+    if (!fanbase || fanbase.length === 0) return null;
 
+    const activePlatforms = fanbase.filter((p) => p.numValue > 0);
     if (activePlatforms.length === 0) return null;
 
-    const totalNum = activePlatforms.reduce((sum, p) => sum + p.numValue, 0);
+    const total = activePlatforms.reduce((sum, p) => sum + p.numValue, 0);
 
-    // Format big number
-    const formatTotal = (num: number) => {
-        if (num >= 1e6) return `${(num / 1e6).toFixed(1)}M`;
-        if (num >= 1e3) return `${(num / 1e3).toFixed(1)}K`;
-        return num.toLocaleString();
+    const fmtBig = (n: number) => {
+        if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+        if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'k';
+        return n.toLocaleString();
     };
 
-    // Donut SVG parameters
-    const R = 70;
-    const C = 2 * Math.PI * R; // ~439.82
-    let accumulatedPercent = 0;
+    const R = 74;
+    const C = 2 * Math.PI * R; // ~464.96
+    const gap = activePlatforms.length > 1 ? 4 : 0;
+    let pos = 0;
 
-    const segments = activePlatforms.map((platform) => {
-        const fraction = platform.numValue / totalNum;
-        const strokeDasharray = `${(fraction * C).toFixed(2)} ${C.toFixed(2)}`;
-        const strokeDashoffset = `-${(accumulatedPercent * C).toFixed(2)}`;
-        accumulatedPercent += fraction;
-
+    const segments = activePlatforms.map((r) => {
+        const len = Math.max(2, (r.numValue / total) * C - gap);
+        const o = -pos;
+        pos += (r.numValue / total) * C;
         return {
-            key: platform.key,
-            color: platform.color,
-            strokeDasharray,
-            strokeDashoffset,
+            key: r.key,
+            color: r.color,
+            len: len.toFixed(1),
+            o: o.toFixed(1),
+            C: C.toFixed(1),
         };
     });
 
+    const renderBrandIcon = (key: string) => {
+        if (key === 'fbSp') {
+            return (
+                <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
+                    <circle cx="16" cy="16" r="15" fill="#1DB954" />
+                    <path
+                        d="M8 12c5-1.5 11-1 15 1.5M9 16.5c4-1 8-.7 11.5 1.3M10 20.7c3-.7 6-.4 8.5 1"
+                        stroke="#fff"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        fill="none"
+                    />
+                </svg>
+            );
+        }
+        if (key === 'fbYt') {
+            return (
+                <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
+                    <rect x="1" y="6" width="30" height="20" rx="6" fill="#FF0000" />
+                    <path d="M13 11.5v9l8-4.5z" fill="#fff" />
+                </svg>
+            );
+        }
+        if (key === 'fbIg') {
+            return (
+                <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="ig-grad" x1="0" y1="1" x2="1" y2="0">
+                            <stop offset="0" stopColor="#FEDA75" />
+                            <stop offset=".4" stopColor="#FA7E1E" />
+                            <stop offset=".7" stopColor="#D62976" />
+                            <stop offset="1" stopColor="#4F5BD5" />
+                        </linearGradient>
+                    </defs>
+                    <rect x="1" y="1" width="30" height="30" rx="9" fill="url(#ig-grad)" />
+                    <rect x="8" y="8" width="16" height="16" rx="5" fill="none" stroke="#fff" strokeWidth="2" />
+                    <circle cx="16" cy="16" r="3.8" fill="none" stroke="#fff" strokeWidth="2" />
+                    <circle cx="21" cy="11" r="1.2" fill="#fff" />
+                </svg>
+            );
+        }
+        if (key === 'fbFb') {
+            return (
+                <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
+                    <rect x="1" y="1" width="30" height="30" rx="7" fill="#1877F2" />
+                    <path
+                        d="M21 31V19.5h3.8l.7-4.5H21v-2.8c0-1.3.6-2.2 2.3-2.2h2.3V6.2S23.8 6 22.2 6C18.8 6 16.7 8 16.7 11.6V15H13v4.5h3.7V31z"
+                        fill="#fff"
+                    />
+                </svg>
+            );
+        }
+        if (key === 'fbDz') {
+            return (
+                <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
+                    <rect x="3" y="21" width="4" height="4" fill="#A238FF" />
+                    <rect x="9" y="17" width="4" height="8" fill="#A238FF" />
+                    <rect x="15" y="12" width="4" height="13" fill="#A238FF" />
+                    <rect x="21" y="7" width="4" height="18" fill="#A238FF" />
+                    <rect x="27" y="14" width="3" height="11" fill="#A238FF" />
+                </svg>
+            );
+        }
+        if (key === 'fbSc') {
+            return (
+                <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
+                    <path d="M3 20v3M7 17v6M11 14v9M15 11v12M19 9v14" stroke="#FF5500" strokeWidth="2.6" strokeLinecap="round" />
+                    <path d="M22 23h5a4 4 0 0 0 0-8c-.3 0-.6 0-.9.1A5.5 5.5 0 0 0 22 11z" fill="#FF5500" />
+                </svg>
+            );
+        }
+        if (key === 'fbTt') {
+            return (
+                <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
+                    <circle cx="16" cy="16" r="15" fill="#161616" />
+                    <path d="M17.5 8v10.5a2.7 2.7 0 1 1-2.7-2.7M17.5 8c.3 2.3 1.8 3.8 4.2 4" stroke="#fff" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+                </svg>
+            );
+        }
+        return (
+            <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
+                <circle cx="16" cy="16" r="15" fill="#1877F2" />
+            </svg>
+        );
+    };
+
     return (
-        <section
-            className="scroll-mt-36 bg-white rounded-[20px] p-6 sm:p-8 border border-[#e6e6ea] shadow-xs space-y-6"
-            id="pp-fanbase"
-        >
-            <div>
-                <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                    Total fanbase distribution
-                </h2>
-                <p className="text-sm text-[#6b6b76] mt-1">
-                    Verified audience reach across major streaming and social platforms.
-                </p>
+        <section className="pp-s rv in" id="pp-fanbase">
+            <div className="pp-sh">
+                <h2>Total fanbase distribution</h2>
+                <p>Audience across platforms.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-2">
-                {/* Left: Pure SVG Donut Chart */}
-                <div className="lg:col-span-5 flex justify-center">
-                    <div className="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center">
-                        <svg
-                            viewBox="0 0 200 200"
-                            className="w-full h-full transform -rotate-90"
-                            aria-label="Fanbase split by platform"
-                            role="img"
-                        >
-                            {/* Background Track */}
-                            <circle
-                                cx="100"
-                                cy="100"
-                                r={R}
-                                fill="none"
-                                stroke="#f3f3f5"
-                                strokeWidth="24"
-                            />
-
-                            {/* Colored Segments */}
-                            {segments.map((seg) => (
+            <div className="pp-fb rv in">
+                {/* Donut Chart */}
+                <div className="pp-dn">
+                    <svg viewBox="0 0 200 200" role="img" aria-label="Fanbase split by platform">
+                        <g transform="rotate(-90 100 100)">
+                            {segments.map((s) => (
                                 <circle
-                                    key={seg.key}
+                                    key={s.key}
+                                    className="sg"
                                     cx="100"
                                     cy="100"
                                     r={R}
                                     fill="none"
-                                    stroke={seg.color}
-                                    strokeWidth="24"
-                                    strokeDasharray={seg.strokeDasharray}
-                                    strokeDashoffset={seg.strokeDashoffset}
-                                    className="transition-all duration-500"
+                                    stroke={s.color}
+                                    strokeWidth="22"
+                                    style={{
+                                        strokeDasharray: `${s.len} ${s.C}`,
+                                        strokeDashoffset: s.o,
+                                    }}
                                 />
                             ))}
-                        </svg>
-
-                        {/* Center Total Text */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                            <span className="font-heading font-extrabold text-3xl sm:text-4xl text-[#1b1b1f] tracking-tight">
-                                {formatTotal(totalNum)}
-                            </span>
-                            <span className="text-xs sm:text-sm font-semibold text-[#6b6b76] uppercase tracking-wider mt-0.5">
-                                Total Fanbase
-                            </span>
-                        </div>
+                        </g>
+                    </svg>
+                    <div className="ct">
+                        <b>{fmtBig(total)}</b>
+                        <small>Total fanbase</small>
                     </div>
                 </div>
 
-                {/* Right: Platform Cards Grid */}
-                <div className="lg:col-span-7">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-                        {activePlatforms.map((platform) => (
-                            <div
-                                key={platform.key}
-                                className="p-3.5 rounded-xl bg-[#f6f6f7] border border-[#e6e6ea]/60 flex flex-col justify-between hover:border-[#eb4e62]/40 transition"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <span
-                                        className="w-3 h-3 rounded-full shrink-0"
-                                        style={{ backgroundColor: platform.color }}
-                                    />
-                                    <span className="text-xs font-semibold text-[#6b6b76] truncate">
-                                        {platform.name}
-                                    </span>
-                                </div>
-                                <div className="mt-2.5">
-                                    <p className="font-heading font-extrabold text-xl text-[#1b1b1f] tracking-tight">
-                                        {platform.count}
-                                    </p>
-                                    <p className="text-[11px] text-[#6b6b76] mt-0.5">
-                                        {platform.label}
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                {/* Platform Cards */}
+                <div className="pp-fc">
+                    {activePlatforms.map((r) => (
+                        <div key={r.key} className="pp-fk">
+                            <span className="ic">{renderBrandIcon(r.key)}</span>
+                            <small>{r.name}</small>
+                            <b>{r.count || fmtBig(r.numValue)}</b>
+                            <span>{r.label}</span>
+                        </div>
+                    ))}
                 </div>
             </div>
         </section>

@@ -3,12 +3,15 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { login } from '@/lib/auth';
 
 export default function AdminLoginPage() {
     const router = useRouter();
     const [email, setEmail] = useState('admin@kalasquare.com');
-    const [password, setPassword] = useState('admin123');
+    const [password, setPassword] = useState('Kalasquare@2026');
+    const [showPassword, setShowPassword] = useState(false);
+    const [rememberMe, setRememberMe] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -27,89 +30,176 @@ export default function AdminLoginPage() {
         }
     };
 
+    const handleFillDemo = () => {
+        setEmail('admin@kalasquare.com');
+        setPassword('Kalasquare@2026');
+        setError(null);
+    };
+
     return (
-        <div className="min-h-screen bg-[#f3f3f5] flex flex-col justify-center items-center px-4 py-12">
-            <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-black/5 p-8">
-                {/* Brand Logo / Header */}
-                <div className="text-center mb-8">
-                    <Link href="/" className="inline-flex items-center gap-2 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-white font-bold text-lg">
-                            K
+        <>
+            {/* 1. Demo Bar fixed on top matching manager.html */}
+            <div id="demoBar" role="navigation" aria-label="Demo pages">
+                <b>Kalasquare Live Demo</b>
+                <nav>
+                    <Link href="/admin/login" aria-current="page">Login</Link>
+                    <Link href="/">Home</Link>
+                    <Link href="/admin/artists">Admin</Link>
+                </nav>
+                <span className="db-h">
+                    Edit in Admin, then check the Home page.<br />
+                    Send an enquiry on Home, then check Admin → Enquiries.
+                </span>
+                <button
+                    type="button"
+                    className="db-r"
+                    id="db-reset"
+                    onClick={() => {
+                        localStorage.clear();
+                        window.location.reload();
+                    }}
+                >
+                    Reset demo
+                </button>
+            </div>
+
+            {/* 2. Login Gate matching manager.html lines 575-625 and screenshot 021b1672.jpg */}
+            <div id="gate" role="dialog" aria-modal="true" aria-label="Admin sign in">
+                <div className="g-stage">
+                    <div className="g-bg" id="g-bg" aria-hidden="true">
+                        <div className="g-glow" />
+                        {/* 8 Floating Category Tiles */}
+                        <div className="g-tile" style={{ left: '6%', top: '26%' }}>
+                            <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
+                            <span>Singing</span>
                         </div>
-                        <span className="font-extrabold text-2xl tracking-tight text-black">
-                            Kala<span className="text-[#eb4e62]">Square</span>
-                        </span>
-                    </Link>
-                    <h1 className="text-xl font-bold text-black">Admin Portal Sign In</h1>
-                    <p className="text-sm text-black/60 mt-1">
-                        Enter your administrator credentials to access the management dashboard.
-                    </p>
-                </div>
-
-                {error && (
-                    <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm flex items-center gap-2">
-                        <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>{error}</span>
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-5">
-                    <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-black/70 mb-2">
-                            Admin Email Address
-                        </label>
-                        <input
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl border border-black/10 bg-white text-black text-sm focus:outline-none focus:ring-2 focus:ring-[#eb4e62] focus:border-transparent transition"
-                            placeholder="admin@kalasquare.com"
-                        />
+                        <div className="g-tile" style={{ left: '20%', top: '26%' }}>
+                            <svg viewBox="0 0 24 24"><rect x="3" y="10" width="18" height="11" rx="2" /><path d="M3 10l2.5-5h4L7 10M9.5 10 12 5h4l-2.5 5M16 10l2.5-5H21v5" /></svg>
+                            <span>Actor</span>
+                        </div>
+                        <div className="g-tile" style={{ left: '34%', top: '26%' }}>
+                            <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2" /><circle cx="12" cy="13.5" r="3.5" /><path d="M8 7l1.5-3h5L16 7" /></svg>
+                            <span>Models</span>
+                        </div>
+                        <div className="g-tile" style={{ left: '48%', top: '26%' }}>
+                            <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z" /></svg>
+                            <span>Influencer</span>
+                        </div>
+                        <div className="g-tile" style={{ left: '13%', top: '54%' }}>
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2" /><path d="M5 7l7 3 7-3M12 10v4l-4 7M12 14l4 7" /></svg>
+                            <span>Dancer</span>
+                        </div>
+                        <div className="g-tile" style={{ left: '27%', top: '54%' }}>
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M8 14a4 4 0 0 0 8 0M9 9.5h.01M15 9.5h.01" /></svg>
+                            <span>Standup</span>
+                        </div>
+                        <div className="g-tile" style={{ left: '41%', top: '54%' }}>
+                            <svg viewBox="0 0 24 24"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12" /></svg>
+                            <span>Fitness</span>
+                        </div>
+                        <div className="g-tile" style={{ left: '55%', top: '54%' }}>
+                            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="2" /><path d="M8 21h8M12 17v4" /></svg>
+                            <span>Anchor</span>
+                        </div>
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-black/70 mb-2">
-                            Password
-                        </label>
-                        <input
-                            type="password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl border border-black/10 bg-white text-black text-sm focus:outline-none focus:ring-2 focus:ring-[#eb4e62] focus:border-transparent transition"
-                            placeholder="••••••••"
-                        />
+                    <div className="g-brand">
+                        <img className="g-logo" id="g-logo" src="/logo.png" alt="KalaSquare" width="184" height="40" />
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full py-3.5 px-6 rounded-xl bg-[#eb4e62] hover:bg-[#d93d51] text-white font-semibold text-sm shadow-sm transition disabled:opacity-60 flex items-center justify-center gap-2"
-                    >
-                        {isLoading ? (
-                            <>
-                                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                                </svg>
-                                <span>Authenticating...</span>
-                            </>
-                        ) : (
-                            'Login'
-                        )}
-                    </button>
-                </form>
+                    <main>
+                        <section className="g-card" aria-labelledby="g-t">
+                            <span className="g-chip"><i></i>Admin panel</span>
+                            <h1 id="g-t">Welcome back</h1>
+                            <p className="g-sub">Sign in to the Kalasquare admin panel.</p>
 
-                <div className="mt-8 pt-6 border-t border-black/5 text-center">
-                    <p className="text-xs text-black/40">
-                        Default demo access: <span className="font-mono text-black/70">admin@kalasquare.com</span> / <span className="font-mono text-black/70">admin123</span>
-                    </p>
+                            <form id="g-f" onSubmit={handleSubmit} noValidate>
+                                <div>
+                                    <label htmlFor="g-user">Email or username</label>
+                                    <input
+                                        id="g-user"
+                                        type="text"
+                                        autoComplete="username"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="admin@kalasquare.com"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="g-pw">Password</label>
+                                    <div className="g-field g-pw">
+                                        <input
+                                            id="g-pw"
+                                            type={showPassword ? 'text' : 'password'}
+                                            autoComplete="current-password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder="Enter your password"
+                                            required
+                                        />
+                                        <button
+                                            className="g-toggle"
+                                            id="g-tg"
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            aria-controls="g-pw"
+                                            aria-pressed={showPassword}
+                                        >
+                                            {showPassword ? 'Hide' : 'Show'}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="g-row">
+                                    <label className="g-check">
+                                        <input
+                                            id="g-rem"
+                                            type="checkbox"
+                                            checked={rememberMe}
+                                            onChange={(e) => setRememberMe(e.target.checked)}
+                                        />
+                                        <span>Keep me signed in</span>
+                                    </label>
+                                    <a
+                                        className="g-link"
+                                        href="#forgot"
+                                        id="g-fg"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            alert('Contact superadmin@kalasquare.com for credentials');
+                                        }}
+                                    >
+                                        Forgot password?
+                                    </a>
+                                </div>
+                                {error && (
+                                    <p className="g-msg" id="g-msg" role="status" aria-live="polite">
+                                        {error}
+                                    </p>
+                                )}
+                                <button className="g-submit" type="submit" disabled={isLoading}>
+                                    {isLoading ? 'Signing in...' : 'Sign in to dashboard'}
+                                </button>
+                                <p className="g-demo">
+                                    Demo login: <code>admin@kalasquare.com</code> · <code>Kalasquare@2026</code>{' '}
+                                    <button type="button" id="g-fill" onClick={handleFillDemo}>
+                                        Fill it
+                                    </button>
+                                </p>
+                            </form>
+                            <p className="g-secure">Authorised staff only. Sign-ins are logged.</p>
+                        </section>
+                    </main>
+
+                    <footer>
+                        <div className="g-venture">
+                            A venture by <em>Delhi Infomedia Private Limited</em>
+                        </div>
+                        <p>India's artist management ecosystem for talent, brands and venues.</p>
+                        <small>&copy; 2026 Kalasquare. All Rights Reserved.</small>
+                    </footer>
                 </div>
             </div>
-        </div>
+        </>
     );
 }
-

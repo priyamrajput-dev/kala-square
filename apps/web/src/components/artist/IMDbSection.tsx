@@ -1,5 +1,6 @@
+'use client';
+
 import React from 'react';
-import { Film, ExternalLink, Star } from 'lucide-react';
 import { IMDbData } from '@/lib/types';
 
 interface IMDbSectionProps {
@@ -14,96 +15,71 @@ export default function IMDbSection({ categories, imdb }: IMDbSectionProps) {
 
     if (!isActor || !imdb) return null;
 
+    const kn = imdb.knownFor || [];
+    const credits = imdb.credits || [];
+
+    if (credits.length === 0 && kn.length === 0) return null;
+
     return (
-        <section
-            className="scroll-mt-36 bg-white rounded-[20px] p-6 sm:p-8 border border-[#e6e6ea] shadow-xs space-y-6"
-            id="pp-imdb"
-        >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded font-black text-xs bg-[#F5C518] text-black tracking-wider">
-                            IMDb
-                        </span>
-                        <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-[#1b1b1f] tracking-tight">
-                            Film &amp; screen
-                        </h2>
-                    </div>
-                    <p className="text-sm text-[#6b6b76] mt-1">
-                        Official screen credits, streaming originals, and recognized roles.
-                    </p>
-                </div>
-
-                {imdb.imdbUrl && (
-                    <a
-                        href={imdb.imdbUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#f6f6f7] hover:bg-[#F5C518]/20 border border-[#e6e6ea] text-xs font-bold text-[#1b1b1f] transition self-start sm:self-auto"
-                    >
-                        <span>View on IMDb</span>
-                        <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
-                )}
+        <section className="pp-s rv in" id="pp-imdb">
+            <div className="pp-sh">
+                <h2>
+                    <span className="pp-imdb">IMDb</span>
+                    Film &amp; screen
+                </h2>
+                <p>Credits and known-for titles.</p>
             </div>
 
-            {/* IMDb Rating & Known For Summary */}
-            <div className="p-4 rounded-xl bg-[#f6f6f7] border border-[#e6e6ea]/60 flex flex-wrap items-center gap-4">
-                {imdb.rating && (
-                    <div className="flex items-center gap-1.5 pr-4 border-r border-[#e6e6ea]">
-                        <Star className="h-4 w-4 fill-[#F5C518] text-[#F5C518]" />
-                        <span className="font-heading font-extrabold text-sm text-[#1b1b1f]">
-                            {imdb.rating}
-                        </span>
-                        <span className="text-xs text-[#6b6b76]">IMDb Score</span>
-                    </div>
-                )}
+            <div className="pp-ig">
+                {credits.map((x) => {
+                    const isKnown = x.isKnownFor || kn.some((k) => k.toLowerCase() === x.title.toLowerCase());
+                    const sub = [x.role, x.type].filter(Boolean).join(' · ');
 
-                {imdb.knownFor && imdb.knownFor.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <span className="font-bold text-[#1b1b1f]">Known for:</span>
-                        {imdb.knownFor.map((title) => (
-                            <span
-                                key={title}
-                                className="px-2.5 py-1 rounded-md bg-white border border-[#e6e6ea] text-[#1b1b1f] font-semibold"
-                            >
-                                {title}
+                    return (
+                        <div key={x.id || x.title} className="pp-xc im">
+                            <span className="pst">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    width="26"
+                                    height="26"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
+                                    <line x1="7" y1="2" x2="7" y2="22" />
+                                    <line x1="17" y1="2" x2="17" y2="22" />
+                                    <line x1="2" y1="12" x2="22" y2="12" />
+                                    <line x1="2" y1="7" x2="7" y2="7" />
+                                    <line x1="2" y1="17" x2="7" y2="17" />
+                                    <line x1="17" y1="17" x2="22" y2="17" />
+                                    <line x1="17" y1="7" x2="22" y2="7" />
+                                </svg>
+                                {x.year && <em>{x.year}</em>}
                             </span>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Credits Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                {imdb.credits.map((credit) => (
-                    <div
-                        key={credit.id}
-                        className="p-4 rounded-xl bg-[#f6f6f7] border border-[#e6e6ea]/60 flex items-start justify-between gap-3 hover:border-[#eb4e62]/40 transition"
-                    >
-                        <div className="flex items-start gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-white border border-[#e6e6ea] flex items-center justify-center text-[#1b1b1f] shrink-0 mt-0.5">
-                                <Film className="h-4 w-4" />
-                            </div>
-                            <div>
-                                <h4 className="font-heading font-bold text-sm text-[#1b1b1f]">
-                                    {credit.title}
-                                </h4>
-                                <p className="text-xs text-[#6b6b76] mt-0.5">
-                                    {[credit.role, credit.type, credit.year]
-                                        .filter(Boolean)
-                                        .join(' · ')}
-                                </p>
-                            </div>
+                            <b>{x.title}</b>
+                            {sub && <small>{sub}</small>}
+                            {isKnown && <i className="kf">Known for</i>}
+                            {imdb.imdbUrl && (
+                                <a
+                                    className="lk"
+                                    href={imdb.imdbUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label="Open IMDb link"
+                                >
+                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                        <polyline points="15 3 21 3 21 9" />
+                                        <line x1="10" y1="14" x2="21" y2="3" />
+                                    </svg>
+                                </a>
+                            )}
                         </div>
-
-                        {credit.isKnownFor && (
-                            <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-[#fff4d6] text-[#8a5a00] border border-[#fde199]">
-                                Known for
-                            </span>
-                        )}
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </section>
     );

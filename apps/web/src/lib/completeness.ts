@@ -5,129 +5,66 @@ export interface CompletenessResult {
     tip: string;
 }
 
+/**
+ * Exact completeness calculation from Kalasquare_Home_Page_Manager_2.html:
+ * function completeness() {
+ *   var soc = ['ig', 'yt', 'fb', 'x', 'spotify', 'imdb'].some(function (k) { return AF[k]; });
+ *   var chk = [AF.name, AF.photo, AF.cats.length, AF.city, AF.tagline, AF.bio, AF.exp, AF.projects, AF.shows, AF.followers, AF.spec.length, AF.gallery.length >= 3,
+ *     AF.videos.some(function (v) { return v.u; }), AF.clips.some(function (v) { return v.u; }), AF.songs.some(function (v) { return v.u; }), AF.camps.length, AF.awards.length, soc, AF.phone];
+ *   return Math.round(chk.filter(Boolean).length / chk.length * 100);
+ * }
+ */
 export function calculateCompleteness(data: Partial<ArtistFormData>): CompletenessResult {
-    let score = 0;
-    const missingTips: { weight: number; tip: string }[] = [];
-
-    // 1. Basic Info (20%)
-    const hasBasic =
-        Boolean(data.name && data.name.trim().length >= 2) &&
-        Boolean(data.slug && data.slug.trim().length >= 2) &&
-        Boolean(data.photoUrl) &&
-        Boolean(data.city) &&
-        Boolean(data.state) &&
-        Boolean(data.artistClass);
-
-    if (hasBasic) {
-        score += 20;
-    } else {
-        missingTips.push({ weight: 20, tip: 'Complete Basic details and profile photo' });
-    }
-
-    // 2. About (15%)
-    const bioLen = (data.bio || '').trim().length;
-    if (bioLen >= 100) {
-        score += 15;
-    } else if (bioLen > 0) {
-        score += 7;
-        missingTips.push({ weight: 8, tip: 'Expand biography to at least 100 characters' });
-    } else {
-        missingTips.push({ weight: 15, tip: 'Add artist biography' });
-    }
-
-    // 3. Categories (10%)
-    const catCount = (data.categories || []).length;
-    if (catCount >= 1) {
-        score += 10;
-    } else {
-        missingTips.push({ weight: 10, tip: 'Select at least 1 primary category' });
-    }
-
-    // 4. Social Links (10%)
-    const hasSocial = Boolean(
-        data.instagram ||
-        data.youtube ||
-        data.facebook ||
-        data.spotify ||
-        data.x ||
-        data.website ||
-        data.imdbUrl,
+    const soc = Boolean(
+        data.socialInstagram ||
+        data.socialYouTube ||
+        data.socialFacebook ||
+        data.socialX ||
+        data.socialSpotify ||
+        data.imdbUrl ||
+        (data as any).instagram ||
+        (data as any).youtube ||
+        (data as any).facebook ||
+        (data as any).x ||
+        (data as any).spotify
     );
-    if (hasSocial) {
-        score += 10;
-    } else {
-        missingTips.push({ weight: 10, tip: 'Add at least one social media link' });
-    }
 
-    // 5. Fanbase (10%)
-    const totalFanbase =
-        Number(data.fanbaseSpotify || 0) +
-        Number(data.fanbaseYouTube || 0) +
-        Number(data.fanbaseInstagram || 0) +
-        Number(data.fanbaseFacebook || 0) +
-        Number(data.fanbaseDeezer || 0) +
-        Number(data.fanbaseSoundCloud || 0) +
-        Number(data.fanbaseTikTok || 0);
+    const chk = [
+        Boolean(data.name && data.name.trim().length > 0),
+        Boolean(data.photoUrl),
+        Boolean(data.categories && data.categories.length > 0),
+        Boolean(data.city && data.city.trim().length > 0),
+        Boolean(data.tagline && data.tagline.trim().length > 0),
+        Boolean(data.bio && data.bio.trim().length > 0),
+        Boolean(data.experienceYears && String(data.experienceYears).trim().length > 0),
+        Boolean(data.projectsCount && String(data.projectsCount).trim().length > 0),
+        Boolean(data.liveShowsCount && String(data.liveShowsCount).trim().length > 0),
+        Boolean(data.totalFollowersLabel && String(data.totalFollowersLabel).trim().length > 0),
+        Boolean(
+            (Array.isArray(data.specializations) && data.specializations.length > 0) ||
+            (typeof data.specializations === 'string' && data.specializations.trim().length > 0)
+        ),
+        Boolean(data.gallery && data.gallery.length >= 3),
+        Boolean(data.videos && data.videos.some((v: any) => v.url && v.url.trim().length > 0)),
+        Boolean(data.clips && data.clips.some((c: any) => c.url && c.url.trim().length > 0)),
+        Boolean((data as any).songs && (data as any).songs.some((s: any) => s.url && s.url.trim().length > 0)),
+        Boolean(data.campaigns && data.campaigns.length > 0),
+        Boolean(data.awards && data.awards.length > 0),
+        soc,
+        Boolean(data.phone && data.phone.trim().length > 0),
+    ];
 
-    if (totalFanbase > 0) {
-        score += 10;
-    } else {
-        missingTips.push({ weight: 10, tip: 'Add fanbase counts to show audience reach' });
-    }
+    const filledCount = chk.filter(Boolean).length;
+    const score = Math.round((filledCount / chk.length) * 100);
 
-    // 6. Gallery (15%)
-    const galCount = (data.gallery || []).length;
-    if (galCount >= 3) {
-        score += 15;
-    } else if (galCount >= 1) {
-        score += 8;
-        missingTips.push({
-            weight: 7,
-            tip: 'Add 2 more gallery photos to reach full gallery score',
-        });
-    } else {
-        missingTips.push({ weight: 15, tip: 'Add photos to the gallery (minimum 3 recommended)' });
-    }
-
-    // 7. Videos (5%)
-    const hasVideos = Boolean(
-        data.videos && data.videos.length > 0 && data.videos.some((v) => v.url),
-    );
-    if (hasVideos) {
-        score += 5;
-    } else {
-        missingTips.push({ weight: 5, tip: 'Add at least one YouTube video link' });
-    }
-
-    // 8. Campaigns / Awards (5%)
-    const hasWork = Boolean(
-        (data.campaigns && data.campaigns.length > 0) || (data.awards && data.awards.length > 0),
-    );
-    if (hasWork) {
-        score += 5;
-    } else {
-        missingTips.push({ weight: 5, tip: 'Add previous campaigns or awards' });
-    }
-
-    // 9. SEO (10%)
-    const hasSeo = Boolean(data.metaTitle && data.metaDescription);
-    if (hasSeo) {
-        score += 10;
-    } else {
-        missingTips.push({ weight: 10, tip: 'Fill meta title and description for search engines' });
-    }
-
-    // Sort tips by potential gain
-    missingTips.sort((a, b) => b.weight - a.weight);
-
-    const highestTip = missingTips[0];
-    const targetPct = Math.min(100, score + (highestTip ? highestTip.weight : 0));
-    const tipText = highestTip
-        ? `Profile is ${score}% complete — ${highestTip.tip} to reach ${targetPct}%`
-        : 'Profile is 100% complete and ready for prime showcase!';
+    const tip = score === 100
+        ? 'Profile is 100% complete and ready for prime showcase!'
+        : score === 0
+        ? 'Profile completeness 0% — start by adding basic details'
+        : `Profile is ${score}% complete`;
 
     return {
-        score: Math.min(100, score),
-        tip: tipText,
+        score,
+        tip,
     };
 }
