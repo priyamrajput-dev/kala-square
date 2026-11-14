@@ -4,6 +4,22 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
+- **Mobile Responsiveness Restoration (Source of Truth Parity - DONE)**:
+  - **Audit Across All 9 Breakpoints**: Executed automated CDP Chrome audit across 320px, 375px, 390px, 430px, 768px, 1024px, 1280px, 1440px, and 1920px viewports on Home (`/`), Artist Profile (`/top-creators/priyam`), and Directory (`/top-creators`). All 27 viewports passed with 0 horizontal overflow (`scrollWidth <= window.innerWidth`).
+  - **DemoBar Fix**: Added `hidden sm:inline` to bold title text, allowed wrapping with compact padding on `<= 520px` screens, eliminating the fixed-width 385px container barrier.
+  - **Hero Collage Fix**: Overlapping Card 2 (`.pc` - Jai Vijay Sachan) and Card 3 (`.dk` - opportunity) hidden on mobile `<= 760px` via `hidden md:flex` and `hidden md:block`, precisely mirroring `Kalasquare_Home_Page_Manager_2.html` line 1888 (`@media(max-width:760px){.dk,.pc{display:none}}`).
+  - **Mobile Navigation Restoration**:
+    - Replaced basic dropdown with full slide-over menu drawer (`#mDr` / `.udr`) matching original HTML lines 2859-2879 with backdrop, header, close button, custom icon rows (Timeline, Membership, KS Spotlight, Top Creators, Hire Artists, Venues, About us), and Sign in action.
+    - Implemented fixed bottom navigation bar (`<nav class="bnav">`) on `<= 760px` with body padding coordination (`.sd { padding-bottom: 56px; }`).
+    - Configured automatic suppression of `.bnav` on artist profile pages (`body:has(.pp-mb) .bnav`, `.pp ~ footer .bnav`), allowing the sticky enquiry bar (`.pp-mb`) to sit cleanly at the bottom without overlap.
+  - **Artist Profile Scroll & Sharing Improvements**:
+    - **Enquiry Scroll Offset**: Updated "Send enquiry" scroll handler to dynamically calculate header, demo bar, and sticky tabs heights (`headerOffset`), ensuring the "Book [Artist]" header and form appear centered in view rather than jumping down to the first input.
+    - **Direct Share & Open in New Tab**: Resolved issue where shared profiles failed to open in new tabs by enabling direct access for pending and live profiles in both backend API and frontend views, and providing clean clipboard copy with toast confirmation.
+  - **Monorepo Build & Deployment**:
+    - Successfully passed full monorepo typecheck and Next.js 16 production build.
+    - Committed changes to branch `main` and pushed to GitHub (`priyamrajput-dev/kala-square`).
+    - Deployment auto-triggered on Vercel at `https://kala-square.vercel.app`.
+
 - **Production Deployment to Vercel & Railway (DONE)**:
   - **GitHub Repository**: Pushed full monorepo to `https://github.com/priyamrajput-dev/kala-square` on branch `main`.
   - **Vercel Frontend Deployment**:
