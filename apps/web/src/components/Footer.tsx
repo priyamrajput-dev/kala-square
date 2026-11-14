@@ -139,6 +139,15 @@ export default function Footer() {
           © 2026 Kalasquare. All Rights Reserved.
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation Bar (lines 1887-1888 of Kalasquare_Home_Page_Manager_2.html) */}
+      <nav className="bnav">
+        <Link href="/" className="active">Home</Link>
+        <Link href="/top-creators">Top Creators</Link>
+        <Link href="/top-creators?view=hire">Hire Artists</Link>
+        <Link href="#events">Shows</Link>
+        <Link href="#venues">Venues</Link>
+      </nav>
     </footer>
   );
 }

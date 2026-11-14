@@ -174,7 +174,7 @@ export default function HomeSections({ initialData }: HomeSectionsProps) {
                 <button
                   type="button"
                   onClick={() => scrollRail(platinumRailRef, 'left')}
-                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white flex items-center justify-center transition cursor-pointer text-base"
+                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white hidden sm:flex items-center justify-center transition cursor-pointer text-base"
                   aria-label="Previous"
                 >
                   ‹
@@ -182,7 +182,7 @@ export default function HomeSections({ initialData }: HomeSectionsProps) {
                 <button
                   type="button"
                   onClick={() => scrollRail(platinumRailRef, 'right')}
-                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white flex items-center justify-center transition cursor-pointer text-base"
+                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white hidden sm:flex items-center justify-center transition cursor-pointer text-base"
                   aria-label="Next"
                 >
                   ›
@@ -219,7 +219,7 @@ export default function HomeSections({ initialData }: HomeSectionsProps) {
                 <button
                   type="button"
                   onClick={() => scrollRail(newRailRef, 'left')}
-                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white flex items-center justify-center transition cursor-pointer text-base"
+                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white hidden sm:flex items-center justify-center transition cursor-pointer text-base"
                   aria-label="Previous"
                 >
                   ‹
@@ -227,7 +227,7 @@ export default function HomeSections({ initialData }: HomeSectionsProps) {
                 <button
                   type="button"
                   onClick={() => scrollRail(newRailRef, 'right')}
-                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white flex items-center justify-center transition cursor-pointer text-base"
+                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white hidden sm:flex items-center justify-center transition cursor-pointer text-base"
                   aria-label="Next"
                 >
                   ›
@@ -354,7 +354,7 @@ export default function HomeSections({ initialData }: HomeSectionsProps) {
                 <button
                   type="button"
                   onClick={() => scrollRail(eventsRailRef, 'left')}
-                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white flex items-center justify-center transition cursor-pointer text-base"
+                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white hidden sm:flex items-center justify-center transition cursor-pointer text-base"
                   aria-label="Previous"
                 >
                   ‹
@@ -362,7 +362,7 @@ export default function HomeSections({ initialData }: HomeSectionsProps) {
                 <button
                   type="button"
                   onClick={() => scrollRail(eventsRailRef, 'right')}
-                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white flex items-center justify-center transition cursor-pointer text-base"
+                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white hidden sm:flex items-center justify-center transition cursor-pointer text-base"
                   aria-label="Next"
                 >
                   ›
@@ -448,7 +448,7 @@ export default function HomeSections({ initialData }: HomeSectionsProps) {
                 <button
                   type="button"
                   onClick={() => scrollRail(venuesRailRef, 'left')}
-                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white flex items-center justify-center transition cursor-pointer text-base"
+                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white hidden sm:flex items-center justify-center transition cursor-pointer text-base"
                   aria-label="Previous"
                 >
                   ‹
@@ -456,7 +456,7 @@ export default function HomeSections({ initialData }: HomeSectionsProps) {
                 <button
                   type="button"
                   onClick={() => scrollRail(venuesRailRef, 'right')}
-                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white flex items-center justify-center transition cursor-pointer text-base"
+                  className="w-9 h-9 rounded-full border border-[#e6e6ea] bg-white hover:bg-[#eb4e62] hover:border-[#eb4e62] hover:text-white hidden sm:flex items-center justify-center transition cursor-pointer text-base"
                   aria-label="Next"
                 >
                   ›

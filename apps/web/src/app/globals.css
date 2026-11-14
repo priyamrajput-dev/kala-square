@@ -934,3 +934,47 @@ body {
   .rrow .n { margin-top: 0; }
   .rrow .acts { margin-top: 0; }
 }
+
+/* Mobile Bottom Bar (.bnav) & Profile Sticky Bar (.pp-mb) coordination */
+.bnav {
+  display: none;
+}
+@media (max-width: 760px) {
+  .bnav {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    background: #ffffff;
+    border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .bnav a {
+    flex: 1;
+    text-align: center;
+    padding: 14px 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--mute);
+    text-decoration: none;
+  }
+  .bnav a.active,
+  .bnav a:first-child {
+    color: var(--coral);
+  }
+  body {
+    padding-bottom: 56px;
+  }
+  body:has(.pp-mb) {
+    padding-bottom: 70px;
+  }
+  /* On artist profile pages, hide .bnav so .pp-mb is visible alone */
+  body:has(.pp-mb) .bnav,
+  body:has(.pp) .bnav,
+  .pp ~ footer .bnav,
+  .pp ~ .bnav {
+    display: none !important;
+  }
+}

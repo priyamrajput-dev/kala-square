@@ -43,17 +43,24 @@ export default function ArtistProfileView({ initialArtist, slug }: ArtistProfile
             (a.id && a.id.toLowerCase().trim() === normalized)
         );
         if (found) {
-          if (found.status === 'draft' || found.status === 'pending') {
-            if (!initialArtist) {
-              setArtist(null);
-            }
-            return;
-          }
           const mapped = mapRecordToArtistProfile(found);
           setArtist(mapped);
+          return;
         }
       }
     } catch {}
+
+    // If initialArtist is null, attempt client-side fetch as well
+    if (!initialArtist) {
+      const normalized = decodeURIComponent(slug).toLowerCase().trim();
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      fetch(`${apiUrl}/api/public/artists/${encodeURIComponent(normalized)}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data) setArtist(data);
+        })
+        .catch(() => {});
+    }
   }, [slug, initialArtist]);
 
   if (!artist) {
@@ -152,10 +159,14 @@ export default function ArtistProfileView({ initialArtist, slug }: ArtistProfile
             e.preventDefault();
             const bookEl = document.getElementById('ppBook');
             if (bookEl) {
-              const y = bookEl.getBoundingClientRect().top + window.scrollY - 120;
-              window.scrollTo({ top: y, behavior: 'smooth' });
+              const headerOffset =
+                (document.getElementById('demoBar')?.offsetHeight || 0) +
+                ((document.querySelector('header') as HTMLElement | null)?.offsetHeight || 0) +
+                ((document.querySelector('.pp-tb') as HTMLElement | null)?.offsetHeight || 0) + 16;
+              const y = bookEl.getBoundingClientRect().top + window.scrollY - headerOffset;
+              window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
               const input = bookEl.querySelector('input');
-              if (input) setTimeout(() => input.focus({ preventScroll: true }), 400);
+              if (input) setTimeout(() => input.focus({ preventScroll: true }), 450);
             }
           }}
         >

@@ -24,7 +24,20 @@ export default function ArtistHero({ artist }: ArtistHeroProps) {
             : `https://kalasquare.com/top-creators/${artist.slug}`;
 
         let success = false;
-        if (typeof window !== 'undefined' && navigator.clipboard?.writeText) {
+        if (typeof navigator !== 'undefined' && navigator.share) {
+            try {
+                await navigator.share({
+                    title: `${artist.name} | KalaSquare`,
+                    text: `Check out ${artist.name}'s profile on KalaSquare`,
+                    url: cleanUrl,
+                });
+                success = true;
+            } catch {
+                // Share sheet cancelled or unsupported, fallback to copy
+            }
+        }
+
+        if (!success && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
             try {
                 await navigator.clipboard.writeText(cleanUrl);
                 success = true;
@@ -80,11 +93,15 @@ export default function ArtistHero({ artist }: ArtistHeroProps) {
         e.preventDefault();
         const bookEl = document.getElementById('ppBook');
         if (bookEl) {
-            const y = bookEl.getBoundingClientRect().top + window.scrollY - 120;
-            window.scrollTo({ top: y, behavior: 'smooth' });
+            const headerOffset =
+                (document.getElementById('demoBar')?.offsetHeight || 0) +
+                ((document.querySelector('header') as HTMLElement | null)?.offsetHeight || 0) +
+                ((document.querySelector('.pp-tb') as HTMLElement | null)?.offsetHeight || 0) + 16;
+            const y = bookEl.getBoundingClientRect().top + window.scrollY - headerOffset;
+            window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
             const input = bookEl.querySelector('input');
             if (input) {
-                setTimeout(() => input.focus({ preventScroll: true }), 400);
+                setTimeout(() => input.focus({ preventScroll: true }), 450);
             }
         }
     };

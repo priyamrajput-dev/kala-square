@@ -101,8 +101,8 @@ export class ArtistsService {
             throw new NotFoundError('Artist not found');
         }
 
-        // Draft / Pending artist public URL must return 404
-        if (artist.status !== 'published' && artist.status !== 'live') {
+        // Only draft artists return 404; pending and live/published artists can be viewed via direct slug URL
+        if (artist.status === 'draft') {
             throw new NotFoundError('Artist not found');
         }
 

@@ -145,10 +145,10 @@ export default function Hero() {
                 </div>
               </div>
 
-              {/* Overlapping Card 2: Artist Card (.pc) */}
+              {/* Overlapping Card 2: Artist Card (.pc) - Hidden on <= 760px matching original HTML */}
               <Link
                 href="/top-creators/jai-vijay-sachan"
-                className="absolute -left-[5%] top-[50%] w-[42%] bg-white hover:border-[#eb4e62] transition-all rounded-[18px] p-3 shadow-2xl flex items-center gap-3 z-20 border border-[#e6e6ea]/60 group cursor-pointer"
+                className="absolute -left-[5%] top-[50%] w-[42%] bg-white hover:border-[#eb4e62] transition-all rounded-[18px] p-3 shadow-2xl hidden md:flex items-center gap-3 z-20 border border-[#e6e6ea]/60 group cursor-pointer"
               >
                 <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0">
                   <Image
@@ -175,8 +175,8 @@ export default function Hero() {
                 </div>
               </Link>
 
-              {/* Overlapping Card 3: Dark Opportunity Card (.dk) */}
-              <div className="absolute left-[47%] top-[50%] w-[25%] bg-[#17171c] text-white rounded-[16px] p-3 shadow-2xl rotate-1 z-30">
+              {/* Overlapping Card 3: Dark Opportunity Card (.dk) - Hidden on <= 760px matching original HTML */}
+              <div className="absolute left-[47%] top-[50%] w-[25%] bg-[#17171c] text-white rounded-[16px] p-3 shadow-2xl rotate-1 z-30 hidden md:block">
                 <small className="text-[11px] font-bold text-[#eb4e62] block">
                   Looking for
                 </small>
