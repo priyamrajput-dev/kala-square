@@ -69,17 +69,20 @@ export class ArtistsRepository {
     async findBySlug(slug: string) {
         const db = getDb();
         const decodedSlug = decodeURIComponent(slug).trim().toLowerCase();
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug.trim());
+        const conditions = [
+            eq(artists.slug, slug),
+            eq(artists.slug, decodedSlug),
+            ilike(artists.slug, decodedSlug),
+        ];
+        if (isUuid) {
+            conditions.push(eq(artists.id, slug.trim()));
+        }
+
         const artistRows = await db
             .select()
             .from(artists)
-            .where(
-                or(
-                    eq(artists.slug, slug),
-                    eq(artists.slug, decodedSlug),
-                    ilike(artists.slug, decodedSlug),
-                    eq(artists.id, slug)
-                )
-            )
+            .where(or(...conditions))
             .limit(1);
         if (artistRows.length === 0) return null;
 

@@ -4,6 +4,33 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
+- **Client Acceptance Criteria & Reference HTML UI Parity E2E Verification (DONE - 100% VERIFIED)**:
+  - **Task 1: Reference HTML UI Parity & Mobile Responsiveness Comparison**:
+    - **Visual Parity Check against `Kalasquare_Home_Page_Manager_2.html`**:
+      - Verified desktop layout against original HTML (`01-ref-html-desktop.png` vs `02-nextjs-home-desktop.png`): exact typography (Plus Jakarta Sans & Bricolage Grotesque), color palette (`#f05a5b` brand coral, off-white gradient background `#fff6f5`), category pill filters, venue cards, top creators grid, and live demo header.
+      - Verified mobile layout (`01-ref-html-mobile.png` vs `02-nextjs-home-mobile.png`): single-column layout, mobile header with location dropdown, search bar, collapsible drawer menu (`#mDr`), bottom navigation bar (`.bnav`), and responsive artist cards.
+    - **Horizontal Overflow Multi-Viewport Audit**:
+      - Audited viewports: `320px`, `375px`, `390px`, `768px`, `1024px`, `1440px`.
+      - Both Home Page (`/`) and Public Artist Profile (`/top-creators/[slug]`) achieved **100% PASS** with `0px` horizontal overflow across every single viewport (`scrollWidth <= window.innerWidth`).
+  - **Task 2: End-to-End Client Requirements Execution**:
+    1. **Frontend (Exact Dummy Design)**: Live public profile renders all 17 sections strictly matching `Kalasquare_Home_Page_Manager_2.html`: ambient hero backdrop, 4:5 tilted avatar, platinum badge, quick stats floating card, 9 tab indicators, 2-column layout with sticky booking card, fanbase donut, gallery lightbox, video/reel grids, campaigns/awards, and sticky mobile enquiry bar.
+    2. **Backend (Create, Edit, Update, Publish)**: Fastify API endpoints (`POST /api/admin/artists`, `PUT /api/admin/artists/:id`, `GET /api/public/artists/:slug`, `GET /api/admin/artists`) fully operational with robust Zod validation. Fixed PostgreSQL syntax error where non-UUID slug caused type mismatch in `artists.id` query.
+    3. **Database (Neon PostgreSQL Persistence)**: Stored artist basic information, physical stats, pricing, categories, photos (`artist_media`), videos/clips, campaigns/awards (`artist_work`), and social links (`artist_social`) in PostgreSQL via Drizzle ORM.
+    4. **Admin (Add, Edit, Verification Status & Management)**: Admin can create an artist, toggle verified switch, edit all 35+ fields, view in artists table with completeness percentage, and manage status (`live` / `draft`).
+    5. **Dynamic Integration**: Updating artist data in Admin (`PUT /api/admin/artists/:id`) immediately and automatically updates the public profile (`GET /api/public/artists/:slug`) upon page refresh with zero delay or caching staleness.
+    6. **Testing & Real Evidence**:
+      - Verified automated lifecycle: `Admin Login → Create Artist ("Karan Verma") → Persist in DB (ID: 31efe845-ef9d-432e-8513-90026886fb0b) → View in Admin List → Open Live Profile → Audit 6 Viewports → Edit Tagline to "Award-Winning Sufi Vocalist & Bollywood Playback Artist" → Save Changes → Refresh Live Profile → Verified updated tagline and awards reflected dynamically`.
+      - Real browser screenshots captured and saved in `artifacts/qa/screenshots/`:
+        - `01-ref-html-desktop.png`: Client reference HTML desktop
+        - `01-ref-html-mobile.png`: Client reference HTML mobile
+        - `02-nextjs-home-desktop.png`: Implemented Next.js Home desktop
+        - `02-nextjs-home-mobile.png`: Implemented Next.js Home mobile
+        - `03-admin-create-karan-form.png`: Admin artist creation form filled
+        - `04-admin-artists-list-karan.png`: Admin artists table showing new artist Karan Verma
+        - `05-karan-live-profile-desktop.png`: Published public profile on Desktop
+        - `06-karan-live-profile-mobile.png`: Published public profile on Mobile (390px)
+        - `07-admin-edit-karan-saved.png`: Admin edit artist screen with updated fields
+        - `08-karan-live-profile-updated.png`: Refreshed public profile verifying dynamic updates
 - **Login Redirect Fix, Admin Mobile Responsiveness & Multi-Origin Deployment Alignment (DONE)**:
   - **Login Redirect Fix**: Identified and resolved React hook ordering violation in `apps/web/src/components/admin/AdminLayout.tsx` where `useState` and `useEffect` were declared after `if (pathname === '/admin/login') return <>{children}</>;`. During client-side App Router transition from `/admin/login` to `/admin/artists`, the layout preserved its component instance but rendered additional hooks, throwing `Rendered more hooks than during the previous render` and triggering Next.js default error boundary ("This page couldn't load. Reload to try again, or go back."). Moving all hooks unconditionally to the top resolved the crash.
   - **Admin Mobile Responsiveness**: Ported `@media (max-width: 899px)` mobile navigation styles from `Kalasquare_Home_Page_Manager_2.html` lines 403-410 into `apps/web/src/app/globals.css`. Transforms the fixed 248px vertical sidebar into a horizontal, scrollable pill bar (`.nav`, `.nv`, `.kids`), hiding labels (`.navl`) and user info (`.who`), and setting single-column layout (`.app`). Audited across 9 viewports (320px to 1920px) with 0 horizontal overflow.
