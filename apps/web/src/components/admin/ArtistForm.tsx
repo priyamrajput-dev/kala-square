@@ -1878,7 +1878,7 @@ export default function ArtistForm({ mode, initialData, artistId }: ArtistFormPr
             </span>
           </div>
 
-          <span className="acts" style={{ marginLeft: 0 }}>
+          <span className="acts flex items-center gap-2" style={{ marginLeft: 0 }}>
             <button
               type="button"
               onClick={() => router.push('/admin/artists')}
